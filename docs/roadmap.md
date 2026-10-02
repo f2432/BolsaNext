@@ -2,30 +2,54 @@
 
 O roadmap é incremental. Cada versão deve produzir uma aplicação executável e testável.
 
+O estado efetivo e detalhado do trabalho encontra-se em `docs/status.md`.
+
 ## V0.1 — Fundação
+
+**Estado: IMPLEMENTADA, PENDENTE DE VALIDAÇÃO LOCAL FINAL.**
+
+Implementado:
 
 - estrutura do projeto;
 - configuração;
 - logging;
 - SQLite;
 - SQLAlchemy;
-- testes;
+- testes iniciais;
 - arranque da aplicação;
 - janela principal mínima;
-- integração contínua básica.
+- integração contínua básica;
+- empacotamento via `pyproject.toml`;
+- comando `bolsanext`;
+- documentação de desenvolvimento.
+
+Falta para fecho:
+
+- validar instalação num clone limpo;
+- executar testes localmente;
+- confirmar GitHub Actions;
+- confirmar arranque PySide6 em Windows;
+- corrigir eventuais problemas encontrados na validação.
 
 ## V0.2 — Market Data
+
+**Estado: PRÓXIMA FASE.**
 
 - entidade `Instrument`;
 - provider `yfinance`;
 - histórico OHLCV;
 - preço atual;
 - normalização de dados;
+- política de adjusted/unadjusted prices;
+- timezone e datas;
 - universos;
 - watchlists;
-- cache local controlada.
+- cache local controlada;
+- testes de domínio e infraestrutura.
 
 ## V0.3 — Portfolio
+
+**Estado: POR INICIAR.**
 
 - entidade `Portfolio`;
 - entidade `Transaction`;
@@ -41,6 +65,8 @@ O roadmap é incremental. Cada versão deve produzir uma aplicação executável
 
 ## V0.4 — Analysis
 
+**Estado: POR INICIAR.**
+
 - gráfico de preços;
 - volume;
 - SMA;
@@ -54,6 +80,8 @@ O roadmap é incremental. Cada versão deve produzir uma aplicação executável
 
 ## V0.5 — Strategies
 
+**Estado: POR INICIAR.**
+
 - interface comum de estratégias;
 - SMA Crossover;
 - RSI + MACD;
@@ -62,6 +90,8 @@ O roadmap é incremental. Cada versão deve produzir uma aplicação executável
 - registo de estratégias.
 
 ## V0.6 — Backtesting
+
+**Estado: POR INICIAR.**
 
 - motor de execução;
 - controlo temporal;
@@ -80,6 +110,8 @@ O roadmap é incremental. Cada versão deve produzir uma aplicação executável
 
 ## V0.7 — Investment Research
 
+**Estado: POR INICIAR.**
+
 - diário de decisão;
 - tese;
 - catalisadores;
@@ -90,6 +122,8 @@ O roadmap é incremental. Cada versão deve produzir uma aplicação executável
 - ligação à watchlist e carteira.
 
 ## V0.8 — AI Foundation
+
+**Estado: PLANEADA.**
 
 - datasets reproduzíveis;
 - feature engineering;
@@ -111,6 +145,8 @@ Modelos iniciais:
 
 ## V0.9 — AI Research
 
+**Estado: PLANEADA.**
+
 - calibração de probabilidades;
 - ensembles;
 - regressão de retornos;
@@ -122,6 +158,8 @@ Modelos iniciais:
 - comparação com baselines.
 
 ## V0.10 — AI Planning
+
+**Estado: PLANEADA, COM ESPAÇO ARQUITETURAL JÁ RESERVADO.**
 
 Fase experimental.
 
@@ -140,6 +178,8 @@ Fase experimental.
 O módulo deve poder evoluir sem depender de execução automática de ordens.
 
 ## V1.0 — Primeira versão estável
+
+**Estado: FUTURA.**
 
 - integração dos módulos;
 - testes;
