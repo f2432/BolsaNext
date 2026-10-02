@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Portfolio / personal data
+portfolio*.csv
+transactions*.csv
+positions*.csv
+statements/
+extracts/
+extratos/
+*.pdf
+
+# Market data / caches
+data/*
+!data/.gitkeep
+cache/
+.cache/
+suggestion_cache/
+cache_*.csv
+
+# Predictions and model artefacts
+prediction_log*.csv
+models/
+*.pkl
+*.joblib
+*.h5
+*.onnx
+
+# Reports / exports
+exports/
+reports/generated/
+
+# Temporary / backups
+tmp/
+temp/
+Backup/
+backups/
+*.zip
+*.rar
+*.7z
+
+# Test/cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
