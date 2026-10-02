@@ -1,0 +1,25 @@
+[project]
+name = "bolsanext"
+version = "0.1.0"
+description = "Plataforma pessoal de análise de investimentos"
+requires-python = ">=3.12"
+dependencies = [
+    "PySide6",
+    "pandas",
+    "numpy",
+    "SQLAlchemy",
+    "yfinance",
+    "scikit-learn",
+    "matplotlib",
+    "PyYAML",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
