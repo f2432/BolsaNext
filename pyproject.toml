@@ -1,7 +1,12 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bolsanext"
 version = "0.1.0"
 description = "Plataforma pessoal de análise de investimentos"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "PySide6",
@@ -19,6 +24,12 @@ dev = [
     "pytest",
     "pytest-cov",
 ]
+
+[project.scripts]
+bolsanext = "bolsa.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
