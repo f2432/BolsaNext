@@ -90,3 +90,21 @@ O inventário da implementação anterior encontra-se em `docs/legacy.md`.
 ## IA
 
 A evolução prevista dos módulos de inteligência artificial encontra-se em `docs/ai-roadmap.md`.
+
+
+## Desenvolvimento local
+
+As instruções para instalar, executar e testar o projeto estão em `docs/development.md`.
+
+Resumo rápido:
+
+```bash
+git clone https://github.com/f2432/BolsaNext.git
+cd BolsaNext
+python -m venv .venv
+pip install -e ".[dev]"
+pytest
+bolsanext
+```
+
+O projeto possui integração contínua através de GitHub Actions. Os testes são executados automaticamente em pushes e pull requests para `main`.
