@@ -3,10 +3,12 @@
 Lê antes de alterar código:
 
 - `README.md`
+- `docs/status.md`
 - `docs/architecture.md`
 - `docs/roadmap.md`
-- `docs/legacy.md`
 - `docs/ai-roadmap.md`
+- `docs/legacy.md`
+- `docs/development.md`
 
 ## Regras gerais
 
@@ -42,3 +44,18 @@ O módulo `ai/planning` deve permanecer reservado para evolução do Planeamento
 Não usar accuracy isolada como prova de capacidade preditiva.
 
 Registar experiências e resultados fora da amostra.
+
+
+## Hierarquia canónica
+
+Usa estas fontes conforme o tipo de decisão:
+
+1. `docs/status.md` — o que está efetivamente feito e qual é o próximo trabalho;
+2. `docs/architecture.md` — como o sistema deve ser estruturado;
+3. `docs/roadmap.md` — ordem e âmbito das versões;
+4. `docs/ai-roadmap.md` — decisões específicas da área de IA;
+5. `docs/legacy.md` — referência histórica, nunca autoridade sobre a nova arquitetura;
+6. `docs/development.md` — execução e desenvolvimento local;
+7. `pyproject.toml` — dependências executáveis e configuração do pacote.
+
+O `README.md` resume e encaminha para estas fontes. Não duplicar informação detalhada no README quando já existir num documento canónico.
