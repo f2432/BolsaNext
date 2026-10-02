@@ -8,6 +8,8 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
+A **V0.1 — Fundação está implementada e aguarda validação local final**. A próxima fase é a **V0.2 — Market Data**. O estado canónico detalhado encontra-se em `docs/status.md`.
+
 A versão anterior provou vários conceitos, incluindo:
 
 - obtenção de dados de mercado;
@@ -108,3 +110,20 @@ bolsanext
 ```
 
 O projeto possui integração contínua através de GitHub Actions. Os testes são executados automaticamente em pushes e pull requests para `main`.
+
+
+## Documentação canónica
+
+Os ficheiros de referência do projeto são:
+
+- `README.md`: identidade, objetivo, princípios e entrada principal;
+- `docs/status.md`: estado efetivo atual, trabalho concluído e próximo trabalho;
+- `docs/roadmap.md`: sequência de versões e funcionalidades previstas;
+- `docs/architecture.md`: arquitetura, limites entre camadas e modelo de dados previsto;
+- `docs/ai-roadmap.md`: plano específico de IA e Planeamento IA;
+- `docs/legacy.md`: inventário e decisões relativas ao projeto anterior;
+- `docs/development.md`: instalação, execução, testes e fluxo local;
+- `AGENTS.md`: regras operacionais para agentes que alterem o projeto;
+- `pyproject.toml`: dependências Python, empacotamento e configuração de testes.
+
+Quando houver conflito, o estado atual é determinado por `docs/status.md`; a arquitetura por `docs/architecture.md`; o plano futuro por `docs/roadmap.md` e `docs/ai-roadmap.md`.
