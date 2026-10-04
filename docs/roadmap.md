@@ -33,19 +33,32 @@ Validação concluída:
 
 ## V0.2 — Market Data
 
-**Estado: PRÓXIMA FASE.**
+**Estado: EM DESENVOLVIMENTO.**
+
+Implementado até ao momento:
 
 - entidade `Instrument`;
 - provider `yfinance`;
 - histórico OHLCV;
 - preço atual;
 - normalização de dados;
-- política de adjusted/unadjusted prices;
+- política inicial de adjusted/unadjusted prices;
 - timezone e datas;
-- universos;
-- watchlists;
-- cache local controlada;
+- domínio e provider de universos;
+- S&P 500 e NASDAQ 100;
+- domínio e serviço de watchlist;
+- primeira interface funcional da watchlist;
 - testes de domínio e infraestrutura.
+
+Ainda falta:
+
+- Euronext 100;
+- integração dos universos na UI;
+- persistência SQLite da watchlist;
+- edição dos estados da watchlist;
+- cache local controlada;
+- tratamento assíncrono dos pedidos de rede;
+- validação final da V0.2.
 
 ## V0.3 — Portfolio
 
