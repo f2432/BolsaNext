@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import StringIO
 import logging
+from urllib.request import Request, urlopen
 
 import pandas as pd
 
@@ -18,6 +20,11 @@ class WikipediaUniverseProvider:
     normalizados para a convenção usada pelo Yahoo Finance, substituindo
     pontos por hífen em tickers norte-americanos (ex.: BRK.B -> BRK-B).
     """
+
+    _USER_AGENT = (
+        "BolsaNext/0.1 "
+        "(educational investment research; https://github.com/f2432/BolsaNext)"
+    )
 
     _SOURCES = {
         "sp500": {
@@ -70,9 +77,32 @@ class WikipediaUniverseProvider:
             retrieved_at=datetime.now(timezone.utc),
         )
 
-    @staticmethod
-    def _read_tables(url: str) -> list[pd.DataFrame]:
-        return pd.read_html(url)
+    @classmethod
+    def _read_tables(cls, url: str) -> list[pd.DataFrame]:
+        """Obtém o HTML com User-Agent explícito e extrai as tabelas.
+
+        Algumas páginas rejeitam pedidos HTTP com o User-Agent por defeito
+        do Python/pandas. O download é feito separadamente para manter o
+        comportamento previsível e permitir testes sem rede.
+        """
+        request = Request(
+            url,
+            headers={
+                "User-Agent": cls._USER_AGENT,
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+        )
+
+        try:
+            with urlopen(request, timeout=20) as response:
+                html = response.read().decode("utf-8")
+        except Exception as exc:
+            raise RuntimeError(
+                "Não foi possível obter os constituintes do universo. "
+                "Verifica a ligação à Internet e tenta novamente."
+            ) from exc
+
+        return pd.read_html(StringIO(html))
 
     @staticmethod
     def _find_constituents_table(
