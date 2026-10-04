@@ -6,7 +6,7 @@ O estado efetivo e detalhado do trabalho encontra-se em `docs/status.md`.
 
 ## V0.1 — Fundação
 
-**Estado: IMPLEMENTADA, PENDENTE DE VALIDAÇÃO LOCAL FINAL.**
+**Estado: CONCLUÍDA E VALIDADA.**
 
 Implementado:
 
@@ -23,13 +23,13 @@ Implementado:
 - comando `bolsanext`;
 - documentação de desenvolvimento.
 
-Falta para fecho:
+Validação concluída:
 
-- validar instalação num clone limpo;
-- executar testes localmente;
-- confirmar GitHub Actions;
-- confirmar arranque PySide6 em Windows;
-- corrigir eventuais problemas encontrados na validação.
+- instalação local validada em Windows;
+- aplicação PySide6 abriu corretamente;
+- 8 testes passaram localmente;
+- base SQLite local criada;
+- GitHub Actions confirmado com sucesso.
 
 ## V0.2 — Market Data
 
