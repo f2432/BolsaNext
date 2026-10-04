@@ -32,12 +32,19 @@ class MainWindow(QMainWindow):
             tabs.addTab(self._placeholder("Watchlist"), "Watchlist")
         else:
             watchlist_area = QTabWidget()
-            watchlist_area.addTab(WatchlistWidget(watchlist_service), "A minha Watchlist")
+            watchlist_widget = WatchlistWidget(watchlist_service)
+            watchlist_area.addTab(watchlist_widget, "A minha Watchlist")
+
             if universe_service is not None:
-                watchlist_area.addTab(
-                    UniverseWidget(universe_service, watchlist_service),
-                    "Universos",
+                universe_widget = UniverseWidget(universe_service, watchlist_service)
+                universe_widget.instrument_added.connect(
+                    lambda _ticker: watchlist_widget.refresh()
                 )
+                watchlist_area.addTab(universe_widget, "Universos")
+
+            watchlist_area.currentChanged.connect(
+                lambda index: watchlist_widget.refresh() if index == 0 else None
+            )
             tabs.addTab(watchlist_area, "Watchlist")
 
         tabs.addTab(self._placeholder("Carteira"), "Carteira")
