@@ -9,16 +9,28 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from bolsa.app.services.watchlist_service import WatchlistService
+from bolsa.ui.watchlist import WatchlistWidget
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, app_name: str = "BolsaNext") -> None:
+    def __init__(
+        self,
+        app_name: str = "BolsaNext",
+        watchlist_service: WatchlistService | None = None,
+    ) -> None:
         super().__init__()
         self.setWindowTitle(app_name)
         self.resize(1200, 800)
 
         tabs = QTabWidget()
         tabs.addTab(self._placeholder("Resumo"), "Resumo")
-        tabs.addTab(self._placeholder("Watchlist"), "Watchlist")
+
+        if watchlist_service is None:
+            tabs.addTab(self._placeholder("Watchlist"), "Watchlist")
+        else:
+            tabs.addTab(WatchlistWidget(watchlist_service), "Watchlist")
+
         tabs.addTab(self._placeholder("Carteira"), "Carteira")
         tabs.addTab(self._placeholder("Análise"), "Análise")
         tabs.addTab(self._placeholder("Backtesting"), "Backtesting")
@@ -27,7 +39,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabs)
 
         status = QStatusBar()
-        status.showMessage("V0.1 — Fundação")
+        status.showMessage("V0.2 — Market Data")
         self.setStatusBar(status)
 
     @staticmethod
