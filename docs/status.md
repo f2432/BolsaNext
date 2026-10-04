@@ -152,18 +152,24 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 
 #### Universos
 
-- criar o conceito de universo;
-- implementar S&P 500;
-- implementar NASDAQ 100;
-- implementar Euronext 100;
+- validar S&P 500 e NASDAQ 100 contra dados reais;
+- implementar Euronext 100 com mapeamento correto para símbolos Yahoo por bolsa;
 - só depois acrescentar outros universos do legacy;
+- integrar seleção de universos na interface;
+- evitar que um carregamento de universo dispare pedidos de preço para centenas de ativos sem controlo;
+- preparar cache dos constituintes dos universos;
 - eliminar qualquer risco de duplicação de lógica entre domínio e UI.
 
 #### Watchlist
 
-- criar modelo de domínio;
-- definir estados iniciais;
-- criar persistência depois de `Instrument` estar estabilizado.
+- permitir remover ativos;
+- permitir alterar o estado entre ideia, em análise, candidato, rejeitado e em revisão;
+- apresentar nome/mercado/moeda quando conhecidos;
+- adicionar ativos a partir de um universo;
+- criar persistência SQLite;
+- restaurar a watchlist no arranque;
+- evitar bloqueio da interface durante pedidos de rede;
+- tratar erros de preço de forma visível mas não intrusiva.
 
 #### Cache
 
