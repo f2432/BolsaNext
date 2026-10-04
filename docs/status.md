@@ -6,11 +6,11 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 ## Estado global
 
-Versão de trabalho atual: **V0.1 — Fundação**
+Versão de trabalho atual: **V0.2 — Market Data**
 
-Estado: **implementada como base inicial; falta validação local completa antes de a considerar fechada**.
+Estado da V0.1: **implementada; GitHub Actions confirmado com sucesso; falta apenas validação local completa da instalação e interface em Windows**.
 
-Próxima versão de desenvolvimento: **V0.2 — Market Data**.
+Estado da V0.2: **iniciada**.
 
 ## Já implementado
 
@@ -115,26 +115,62 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 - verificar o comportamento inicial em Windows;
 - corrigir qualquer problema de empacotamento, paths ou Qt encontrado nessa validação.
 
-## Próxima fase — V0.2 Market Data
+## V0.2 — Market Data
 
-### Domínio
+### Já implementado nesta fase
 
-- criar entidade `Instrument`;
-- definir identidade e normalização de ticker;
-- definir mercado, moeda e tipo de instrumento;
-- criar testes unitários do domínio.
+- entidade de domínio `Instrument`;
+- enum `AssetType` com stock, ETF, index e other;
+- normalização de ticker, mercado e moeda;
+- validação básica de ticker e código de moeda;
+- contrato `MarketDataProvider`;
+- adapter `YFinanceMarketDataProvider`;
+- obtenção de histórico OHLCV via `yfinance`;
+- obtenção de preço atual com `fast_info` e fallback para histórico intradiário;
+- `MarketService` na camada Application;
+- validação de intervalos de datas no serviço;
+- normalização de `DatetimeIndex`;
+- conversão de timestamps com timezone para UTC timezone-naive;
+- ordenação cronológica;
+- remoção de datas duplicadas;
+- colunas canónicas `Open`, `High`, `Low`, `Close`, `Adj Close`, `Volume`;
+- política inicial explícita `auto_adjust=False`, preservando OHLC não ajustado e `Adj Close` separadamente;
+- testes de `Instrument`;
+- testes do `MarketService` com provider falso;
+- teste da normalização do provider Yahoo sem depender da rede.
 
-### Infraestrutura de mercado
+### Falta nesta fase
 
-- criar interface/contrato de market data;
-- implementar adapter `yfinance`;
-- obter histórico OHLCV;
-- obter preço atual;
-- normalizar colunas e índices;
-- definir timezone e política de datas;
-- definir política de adjusted/unadjusted prices;
-- tratar erros e dados em falta;
-- criar testes sem depender permanentemente da rede.
+#### Dados de mercado
+
+- validar a nova implementação no GitHub Actions após os commits V0.2;
+- fazer um teste manual real com um ticker conhecido;
+- decidir e documentar comportamento quando o Yahoo não fornece `Adj Close`;
+- confirmar tratamento de intervalos intradiários e timezone em casos reais;
+- acrescentar erros de domínio/infraestrutura mais específicos em vez de depender apenas de exceções genéricas;
+- definir política de retries e timeouts quando necessário.
+
+#### Universos
+
+- criar o conceito de universo;
+- implementar S&P 500;
+- implementar NASDAQ 100;
+- implementar Euronext 100;
+- só depois acrescentar outros universos do legacy;
+- eliminar qualquer risco de duplicação de lógica entre domínio e UI.
+
+#### Watchlist
+
+- criar modelo de domínio;
+- definir estados iniciais;
+- criar persistência depois de `Instrument` estar estabilizado.
+
+#### Cache
+
+- desenhar cache local controlada;
+- guardar metadados de origem e instante de recolha;
+- definir política de expiração;
+- manter cache fora do Git.
 
 ### Universos
 
