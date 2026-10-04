@@ -37,3 +37,40 @@ def test_find_constituents_table_ignores_unrelated_tables() -> None:
     )
 
     assert result.equals(expected)
+
+
+def test_read_tables_uses_explicit_user_agent(monkeypatch) -> None:
+    html = """
+    <table>
+      <tr><th>Symbol</th><th>Security</th></tr>
+      <tr><td>AAPL</td><td>Apple Inc.</td></tr>
+    </table>
+    """
+
+    captured = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return html.encode("utf-8")
+
+    def fake_urlopen(request, timeout):
+        captured["user_agent"] = request.get_header("User-agent")
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.wikipedia_universe_provider.urlopen",
+        fake_urlopen,
+    )
+
+    tables = WikipediaUniverseProvider._read_tables("https://example.test")
+
+    assert captured["user_agent"] == WikipediaUniverseProvider._USER_AGENT
+    assert captured["timeout"] == 20
+    assert tables[0].iloc[0]["Symbol"] == "AAPL"
