@@ -8,7 +8,7 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
-A **V0.1 — Fundação está implementada e aguarda validação local final**. A próxima fase é a **V0.2 — Market Data**. O estado canónico detalhado encontra-se em `docs/status.md`.
+A **V0.1 — Fundação está concluída e validada**. A **V0.2 — Market Data está em desenvolvimento**, já com dados Yahoo, S&P 500, NASDAQ 100 e uma primeira Watchlist funcional. O estado canónico detalhado encontra-se em `docs/status.md`.
 
 A versão anterior provou vários conceitos, incluindo:
 
