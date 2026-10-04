@@ -8,7 +8,7 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 Versão de trabalho atual: **V0.2 — Market Data**
 
-Estado da V0.1: **implementada; GitHub Actions confirmado com sucesso; falta apenas validação local completa da instalação e interface em Windows**.
+Estado da V0.1: **CONCLUÍDA E VALIDADA localmente em Windows e no GitHub Actions**.
 
 Estado da V0.2: **iniciada**.
 
