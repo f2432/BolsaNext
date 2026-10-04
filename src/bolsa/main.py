@@ -5,11 +5,14 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
-from bolsa.app.services import MarketService, WatchlistService
+from bolsa.app.services import MarketService, UniverseService, WatchlistService
 from bolsa.config import load_config
 from bolsa.domain.watchlist import Watchlist
 from bolsa.infrastructure.database import create_database_engine, initialize_database
-from bolsa.infrastructure.market_data import YFinanceMarketDataProvider
+from bolsa.infrastructure.market_data import (
+    WikipediaUniverseProvider,
+    YFinanceMarketDataProvider,
+)
 from bolsa.logging_config import configure_logging
 from bolsa.ui.main_window import MainWindow
 
@@ -24,6 +27,7 @@ def main() -> int:
     initialize_database(engine)
 
     market_service = MarketService(YFinanceMarketDataProvider())
+    universe_service = UniverseService(WikipediaUniverseProvider())
     watchlist_service = WatchlistService(
         Watchlist("Principal"),
         market_service,
@@ -35,6 +39,7 @@ def main() -> int:
     window = MainWindow(
         config.app_name,
         watchlist_service=watchlist_service,
+        universe_service=universe_service,
     )
     window.show()
 
