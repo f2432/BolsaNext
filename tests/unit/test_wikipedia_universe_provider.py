@@ -74,3 +74,11 @@ def test_read_tables_uses_explicit_user_agent(monkeypatch) -> None:
     assert captured["user_agent"] == WikipediaUniverseProvider._USER_AGENT
     assert captured["timeout"] == 20
     assert tables[0].iloc[0]["Symbol"] == "AAPL"
+
+
+def test_nasdaq_source_uses_constituents_page() -> None:
+    source = WikipediaUniverseProvider._SOURCES["nasdaq100"]
+
+    assert source["url"].endswith("List_of_NASDAQ-100_companies")
+    assert source["symbol_columns"] == ("Ticker", "Symbol")
+    assert source["name_columns"] == ("Company", "Security")
