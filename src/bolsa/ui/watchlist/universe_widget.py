@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -24,6 +24,8 @@ _UNIVERSE_LABELS = {
 
 
 class UniverseWidget(QWidget):
+    instrument_added = Signal(str)
+
     def __init__(
         self,
         universe_service: UniverseService,
@@ -121,6 +123,7 @@ class UniverseWidget(QWidget):
             QMessageBox.warning(self, "Watchlist", str(exc))
             return
 
+        self.instrument_added.emit(ticker)
         QMessageBox.information(
             self,
             "Watchlist",
