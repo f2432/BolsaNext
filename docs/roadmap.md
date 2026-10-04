@@ -46,6 +46,8 @@ Implementado até ao momento:
 - timezone e datas;
 - domínio e provider de universos;
 - S&P 500 e NASDAQ 100;
+- integração dos universos na interface;
+- seleção de instrumento de um universo e adição à Watchlist;
 - domínio e serviço de watchlist;
 - primeira interface funcional da watchlist;
 - testes de domínio e infraestrutura.
@@ -53,7 +55,6 @@ Implementado até ao momento:
 Ainda falta:
 
 - Euronext 100;
-- integração dos universos na UI;
 - persistência SQLite da watchlist;
 - edição dos estados da watchlist;
 - cache local controlada;
