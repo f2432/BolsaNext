@@ -37,7 +37,7 @@ class WikipediaUniverseProvider:
         },
         "nasdaq100": {
             "name": "NASDAQ 100",
-            "url": "https://en.wikipedia.org/wiki/Nasdaq-100",
+            "url": "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
             "symbol_columns": ("Ticker", "Symbol"),
             "name_columns": ("Company", "Security"),
             "market": "NASDAQ",
