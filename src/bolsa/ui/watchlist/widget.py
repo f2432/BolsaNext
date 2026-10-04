@@ -74,6 +74,9 @@ class WatchlistWidget(QWidget):
         self._ticker_input.clear()
         self._refresh_table()
 
+    def refresh(self, *, refresh_prices: bool = False) -> None:
+        self._refresh_table(refresh_prices=refresh_prices)
+
     def _refresh_table(self, *, refresh_prices: bool = False) -> None:
         rows = self._service.rows(refresh_prices=refresh_prices)
         self._table.setRowCount(len(rows))
