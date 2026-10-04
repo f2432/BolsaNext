@@ -9,8 +9,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.ui.watchlist import WatchlistWidget
+from bolsa.ui.watchlist import UniverseWidget, WatchlistWidget
 
 
 class MainWindow(QMainWindow):
@@ -18,6 +19,7 @@ class MainWindow(QMainWindow):
         self,
         app_name: str = "BolsaNext",
         watchlist_service: WatchlistService | None = None,
+        universe_service: UniverseService | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(app_name)
@@ -29,7 +31,14 @@ class MainWindow(QMainWindow):
         if watchlist_service is None:
             tabs.addTab(self._placeholder("Watchlist"), "Watchlist")
         else:
-            tabs.addTab(WatchlistWidget(watchlist_service), "Watchlist")
+            watchlist_area = QTabWidget()
+            watchlist_area.addTab(WatchlistWidget(watchlist_service), "A minha Watchlist")
+            if universe_service is not None:
+                watchlist_area.addTab(
+                    UniverseWidget(universe_service, watchlist_service),
+                    "Universos",
+                )
+            tabs.addTab(watchlist_area, "Watchlist")
 
         tabs.addTab(self._placeholder("Carteira"), "Carteira")
         tabs.addTab(self._placeholder("Análise"), "Análise")
