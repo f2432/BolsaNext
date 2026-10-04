@@ -1,3 +1,4 @@
+from .universe_widget import UniverseWidget
 from .widget import WatchlistWidget
 
-__all__ = ["WatchlistWidget"]
+__all__ = ["UniverseWidget", "WatchlistWidget"]
