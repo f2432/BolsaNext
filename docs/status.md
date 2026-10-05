@@ -10,9 +10,9 @@ Versão de trabalho atual: **V0.2 — Market Data**
 
 Estado da V0.1: **CONCLUÍDA E VALIDADA** localmente em Windows e no GitHub Actions.
 
-Estado da V0.2: **FECHO TÉCNICO CONCLUÍDO NA DEV; aguarda validação local final antes de ser considerada concluída e antes de qualquer passagem para main**.
+Estado da V0.2: **CONCLUÍDA E VALIDADA LOCALMENTE**.
 
-Próximo objetivo: fechar os últimos detalhes da V0.2 e preparar a passagem para a V0.3 — Portfolio.
+Próximo objetivo: iniciar a V0.3 — Portfolio.
 
 ## V0.1 — Fundação concluída
 
@@ -211,17 +211,20 @@ A origem da verdade para a Watchlist é a base local SQLite.
 - cache de histórico fica para V0.4 Analysis;
 - GitHub Actions passa a executar testes também em pushes para `dev`.
 
-## Validação final necessária para fechar a V0.2
+## Validação final da V0.2 concluída
 
-No Windows, através de `dev` e `run.ps1`:
+Validação local concluída em Windows através de `dev` e `run.ps1`.
 
-- confirmar que os testes passam;
-- adicionar um ticker válido manualmente e confirmar nome, mercado e moeda;
-- tentar um ticker sintaticamente inválido e confirmar mensagem clara;
-- tentar um ticker inexistente e confirmar que não é adicionado;
-- atualizar preços e confirmar que a interface continua utilizável;
-- confirmar que S&P 500, NASDAQ 100 e Euronext 100 continuam funcionais;
-- confirmar persistência da Watchlist, estados e larguras das colunas.
+Foram confirmados:
+
+- testes locais sem falhas;
+- adição manual de tickers válidos com metadados;
+- rejeição de tickers sintaticamente inválidos;
+- rejeição de tickers inexistentes sem os adicionar à Watchlist;
+- atualização de preços sem bloquear a interface;
+- funcionamento de S&P 500, NASDAQ 100 e Euronext 100;
+- persistência da Watchlist e dos estados;
+- persistência das larguras das colunas.
 
 A comparação periódica da composição do Euronext 100 com a fonte oficial passa a ser manutenção e não bloqueia o fecho da V0.2.
 
