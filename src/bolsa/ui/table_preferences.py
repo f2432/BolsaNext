@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import QByteArray, QSettings
-from PySide6.QtWidgets import QTableWidget
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QTableWidget
 
 
 _ORGANIZATION = "BolsaNext"
 _APPLICATION = "BolsaNext"
 
 
-def restore_table_header(table: QTableWidget, key: str) -> None:
+def restore_table_header(table: "QTableWidget", key: str) -> None:
     """Restaura larguras e restante estado do cabeçalho da tabela."""
     settings = QSettings(_ORGANIZATION, _APPLICATION)
     value = settings.value(_settings_key(key))
@@ -17,7 +21,7 @@ def restore_table_header(table: QTableWidget, key: str) -> None:
         table.horizontalHeader().restoreState(value)
 
 
-def enable_table_header_persistence(table: QTableWidget, key: str) -> None:
+def enable_table_header_persistence(table: "QTableWidget", key: str) -> None:
     """Restaura o cabeçalho e passa a guardar alterações futuras."""
     restore_table_header(table, key)
 
