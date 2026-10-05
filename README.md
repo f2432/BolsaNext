@@ -8,7 +8,7 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
-A **V0.1 — Fundação** e a **V0.2 — Market Data** estão concluídas e validadas. O trabalho seguinte é a **V0.3 — Portfolio**. O estado canónico detalhado encontra-se em `docs/status.md`.
+A **V0.1 — Fundação** está concluída. A **V0.2 — Market Data** foi funcionalmente concluída e integrada, mas está agora num ciclo final de estabilização e saneamento antes da V0.3. A **V0.3 — Portfolio ainda não foi iniciada**. O estado canónico encontra-se em `docs/status.md` e o plano sequencial do ciclo atual em `docs/stabilization-v0.2.md`.
 
 A versão anterior provou vários conceitos, incluindo:
 
@@ -118,6 +118,7 @@ Os ficheiros de referência do projeto são:
 
 - `README.md`: identidade, objetivo, princípios e entrada principal;
 - `docs/status.md`: estado efetivo atual, trabalho concluído e próximo trabalho;
+- `docs/stabilization-v0.2.md`: plano sequencial, decisões, rastreabilidade e preservação integral do ciclo atual de estabilização;
 - `docs/roadmap.md`: sequência de versões e funcionalidades previstas;
 - `docs/architecture.md`: arquitetura, limites entre camadas e modelo de dados previsto;
 - `docs/ai-roadmap.md`: plano específico de IA e Planeamento IA;
