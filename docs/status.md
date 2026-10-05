@@ -110,6 +110,24 @@ Decisão vigente:
 
 Próximo passo: **B1 — Ports e direção das dependências**.
 
+### B1 — ports e direção das dependências
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementado no commit `0f680d36a836c8add5893db0c65d6d3f32fab865`:
+
+- contratos movidos para `src/bolsa/app/ports/`;
+- services da Application deixaram de importar Infrastructure;
+- erros de Market Data passaram a ser canónicos em `app/ports/errors.py`;
+- `WatchlistRepository` passou para `app/ports/repositories.py`;
+- caminhos antigos de provider/universe/errors mantidos como reexports de compatibilidade;
+- criado teste arquitetural que impede regressão `Application → Infrastructure`;
+- arquitetura canónica atualizada.
+
+GitHub Actions: **40 testes passaram**. O 40.º teste é a nova proteção arquitetural.
+
+Falta apenas validação local antes de fechar B1. Próximo bloco depois disso: **B2 — erros externos**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação

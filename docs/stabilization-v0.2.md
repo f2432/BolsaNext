@@ -237,7 +237,40 @@ D3 fica fechado. Próximo passo: **B1 — Ports e direção das dependências**.
 
 ### B1 — Ports e direção das dependências
 
-Corrigir Application → Infrastructure, localizar contratos/ports e erros no nível apropriado, preservando comportamento.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementação em `dev`: commit `0f680d36a836c8add5893db0c65d6d3f32fab865` — `refactor: move application contracts to ports`.
+
+Foi implementado o desenho previamente validado:
+
+- criado `src/bolsa/app/ports/market_data.py` com `MarketDataProvider`;
+- criado `src/bolsa/app/ports/universe.py` com `UniverseProvider`;
+- criado `src/bolsa/app/ports/repositories.py` com `WatchlistRepository`;
+- criado `src/bolsa/app/ports/errors.py` com `MarketDataError`, `InstrumentNotFoundError` e `MarketDataUnavailableError`;
+- criado `src/bolsa/app/ports/__init__.py` como superfície explícita dos contratos;
+- `MarketService`, `UniverseService` e `WatchlistService` deixaram de importar `bolsa.infrastructure`;
+- `WatchlistRepository` saiu de dentro de `watchlist_service.py` e passou para o port de repositories;
+- `YFinanceMarketDataProvider` passa a usar os erros canónicos dos ports;
+- `CachedUniverseProvider` passa a tipar a fonte com o port canónico de universos;
+- os antigos `infrastructure/market_data/provider.py`, `universe_provider.py` e `errors.py` ficam temporariamente como reexports de compatibilidade;
+- criado `tests/unit/test_architecture.py`, que falha se qualquer ficheiro de `src/bolsa/app/` voltar a importar diretamente `bolsa.infrastructure`;
+- `docs/architecture.md` documenta os caminhos reais, a direção das dependências e a compatibilidade transitória.
+
+Resultado automático:
+
+- GitHub Actions na `dev`: **SUCCESS**;
+- suite automática após B1: **40 passed in 1.59s**;
+- baseline anterior: 39 testes; o teste adicional é a proteção arquitetural;
+- nenhuma asserção funcional anterior foi alterada;
+- B1 não alterou comportamento de negócio, UI, Market Data ou persistência.
+
+Falta para fechar B1 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local com a `dev`;
+- correr a suite local;
+- confirmar que a aplicação continua a abrir normalmente.
+
+Depois da validação local, o próximo passo é **B2 — Taxonomia e comportamento dos erros externos**.
 
 ### B2 — Taxonomia e comportamento dos erros externos
 
