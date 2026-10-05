@@ -1,6 +1,11 @@
 import pandas as pd
+import pytest
 
 from bolsa.domain.instruments import AssetType, Instrument
+from bolsa.infrastructure.market_data import (
+    InstrumentNotFoundError,
+    MarketDataUnavailableError,
+)
 from bolsa.infrastructure.market_data.yfinance_provider import (
     YFinanceMarketDataProvider,
 )
@@ -35,7 +40,38 @@ def test_normalise_history_orders_deduplicates_and_adds_columns() -> None:
         "Adj Close",
         "Volume",
     ]
+    assert result["Adj Close"].isna().all()
     assert float(result.loc[pd.Timestamp("2026-01-02 00:00:00"), "Close"]) == 11.0
+
+
+def test_normalise_history_converts_timezone_to_utc_naive() -> None:
+    data = pd.DataFrame(
+        {"Close": [100.0]},
+        index=pd.DatetimeIndex(["2026-01-02 09:30"], tz="America/New_York"),
+    )
+
+    result = YFinanceMarketDataProvider._normalise_history(data, "TEST")
+
+    assert result.index.tz is None
+    assert result.index[0] == pd.Timestamp("2026-01-02 14:30:00")
+
+
+def test_normalise_empty_history_keeps_canonical_schema() -> None:
+    result = YFinanceMarketDataProvider._normalise_history(
+        pd.DataFrame(),
+        "TEST",
+    )
+
+    assert result.empty
+    assert result.index.name == "Date"
+    assert list(result.columns) == [
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Adj Close",
+        "Volume",
+    ]
 
 
 def test_get_instrument_details_maps_yahoo_metadata(monkeypatch) -> None:
@@ -61,3 +97,50 @@ def test_get_instrument_details_maps_yahoo_metadata(monkeypatch) -> None:
     assert result.market == "NASDAQGS"
     assert result.currency == "USD"
     assert result.asset_type is AssetType.STOCK
+
+
+def test_get_instrument_details_rejects_unknown_ticker(monkeypatch) -> None:
+    class FakeTicker:
+        def get_info(self):
+            return {}
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(InstrumentNotFoundError, match="INVALID"):
+        YFinanceMarketDataProvider().get_instrument_details(
+            Instrument("INVALID")
+        )
+
+
+def test_get_instrument_details_distinguishes_provider_failure(monkeypatch) -> None:
+    class FakeTicker:
+        def get_info(self):
+            raise ConnectionError("offline")
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(MarketDataUnavailableError, match="Tenta novamente"):
+        YFinanceMarketDataProvider().get_instrument_details(
+            Instrument("AAPL")
+        )
+
+
+def test_get_historical_data_wraps_provider_failure(monkeypatch) -> None:
+    def fail_download(**_kwargs):
+        raise ConnectionError("offline")
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.download",
+        fail_download,
+    )
+
+    with pytest.raises(MarketDataUnavailableError, match="histórico"):
+        YFinanceMarketDataProvider().get_historical_data(
+            Instrument("AAPL")
+        )
