@@ -49,6 +49,18 @@ A1–A4, restante A5, restante A7 e A8 permanecem preservados para a futura espe
 
 Ver detalhes, correções ao plano original e rastreabilidade completa em `docs/stabilization-v0.2.md`.
 
+### Baseline S0 do ciclo atual
+
+Medições já confirmadas:
+
+- 39 testes locais passaram;
+- cobertura global: 55%;
+- execução local observada em Windows com Python 3.14.5;
+- CI remoto da `dev` passou em Python 3.12;
+- foi detetado um `ResourceWarning` por ligação SQLite não fechada num teste de integração da Watchlist; fica registado para correção no saneamento de persistência/B4.
+
+Falta apenas confirmar visualmente o `git status --short` local e o SHA local para fechar formalmente S0.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
