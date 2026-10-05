@@ -118,6 +118,26 @@ Antes de código:
 
 Se falhar, parar.
 
+#### Registo de execução S0 — 2026-10-05
+
+Estado atual: **PARCIALMENTE CONCLUÍDO — falta apenas confirmação visível do `git status --short` e do SHA local**.
+
+Resultados confirmados:
+
+- branch remota de trabalho: `dev`;
+- SHA remoto de referência no arranque deste baseline: `d3796d76adfc0678cfcda6f8268a8dd5178a78e0`;
+- `main` permanece em `d4bbe1113704754f0cb8fe8972d07957aa173ffb` e não foi alterada neste ciclo;
+- CI GitHub Actions sobre a `dev`: sucesso;
+- suite local Windows: **39 testes passaram**;
+- cobertura global local: **55%**;
+- total medido: 957 statements, 429 não cobertos;
+- ambiente local observado no relatório de cobertura: Windows, Python **3.14.5**;
+- CI remoto continua em Python 3.12, pelo que o ciclo passa a ter duas referências reais de runtime: Python 3.12 em CI e Python 3.14.5 no PC local;
+- foi observado um `ResourceWarning` relacionado com uma ligação SQLite não fechada durante `tests/integration/test_watchlist_repository.py::test_watchlist_persists_and_reloads`;
+- esse warning não fez falhar a suite, mas fica registado como problema real de baseline e deve ser tratado no saneamento de persistência, em particular B4, sem ser perdido por omissão.
+
+O valor de 55% passa a ser o baseline oficial de cobertura deste ciclo. Os 39 testes passam a ser o baseline inicial de contagem, não um número fixo.
+
 ### D1 — A6 completa
 
 Fechar sem código a semântica de `market` e proveniência/prioridade dos metadados.
