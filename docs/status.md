@@ -152,12 +152,10 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 
 #### Universos
 
-- validar S&P 500 e NASDAQ 100 contra dados reais;
-- implementar Euronext 100 com mapeamento correto para símbolos Yahoo por bolsa;
+- validar localmente o Euronext 100 em Windows;
+- comparar periodicamente a composição obtida com a fonte oficial Euronext;
 - só depois acrescentar outros universos do legacy;
-- integrar seleção de universos na interface;
 - evitar que um carregamento de universo dispare pedidos de preço para centenas de ativos sem controlo;
-- preparar cache dos constituintes dos universos;
 - eliminar qualquer risco de duplicação de lógica entre domínio e UI.
 
 #### Watchlist
@@ -170,10 +168,10 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 
 #### Cache
 
-- desenhar cache local controlada;
-- guardar metadados de origem e instante de recolha;
-- definir política de expiração;
-- manter cache fora do Git.
+- cache de universos já implementada;
+- acrescentar cache de histórico de mercado quando a área Analysis começar a consumir séries repetidamente;
+- manter cache fora do Git;
+- rever TTL por tipo de dado quando existirem mais fontes.
 
 ### Universos
 
