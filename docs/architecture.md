@@ -475,3 +475,86 @@ B1 concluído e validado em 2026-10-05:
 - validação local Windows: 40 testes passaram;
 - aplicação iniciou corretamente após a refatoração;
 - a fronteira `Application → Infrastructure` fica protegida por teste arquitetural.
+
+
+## Política unificada de erros externos
+
+Decisão e implementação B2 do ciclo de estabilização V0.2.
+
+Esta secção expande e, onde necessário, substitui a política anterior limitada a Market Data, preservando-a como histórico da evolução.
+
+### Hierarquia
+
+```text
+ExternalDataError
+├── MarketDataError
+│   ├── InstrumentNotFoundError
+│   ├── MarketDataUnavailableError
+│   ├── CurrentPriceUnavailableError
+│   └── MarketDataFormatError
+└── UniverseError
+    ├── UnsupportedUniverseError
+    ├── UniverseSourceUnavailableError
+    └── UniverseFormatError
+```
+
+Universos e cotações são ambos dados externos, mas pertencem a famílias paralelas.
+
+### Preço atual
+
+O contrato canónico é:
+
+```python
+get_current_price(instrument) -> float
+```
+
+Em falha previsível, o provider levanta uma exceção tipada.
+
+- ticker não reconhecido → `InstrumentNotFoundError`;
+- fornecedor/rede indisponível → `MarketDataUnavailableError`;
+- instrumento válido sem cotação utilizável → `CurrentPriceUnavailableError`;
+- resposta estruturalmente inesperada → `MarketDataFormatError`.
+
+`None` deixa de representar silenciosamente todas estas situações.
+
+Histórico vazio continua deliberadamente válido e devolve o schema OHLCV canónico vazio.
+
+### Universos
+
+A Application recebe `UniverseLoadResult`, que transporta o `Universe` e a origem/frescura:
+
+- `LIVE` — obtido da fonte;
+- `FRESH_CACHE` — cache dentro do TTL normal;
+- `STALE_CACHE` — cache expirada usada em modo degradado.
+
+A fonte Wikipedia não deixa escapar exceções previsíveis de urllib/pandas:
+
+- código não suportado → `UnsupportedUniverseError`;
+- rede/timeout/HTTP → `UniverseSourceUnavailableError`;
+- estrutura da página/tabela inválida → `UniverseFormatError`.
+
+### Fallback stale
+
+A cache normal mantém TTL de 24 horas.
+
+Se a cache expirou e a fonte falha por indisponibilidade ou formato, pode ser usada cache com idade máxima de **7 dias**.
+
+Esse fallback:
+
+- é explícito;
+- inclui timestamp da cache;
+- inclui aviso do motivo;
+- nunca se aplica a universo não suportado;
+- não transforma dados antigos em dados aparentemente frescos.
+
+Depois de 7 dias, a falha da fonte volta a ser apresentada e a cache não é utilizada.
+
+### UI e serviços
+
+A UI não interpreta exceções internas de providers.
+
+A Watchlist trata falhas de preço por instrumento, preserva as restantes linhas e apresenta avisos com o motivo.
+
+A UI de universos mostra se os dados vieram de cache fresca ou stale e, neste último caso, apresenta o aviso associado.
+
+Testes dos caminhos de erro usam providers/fontes simulados; o CI não depende de Yahoo ou Wikipedia reais.
