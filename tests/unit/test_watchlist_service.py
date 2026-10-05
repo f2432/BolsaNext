@@ -1,10 +1,13 @@
 import pytest
 
+from bolsa.app.ports.errors import (
+    CurrentPriceUnavailableError,
+    InstrumentNotFoundError,
+)
 from bolsa.app.services import MarketService
 from bolsa.app.services.watchlist_service import WatchlistService
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
-from bolsa.infrastructure.market_data import InstrumentNotFoundError
 
 
 class FakeProvider:
@@ -28,6 +31,11 @@ class MissingInstrumentProvider(FakeProvider):
         raise InstrumentNotFoundError(instrument.ticker)
 
 
+class MissingPriceProvider(FakeProvider):
+    def get_current_price(self, instrument):
+        raise CurrentPriceUnavailableError(instrument.ticker)
+
+
 def test_watchlist_service_can_refresh_prices() -> None:
     service = WatchlistService(
         Watchlist("Principal"),
@@ -40,6 +48,23 @@ def test_watchlist_service_can_refresh_prices() -> None:
     assert len(rows) == 1
     assert rows[0].ticker == "AAPL"
     assert rows[0].price == 123.45
+    assert service.price_warnings == ()
+
+
+def test_watchlist_service_keeps_rows_when_one_price_fails() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(MissingPriceProvider()),
+    )
+    service.add_ticker("aapl")
+
+    rows = service.rows(refresh_prices=True)
+
+    assert len(rows) == 1
+    assert rows[0].ticker == "AAPL"
+    assert rows[0].price is None
+    assert len(service.price_warnings) == 1
+    assert "cotação atual" in service.price_warnings[0]
 
 
 def test_watchlist_service_enriches_manual_ticker() -> None:
