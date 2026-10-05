@@ -62,7 +62,6 @@ Implementado até ao momento:
 
 Ainda falta:
 
-- validação local final das preferências de largura das tabelas;
 - rever tickers inválidos e mensagens de erro;
 - confirmar casos especiais de dados de mercado;
 - decidir se múltiplas watchlists entram nesta versão;
