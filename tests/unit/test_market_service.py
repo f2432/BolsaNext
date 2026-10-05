@@ -25,6 +25,14 @@ class FakeProvider:
     def get_current_price(self, instrument):
         return 123.45
 
+    def get_instrument_details(self, instrument):
+        return Instrument(
+            ticker=instrument.ticker,
+            name="Apple Inc.",
+            market="NASDAQ",
+            currency="USD",
+        )
+
 
 def test_market_service_delegates_to_provider() -> None:
     service = MarketService(FakeProvider())
@@ -32,9 +40,13 @@ def test_market_service_delegates_to_provider() -> None:
 
     history = service.history(instrument)
     price = service.current_price(instrument)
+    details = service.instrument_details(instrument)
 
     assert float(history["Close"].iloc[0]) == 100.0
     assert price == 123.45
+    assert details.name == "Apple Inc."
+    assert details.market == "NASDAQ"
+    assert details.currency == "USD"
 
 
 def test_market_service_rejects_invalid_date_range() -> None:
