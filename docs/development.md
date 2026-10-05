@@ -139,3 +139,15 @@ Exemplo para apenas testar e arrancar sem fazer `git pull` nem reinstalar depend
 ```powershell
 .\run.ps1 -SkipPull -SkipInstall
 ```
+
+
+## Fluxo com branches
+
+O desenvolvimento corrente usa duas branches:
+
+- `main`: versão validada;
+- `dev`: trabalho em curso e versões para teste local.
+
+O script `run.ps1` garante que os testes locais são feitos sobre `dev`. Se for executado estando noutra branch, tenta mudar automaticamente para `dev`.
+
+A `main` só deve ser atualizada depois de validação explícita. A integração de um bloco validado deve ser feita por squash, para que várias alterações intermédias de `dev` resultem num único commit coerente em `main`.
