@@ -33,7 +33,7 @@ Validação concluída:
 
 ## V0.2 — Market Data
 
-**Estado: EM DESENVOLVIMENTO.**
+**Estado: FECHO TÉCNICO CONCLUÍDO NA DEV; AGUARDA VALIDAÇÃO LOCAL FINAL.**
 
 Implementado até ao momento:
 
@@ -60,14 +60,19 @@ Implementado até ao momento:
 - persistência das preferências de largura das tabelas;
 - testes de domínio e infraestrutura.
 
-Ainda falta:
+Fecho técnico concluído:
 
-- rever tickers inválidos e mensagens de erro;
-- confirmar casos especiais de dados de mercado;
-- decidir se múltiplas watchlists entram nesta versão;
-- validação final da V0.2.
+- validação sintática e de existência de tickers;
+- erros próprios para ticker inexistente e fornecedor indisponível;
+- mensagens de erro melhoradas;
+- casos de histórico vazio, `Adj Close` em falta e timezone cobertos por testes;
+- decisão explícita de não fazer retries automáticos na V0.2;
+- múltiplas Watchlists adiadas para uma fase posterior;
+- edição de notas remetida para Research;
+- cache de histórico remetida para V0.4 Analysis;
+- CI executado também sobre pushes para `dev`.
 
-O cache de histórico de mercado fica para quando a área Analysis começar a reutilizar séries temporais com frequência.
+Falta apenas a validação local final da V0.2 antes da sua conclusão e eventual squash para `main`.
 
 ## V0.3 — Portfolio
 
