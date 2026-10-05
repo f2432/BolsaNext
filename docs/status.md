@@ -190,7 +190,8 @@ A origem da verdade para a Watchlist é a base local SQLite.
 - carregamento assíncrono dos universos;
 - atualização assíncrona de preços;
 - enriquecimento automático de metadados;
-- cache de universos.
+- cache de universos;
+- persistência das larguras das colunas validada localmente na Watchlist e nos Universos.
 
 ## Falta para fechar a V0.2
 
@@ -210,7 +211,6 @@ A origem da verdade para a Watchlist é a base local SQLite.
 
 ### Watchlist
 
-- testar localmente a persistência das larguras das colunas;
 - melhorar edição de notas;
 - decidir se múltiplas watchlists entram ainda na V0.2 ou ficam para uma versão posterior;
 - melhorar mensagens de erro de preço e metadados.
