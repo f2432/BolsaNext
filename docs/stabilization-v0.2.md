@@ -173,7 +173,51 @@ D1 fica fechado. Próximo passo: **D2 — A7.1: política de backup antes de mov
 
 ### D2 — A7.1
 
-Fechar sem código backup/restauro antes de movimentos e migrações da base.
+Estado: **DECIDIDO E DOCUMENTADO** em 2026-10-05.
+
+Decisão canónica de backup/restauro para o ciclo V0.2:
+
+1. A base SQLite é considerada dado persistente que nunca pode ser substituído, movido ou migrado sem existir primeiro uma cópia recuperável.
+2. É obrigatório criar backup antes de qualquer migração de schema. Se o backup falhar, a migração não começa.
+3. É obrigatório criar backup antes da mudança de localização da base. A base de origem não é apagada nem substituída durante a transição.
+4. Nenhum movimento/migração de base é feito sem tornar explícitos ao utilizador a origem, o destino e o caminho do backup.
+5. Backups nunca entram no Git e devem ficar fora do repositório ou em localização explicitamente ignorada.
+6. Backups são imutáveis e nunca são sobrescritos. O nome inclui timestamp e, quando útil, o motivo, por exemplo `bolsanext_before_migration_YYYYMMDD_HHMMSS.sqlite3`.
+7. A implementação deverá preferir a **SQLite Backup API** em vez de cópia cega do ficheiro, para obter snapshot consistente mesmo perante futuras utilizações de WAL ou ligações abertas.
+8. Depois de criado, o backup tem de ser validado: existência, tamanho não nulo, abertura SQLite e `PRAGMA quick_check` com resultado `ok`.
+9. Uma migração só é considerada concluída depois de a base migrada ser validada. Em falha, a base original e o backup permanecem preservados.
+10. Restauro é explícito, não automático. A aplicação não escolhe sozinha um backup antigo para substituir a base ativa.
+11. Num restauro, a base problemática também deve ser preservada antes de ser substituída.
+12. Nesta fase não existe rotação automática de backups; backups de migração/movimento são mantidos.
+13. Esta política destina-se a proteger B5/B6 e a V0.2 estabilizada. O sistema geral de backup/export/import da futura carteira continua preservado no restante A7 para a especificação da V0.3.
+
+Fluxo mínimo obrigatório:
+
+```text
+base original
+    ↓
+backup via SQLite Backup API
+    ↓
+validar backup (quick_check)
+    ↓
+movimento/migração
+    ↓
+validar nova base
+    ↓
+continuar
+```
+
+Em falha:
+
+```text
+parar operação
+preservar base original
+preservar backup
+não promover base parcialmente migrada
+apresentar erro
+```
+
+D2 fica fechado. Próximo passo: **D3 — parte atual de A5: significado de `base_currency` na configuração**.
 
 ### D3 — parte atual de A5
 
