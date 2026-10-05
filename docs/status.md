@@ -160,11 +160,10 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 
 #### Watchlist
 
-- apresentar mercado/moeda quando conhecidos;
 - melhorar edição de notas;
 - permitir eventualmente múltiplas watchlists;
-- evitar bloqueio da interface durante pedidos de rede;
-- tratar erros de preço de forma visível mas não intrusiva.
+- tratar erros de preço e metadados de forma visível mas não intrusiva;
+- rever validação de tickers inexistentes ou inválidos.
 
 #### Cache
 
