@@ -221,7 +221,19 @@ D2 fica fechado. Próximo passo: **D3 — parte atual de A5: significado de `bas
 
 ### D3 — parte atual de A5
 
-Fechar sem Portfolio o significado atual de `base_currency` e eventual renomeação para `default_base_currency`.
+Estado: **DECIDIDO E DOCUMENTADO** em 2026-10-05.
+
+Decisão canónica:
+
+1. O campo atual `AppConfig.base_currency` não representa uma autoridade financeira global da aplicação.
+2. O significado correto é **moeda base por omissão para futuras entidades/funcionalidades que necessitem de uma moeda inicial**.
+3. O nome preferido passa a ser `default_base_currency`, por ser semanticamente explícito.
+4. A alteração deste valor de configuração no futuro não pode modificar silenciosamente dados persistentes já existentes.
+5. A futura entidade `Portfolio`, quando vier a existir, terá a sua própria moeda base persistida e essa será a autoridade da carteira. Esta regra fica apenas preservada como especificação futura; **não é implementada neste ciclo**.
+6. Não são introduzidos agora cálculos financeiros, conversão cambial, validação de Portfolio ou qualquer outra funcionalidade V0.3.
+7. A implementação da renomeação de configuração pode ser feita durante o saneamento técnico quando for oportuno, preservando compatibilidade onde necessário.
+
+D3 fica fechado. Próximo passo: **B1 — Ports e direção das dependências**.
 
 ### B1 — Ports e direção das dependências
 
