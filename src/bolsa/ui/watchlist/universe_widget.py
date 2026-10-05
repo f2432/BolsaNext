@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
 from bolsa.domain.universes import Universe
+from bolsa.ui.table_preferences import enable_table_header_persistence
 from bolsa.ui.workers import FunctionThread
 
 
@@ -70,6 +71,7 @@ class UniverseWidget(QWidget):
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.horizontalHeader().setStretchLastSection(True)
+        enable_table_header_persistence(self._table, "watchlist/universes")
         layout.addWidget(self._table)
 
     def _load_universe(self) -> None:
