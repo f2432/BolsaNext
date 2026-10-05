@@ -238,13 +238,16 @@ class YFinanceMarketDataProvider:
 
     @staticmethod
     def _normalise_history(data: pd.DataFrame, ticker: str) -> pd.DataFrame:
-        if data is None or data.empty:
+        if data is None:
             return YFinanceMarketDataProvider._empty_history()
 
         if not isinstance(data, pd.DataFrame):
             raise MarketDataFormatError(
                 f"O histórico de {ticker} não tem o formato esperado."
             )
+
+        if data.empty:
+            return YFinanceMarketDataProvider._empty_history()
 
         result = data.copy()
 
