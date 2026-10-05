@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 from bolsa.app.services.watchlist_service import WatchlistRow, WatchlistService
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import WatchlistState
+from bolsa.ui.table_preferences import enable_table_header_persistence
 from bolsa.ui.workers import FunctionThread
 
 
@@ -69,6 +70,7 @@ class WatchlistWidget(QWidget):
             ["Ticker", "Nome", "Mercado", "Moeda", "Estado", "Preço atual", "Ações"]
         )
         self._table.horizontalHeader().setStretchLastSection(True)
+        enable_table_header_persistence(self._table, "watchlist/main")
         layout.addWidget(self._table)
 
         self._refresh_table()
