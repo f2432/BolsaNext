@@ -33,7 +33,9 @@ Validação concluída:
 
 ## V0.2 — Market Data
 
-**Estado: CONCLUÍDA E VALIDADA.**
+**Estado funcional: CONCLUÍDA E INTEGRADA. Em estabilização final antes da V0.3.**
+
+A conclusão funcional de 2026-10-05 permanece registada. Uma revisão posterior abriu um ciclo de hardening e coerência que tem de fechar antes da V0.3.
 
 Implementado até ao momento:
 
@@ -72,11 +74,29 @@ Fecho técnico concluído:
 - cache de histórico remetida para V0.4 Analysis;
 - CI executado também sobre pushes para `dev`.
 
-Validação local concluída. A versão está pronta para integração por squash em `main`.
+A integração funcional da V0.2 em `main` já aconteceu. O trabalho atual é um ciclo adicional de estabilização, descrito em `docs/stabilization-v0.2.md`.
+
+## Gate obrigatório entre V0.2 e V0.3 — Estabilização final
+
+**Estado: EM CURSO.**
+
+Este gate não é uma nova versão funcional. Serve para estabilizar a V0.2 e preparar a base técnica sem iniciar Portfolio.
+
+Abrange:
+
+- decisões V0.2 retiradas da antiga Faixa A: A6 completa, A7.1 e parte atual de A5;
+- B1 a B10;
+- itens avulsos I1 a I5;
+- B11 como fecho definitivo;
+- preservação integral das decisões futuras A1–A4, restante A5, restante A7 e A8.
+
+A V0.3 não pode começar até este gate estar fechado e validado pelo utilizador.
+
+Plano detalhado e matriz de rastreio: `docs/stabilization-v0.2.md`.
 
 ## V0.3 — Portfolio
 
-**Estado: POR INICIAR.**
+**Estado: POR INICIAR E BLOQUEADA PELO GATE DE ESTABILIZAÇÃO V0.2.**
 
 - entidade `Portfolio`;
 - entidade `Transaction`;
