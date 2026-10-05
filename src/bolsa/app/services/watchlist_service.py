@@ -6,6 +6,7 @@ from typing import Protocol
 from bolsa.app.services.market_service import MarketService
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
+from bolsa.infrastructure.market_data.errors import MarketDataError
 
 
 class WatchlistRepository(Protocol):
@@ -36,10 +37,15 @@ class WatchlistService:
         self._watchlist = watchlist
         self._market_service = market_service
         self._repository = repository
+        self._metadata_warnings: tuple[str, ...] = ()
 
     @property
     def name(self) -> str:
         return self._watchlist.name
+
+    @property
+    def metadata_warnings(self) -> tuple[str, ...]:
+        return self._metadata_warnings
 
     def add_ticker(
         self,
@@ -71,6 +77,7 @@ class WatchlistService:
 
     def refresh_metadata(self) -> list[WatchlistRow]:
         changed = False
+        warnings: list[str] = []
 
         for item in self._watchlist.items:
             if (
@@ -80,10 +87,17 @@ class WatchlistService:
             ):
                 continue
 
-            enriched = self._market_service.instrument_details(item.instrument)
+            try:
+                enriched = self._market_service.instrument_details(item.instrument)
+            except MarketDataError as exc:
+                warnings.append(f"{item.instrument.ticker}: {exc}")
+                continue
+
             if enriched != item.instrument:
                 item.instrument = enriched
                 changed = True
+
+        self._metadata_warnings = tuple(warnings)
 
         if changed:
             self._persist()
