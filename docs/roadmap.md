@@ -45,7 +45,7 @@ Implementado até ao momento:
 - política inicial de adjusted/unadjusted prices;
 - timezone e datas;
 - domínio e provider de universos;
-- S&P 500 e NASDAQ 100;
+- S&P 500, NASDAQ 100 e Euronext 100;
 - integração dos universos na interface;
 - seleção de instrumento de um universo e adição à Watchlist;
 - domínio e serviço de watchlist;
@@ -57,14 +57,18 @@ Implementado até ao momento:
 - restauro automático no arranque;
 - edição de estados;
 - remoção de ativos;
+- persistência das preferências de largura das tabelas;
 - testes de domínio e infraestrutura.
 
 Ainda falta:
 
-- Euronext 100;
-- cache histórico de mercado quando necessário;
-- tratamento assíncrono dos pedidos de rede;
+- validação local final das preferências de largura das tabelas;
+- rever tickers inválidos e mensagens de erro;
+- confirmar casos especiais de dados de mercado;
+- decidir se múltiplas watchlists entram nesta versão;
 - validação final da V0.2.
+
+O cache de histórico de mercado fica para quando a área Analysis começar a reutilizar séries temporais com frequência.
 
 ## V0.3 — Portfolio
 
