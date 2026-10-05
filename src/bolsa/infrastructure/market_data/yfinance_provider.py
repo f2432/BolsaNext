@@ -6,11 +6,14 @@ import logging
 import pandas as pd
 import yfinance as yf
 
-from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.app.ports.errors import (
+    CurrentPriceUnavailableError,
     InstrumentNotFoundError,
+    MarketDataError,
+    MarketDataFormatError,
     MarketDataUnavailableError,
 )
+from bolsa.domain.instruments import AssetType, Instrument
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +72,14 @@ class YFinanceMarketDataProvider:
                 "Tenta novamente."
             ) from exc
 
-        return self._normalise_history(data, instrument.ticker)
+        try:
+            return self._normalise_history(data, instrument.ticker)
+        except MarketDataError:
+            raise
+        except Exception as exc:
+            raise MarketDataFormatError(
+                f"O histórico de {instrument.ticker} não tem o formato esperado."
+            ) from exc
 
     def get_instrument_details(self, instrument: Instrument) -> Instrument:
         try:
@@ -81,7 +91,12 @@ class YFinanceMarketDataProvider:
                 "Tenta novamente."
             ) from exc
 
-        if not any(info.get(key) not in (None, "") for key in _METADATA_KEYS):
+        if not isinstance(info, dict):
+            raise MarketDataFormatError(
+                f"Os metadados de {instrument.ticker} não têm o formato esperado."
+            )
+
+        if not self._has_instrument_metadata(info):
             raise InstrumentNotFoundError(instrument.ticker)
 
         name = info.get("longName") or info.get("shortName") or instrument.name
@@ -110,10 +125,10 @@ class YFinanceMarketDataProvider:
             asset_type=asset_type,
         )
 
-    def get_current_price(self, instrument: Instrument) -> float | None:
-        try:
-            ticker = yf.Ticker(instrument.ticker)
+    def get_current_price(self, instrument: Instrument) -> float:
+        ticker = yf.Ticker(instrument.ticker)
 
+        try:
             try:
                 price = ticker.fast_info.get("last_price")
                 if price is not None:
@@ -125,18 +140,78 @@ class YFinanceMarketDataProvider:
                     exc_info=True,
                 )
 
-            history = ticker.history(period="1d", interval="1m", auto_adjust=False)
-            if history is None or history.empty or "Close" not in history.columns:
-                return None
+            try:
+                history = ticker.history(
+                    period="1d",
+                    interval="1m",
+                    auto_adjust=False,
+                )
+            except Exception as exc:
+                raise MarketDataUnavailableError(
+                    f"Não foi possível obter a cotação atual de {instrument.ticker}. "
+                    "Tenta novamente."
+                ) from exc
+
+            if history is None or (
+                isinstance(history, pd.DataFrame) and history.empty
+            ):
+                self._raise_for_missing_current_price(ticker, instrument)
+
+            if not isinstance(history, pd.DataFrame):
+                raise MarketDataFormatError(
+                    f"A cotação atual de {instrument.ticker} não tem o formato esperado."
+                )
+
+            if "Close" not in history.columns:
+                raise MarketDataFormatError(
+                    f"A cotação atual de {instrument.ticker} não contém a coluna Close."
+                )
 
             close = history["Close"].dropna()
             if close.empty:
-                return None
+                self._raise_for_missing_current_price(ticker, instrument)
 
-            return float(close.iloc[-1])
-        except Exception:
-            logger.exception("Erro ao obter preço atual de %s", instrument.ticker)
-            return None
+            try:
+                return float(close.iloc[-1])
+            except (TypeError, ValueError) as exc:
+                raise MarketDataFormatError(
+                    f"A cotação atual de {instrument.ticker} não é numérica."
+                ) from exc
+        except MarketDataError:
+            raise
+        except Exception as exc:
+            logger.exception("Erro inesperado ao obter preço atual de %s", instrument.ticker)
+            raise MarketDataUnavailableError(
+                f"Não foi possível obter a cotação atual de {instrument.ticker}. "
+                "Tenta novamente."
+            ) from exc
+
+    def _raise_for_missing_current_price(
+        self,
+        ticker: object,
+        instrument: Instrument,
+    ) -> None:
+        try:
+            info = ticker.get_info() or {}
+        except Exception as exc:
+            raise MarketDataUnavailableError(
+                f"Não foi possível confirmar o instrumento {instrument.ticker}. "
+                "Tenta novamente."
+            ) from exc
+
+        if not isinstance(info, dict):
+            raise MarketDataFormatError(
+                f"Os metadados de {instrument.ticker} não têm o formato esperado."
+            )
+
+        if not self._has_instrument_metadata(info):
+            raise InstrumentNotFoundError(instrument.ticker)
+
+        raise CurrentPriceUnavailableError(instrument.ticker)
+
+    @staticmethod
+    def _has_instrument_metadata(info: dict[str, object]) -> bool:
+        return any(info.get(key) not in (None, "") for key in _METADATA_KEYS)
 
     @staticmethod
     def _normalise_currency(
@@ -165,6 +240,11 @@ class YFinanceMarketDataProvider:
     def _normalise_history(data: pd.DataFrame, ticker: str) -> pd.DataFrame:
         if data is None or data.empty:
             return YFinanceMarketDataProvider._empty_history()
+
+        if not isinstance(data, pd.DataFrame):
+            raise MarketDataFormatError(
+                f"O histórico de {ticker} não tem o formato esperado."
+            )
 
         result = data.copy()
 
