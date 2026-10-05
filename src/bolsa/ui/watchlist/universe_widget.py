@@ -13,9 +13,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from bolsa.app.ports.universe import UniverseLoadResult, UniverseLoadStatus
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.domain.universes import Universe
 from bolsa.ui.table_preferences import enable_table_header_persistence
 from bolsa.ui.workers import FunctionThread
 
@@ -90,7 +90,8 @@ class UniverseWidget(QWidget):
         self._load_thread = thread
         thread.start()
 
-    def _render_universe(self, universe: Universe) -> None:
+    def _render_universe(self, result: UniverseLoadResult) -> None:
+        universe = result.universe
         self._table.setRowCount(len(universe.instruments))
         for row_index, instrument in enumerate(universe.instruments):
             self._table.setItem(row_index, 0, QTableWidgetItem(instrument.ticker))
@@ -98,9 +99,25 @@ class UniverseWidget(QWidget):
             self._table.setItem(row_index, 2, QTableWidgetItem(instrument.market or ""))
             self._table.setItem(row_index, 3, QTableWidgetItem(instrument.currency or ""))
 
-        self._status.setText(
-            f"{universe.name}: {len(universe.instruments)} instrumentos carregados."
-        )
+        status = f"{universe.name}: {len(universe.instruments)} instrumentos carregados."
+
+        if result.status is UniverseLoadStatus.FRESH_CACHE and result.cached_at is not None:
+            status += (
+                " Cache local de "
+                + result.cached_at.astimezone().strftime("%d/%m/%Y %H:%M")
+                + "."
+            )
+        elif result.status is UniverseLoadStatus.STALE_CACHE:
+            if result.cached_at is not None:
+                status += (
+                    " Dados em cache de "
+                    + result.cached_at.astimezone().strftime("%d/%m/%Y %H:%M")
+                    + "."
+                )
+            if result.warning:
+                status += " " + result.warning
+
+        self._status.setText(status)
 
         if self._table.rowCount() > 0:
             self._table.selectRow(0)
