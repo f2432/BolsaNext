@@ -32,7 +32,7 @@ class MarketService:
             end=end,
         )
 
-    def current_price(self, instrument: Instrument) -> float | None:
+    def current_price(self, instrument: Instrument) -> float:
         return self._provider.get_current_price(instrument)
 
     def instrument_details(self, instrument: Instrument) -> Instrument:
