@@ -127,3 +127,12 @@ Os ficheiros de referência do projeto são:
 - `pyproject.toml`: dependências Python, empacotamento e configuração de testes.
 
 Quando houver conflito, o estado atual é determinado por `docs/status.md`; a arquitetura por `docs/architecture.md`; o plano futuro por `docs/roadmap.md` e `docs/ai-roadmap.md`.
+
+
+## Fluxo de desenvolvimento Git
+
+O desenvolvimento corrente é feito em `dev`. A branch `main` é reservada a estados já validados.
+
+A passagem de `dev` para `main` só é feita após validação explícita e através de squash, para manter um único commit coerente por bloco funcional.
+
+O procedimento detalhado encontra-se em `docs/development.md` e `docs/status.md`.
