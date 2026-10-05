@@ -1,6 +1,6 @@
 from bolsa.app.services import MarketService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.domain.watchlist import Watchlist
+from bolsa.domain.watchlist import Watchlist, WatchlistState
 
 
 class FakeProvider:
@@ -50,13 +50,10 @@ def test_watchlist_service_persists_mutations() -> None:
     )
 
     service.add_ticker("AAPL")
-    service.set_state("AAPL", __import__(
-        "bolsa.domain.watchlist",
-        fromlist=["WatchlistState"],
-    ).WatchlistState.CANDIDATE)
+    service.set_state("AAPL", WatchlistState.CANDIDATE)
     service.remove_ticker("AAPL")
 
     assert len(repository.saved) == 3
     assert repository.saved[0][0][0] == "AAPL"
-    assert repository.saved[1][0][1].value == "candidate"
+    assert repository.saved[1][0][1] == WatchlistState.CANDIDATE
     assert repository.saved[2] == []
