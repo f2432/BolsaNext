@@ -8,11 +8,16 @@ from PySide6.QtWidgets import QApplication
 from bolsa.app.services import MarketService, UniverseService, WatchlistService
 from bolsa.config import load_config
 from bolsa.domain.watchlist import Watchlist
-from bolsa.infrastructure.database import create_database_engine, initialize_database
+from bolsa.infrastructure.database import (
+    create_database_engine,
+    create_session_factory,
+    initialize_database,
+)
 from bolsa.infrastructure.market_data import (
     WikipediaUniverseProvider,
     YFinanceMarketDataProvider,
 )
+from bolsa.infrastructure.repositories import SqlAlchemyWatchlistRepository
 from bolsa.logging_config import configure_logging
 from bolsa.ui.main_window import MainWindow
 
@@ -25,12 +30,17 @@ def main() -> int:
 
     engine = create_database_engine(config.database_url)
     initialize_database(engine)
+    session_factory = create_session_factory(engine)
+
+    watchlist_repository = SqlAlchemyWatchlistRepository(session_factory)
+    watchlist = watchlist_repository.load("Principal") or Watchlist("Principal")
 
     market_service = MarketService(YFinanceMarketDataProvider())
     universe_service = UniverseService(WikipediaUniverseProvider())
     watchlist_service = WatchlistService(
-        Watchlist("Principal"),
+        watchlist,
         market_service,
+        repository=watchlist_repository,
     )
 
     logger.info("A iniciar %s", config.app_name)
