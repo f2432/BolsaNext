@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -51,9 +52,9 @@ class WatchlistWidget(QWidget):
 
         layout.addLayout(controls)
 
-        self._table = QTableWidget(0, 4)
+        self._table = QTableWidget(0, 5)
         self._table.setHorizontalHeaderLabels(
-            ["Ticker", "Nome", "Estado", "Preço atual"]
+            ["Ticker", "Nome", "Estado", "Preço atual", "Ações"]
         )
         self._table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self._table)
@@ -88,14 +89,44 @@ class WatchlistWidget(QWidget):
                 1,
                 QTableWidgetItem(row.name or ""),
             )
-            self._table.setItem(
-                row_index,
-                2,
-                QTableWidgetItem(_STATE_LABELS[row.state]),
+
+            state_combo = QComboBox()
+            for state, label in _STATE_LABELS.items():
+                state_combo.addItem(label, state)
+            state_combo.setCurrentIndex(state_combo.findData(row.state))
+            state_combo.currentIndexChanged.connect(
+                lambda _index, ticker=row.ticker, combo=state_combo: (
+                    self._change_state(ticker, combo.currentData())
+                )
             )
+            self._table.setCellWidget(row_index, 2, state_combo)
+
             price_text = "—" if row.price is None else f"{row.price:.2f}"
             self._table.setItem(
                 row_index,
                 3,
                 QTableWidgetItem(price_text),
             )
+
+            remove_button = QPushButton("Remover")
+            remove_button.clicked.connect(
+                lambda _checked=False, ticker=row.ticker: self._remove_ticker(ticker)
+            )
+            self._table.setCellWidget(row_index, 4, remove_button)
+
+    def _change_state(self, ticker: str, state: WatchlistState) -> None:
+        self._service.set_state(ticker, state)
+
+    def _remove_ticker(self, ticker: str) -> None:
+        answer = QMessageBox.question(
+            self,
+            "Remover da Watchlist",
+            f"Remover {ticker} da Watchlist?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        self._service.remove_ticker(ticker)
+        self._refresh_table()
