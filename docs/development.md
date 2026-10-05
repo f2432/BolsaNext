@@ -103,3 +103,39 @@ O CI usa Python 3.12 e instala o projeto através de:
 ```bash
 pip install -e ".[dev]"
 ```
+
+
+## Execução rápida no Windows
+
+Na raiz do projeto existe o script `run.ps1`.
+
+Execução normal:
+
+```powershell
+.\run.ps1
+```
+
+O script executa, por esta ordem:
+
+1. `git pull --ff-only`;
+2. `python -m pip install -e ".[dev]"`;
+3. `python -m pytest -q`;
+4. `python -m bolsa.main`.
+
+Se algum passo falhar, o script pára e não executa os seguintes.
+
+Existem também opções para saltar passos quando necessário:
+
+```powershell
+.\run.ps1 -SkipPull
+.\run.ps1 -SkipInstall
+.\run.ps1 -SkipTests
+```
+
+As opções podem ser combinadas.
+
+Exemplo para apenas testar e arrancar sem fazer `git pull` nem reinstalar dependências:
+
+```powershell
+.\run.ps1 -SkipPull -SkipInstall
+```
