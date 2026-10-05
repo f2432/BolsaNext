@@ -14,6 +14,7 @@ from bolsa.infrastructure.database import (
     initialize_database,
 )
 from bolsa.infrastructure.market_data import (
+    CachedUniverseProvider,
     WikipediaUniverseProvider,
     YFinanceMarketDataProvider,
 )
@@ -36,7 +37,12 @@ def main() -> int:
     watchlist = watchlist_repository.load("Principal") or Watchlist("Principal")
 
     market_service = MarketService(YFinanceMarketDataProvider())
-    universe_service = UniverseService(WikipediaUniverseProvider())
+    universe_service = UniverseService(
+        CachedUniverseProvider(
+            WikipediaUniverseProvider(),
+            config.cache_dir / "universes",
+        )
+    )
     watchlist_service = WatchlistService(
         watchlist,
         market_service,
