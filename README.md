@@ -8,7 +8,7 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
-A **V0.1 — Fundação está concluída e validada**. A **V0.2 — Market Data está em desenvolvimento**, já com dados Yahoo, S&P 500, NASDAQ 100 e uma primeira Watchlist funcional. O estado canónico detalhado encontra-se em `docs/status.md`.
+A **V0.1 — Fundação** e a **V0.2 — Market Data** estão concluídas e validadas. O trabalho seguinte é a **V0.3 — Portfolio**. O estado canónico detalhado encontra-se em `docs/status.md`.
 
 A versão anterior provou vários conceitos, incluindo:
 
@@ -127,3 +127,12 @@ Os ficheiros de referência do projeto são:
 - `pyproject.toml`: dependências Python, empacotamento e configuração de testes.
 
 Quando houver conflito, o estado atual é determinado por `docs/status.md`; a arquitetura por `docs/architecture.md`; o plano futuro por `docs/roadmap.md` e `docs/ai-roadmap.md`.
+
+
+## Fluxo de desenvolvimento Git
+
+O desenvolvimento corrente é feito em `dev`. A branch `main` é reservada a estados já validados.
+
+A passagem de `dev` para `main` só é feita após validação explícita e através de squash, para manter um único commit coerente por bloco funcional.
+
+O procedimento detalhado encontra-se em `docs/development.md` e `docs/status.md`.

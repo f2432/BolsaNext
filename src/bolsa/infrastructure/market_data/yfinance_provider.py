@@ -7,23 +7,26 @@ import pandas as pd
 import yfinance as yf
 
 from bolsa.domain.instruments import AssetType, Instrument
+from bolsa.infrastructure.market_data.errors import (
+    InstrumentNotFoundError,
+    MarketDataUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
 _CANONICAL_COLUMNS = ["Open", "High", "Low", "Close", "Adj Close", "Volume"]
+_METADATA_KEYS = {
+    "quoteType",
+    "longName",
+    "shortName",
+    "exchange",
+    "fullExchangeName",
+    "currency",
+}
 
 
 class YFinanceMarketDataProvider:
-    """Adapter de dados de mercado baseado em yfinance.
-
-    Política inicial:
-    - OHLC é mantido sem auto-adjust;
-    - Adj Close é preservado quando disponibilizado;
-    - o índice é convertido para DatetimeIndex;
-    - timestamps com timezone são convertidos para UTC e ficam timezone-naive;
-    - linhas duplicadas são removidas, mantendo a última;
-    - o resultado é ordenado por data.
-    """
+    """Adapter de dados de mercado baseado em yfinance."""
 
     def get_historical_data(
         self,
@@ -57,30 +60,40 @@ class YFinanceMarketDataProvider:
             interval,
         )
 
-        data = yf.download(**kwargs)
+        try:
+            data = yf.download(**kwargs)
+        except Exception as exc:
+            logger.exception("Erro ao obter histórico de %s", instrument.ticker)
+            raise MarketDataUnavailableError(
+                f"Não foi possível obter o histórico de {instrument.ticker}. "
+                "Tenta novamente."
+            ) from exc
+
         return self._normalise_history(data, instrument.ticker)
 
     def get_instrument_details(self, instrument: Instrument) -> Instrument:
         try:
             info = yf.Ticker(instrument.ticker).get_info() or {}
-        except Exception:
-            logger.exception(
-                "Erro ao obter metadados de %s; serão usados os dados existentes.",
-                instrument.ticker,
-            )
-            return instrument
+        except Exception as exc:
+            logger.exception("Erro ao obter metadados de %s", instrument.ticker)
+            raise MarketDataUnavailableError(
+                f"Não foi possível consultar os dados de {instrument.ticker}. "
+                "Tenta novamente."
+            ) from exc
 
-        name = (
-            info.get("longName")
-            or info.get("shortName")
-            or instrument.name
-        )
+        if not any(info.get(key) not in (None, "") for key in _METADATA_KEYS):
+            raise InstrumentNotFoundError(instrument.ticker)
+
+        name = info.get("longName") or info.get("shortName") or instrument.name
         market = (
             info.get("fullExchangeName")
             or info.get("exchange")
             or instrument.market
         )
-        currency = info.get("currency") or instrument.currency
+        currency = self._normalise_currency(
+            info.get("currency"),
+            fallback=instrument.currency,
+        )
 
         quote_type = str(info.get("quoteType") or "").upper()
         asset_type = {
@@ -89,21 +102,13 @@ class YFinanceMarketDataProvider:
             "INDEX": AssetType.INDEX,
         }.get(quote_type, instrument.asset_type)
 
-        try:
-            return Instrument(
-                ticker=instrument.ticker,
-                name=name,
-                market=market,
-                currency=currency,
-                asset_type=asset_type,
-            )
-        except ValueError:
-            logger.warning(
-                "Metadados inválidos recebidos para %s; serão mantidos os dados existentes.",
-                instrument.ticker,
-                exc_info=True,
-            )
-            return instrument
+        return Instrument(
+            ticker=instrument.ticker,
+            name=name,
+            market=market,
+            currency=currency,
+            asset_type=asset_type,
+        )
 
     def get_current_price(self, instrument: Instrument) -> float | None:
         try:
@@ -124,20 +129,46 @@ class YFinanceMarketDataProvider:
             if history is None or history.empty or "Close" not in history.columns:
                 return None
 
-            return float(history["Close"].dropna().iloc[-1])
+            close = history["Close"].dropna()
+            if close.empty:
+                return None
+
+            return float(close.iloc[-1])
         except Exception:
             logger.exception("Erro ao obter preço atual de %s", instrument.ticker)
             return None
 
     @staticmethod
+    def _normalise_currency(
+        value: object,
+        *,
+        fallback: str | None,
+    ) -> str | None:
+        if value is None:
+            return fallback
+
+        currency = str(value).strip().upper()
+        if len(currency) == 3 and currency.isalpha():
+            return currency
+
+        logger.warning("Código de moeda inesperado recebido do Yahoo: %r", value)
+        return fallback
+
+    @staticmethod
+    def _empty_history() -> pd.DataFrame:
+        return pd.DataFrame(
+            index=pd.DatetimeIndex([], name="Date"),
+            columns=_CANONICAL_COLUMNS,
+        )
+
+    @staticmethod
     def _normalise_history(data: pd.DataFrame, ticker: str) -> pd.DataFrame:
         if data is None or data.empty:
-            return pd.DataFrame(columns=_CANONICAL_COLUMNS)
+            return YFinanceMarketDataProvider._empty_history()
 
         result = data.copy()
 
         if isinstance(result.columns, pd.MultiIndex):
-            # yfinance pode devolver (campo, ticker) para um único ativo.
             level_0 = result.columns.get_level_values(0)
             if set(_CANONICAL_COLUMNS).intersection(level_0):
                 result.columns = level_0
@@ -160,8 +191,7 @@ class YFinanceMarketDataProvider:
 
         result = result[_CANONICAL_COLUMNS]
 
-        numeric_columns = ["Open", "High", "Low", "Close", "Adj Close", "Volume"]
-        for column in numeric_columns:
+        for column in _CANONICAL_COLUMNS:
             result[column] = pd.to_numeric(result[column], errors="coerce")
 
         return result

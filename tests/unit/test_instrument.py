@@ -18,9 +18,24 @@ def test_instrument_normalises_ticker_currency_and_market() -> None:
     assert instrument.currency == "USD"
 
 
+def test_instrument_accepts_common_yahoo_ticker_characters() -> None:
+    assert Instrument("^GSPC").ticker == "^GSPC"
+    assert Instrument("BRK-B").ticker == "BRK-B"
+    assert Instrument("EURUSD=X").ticker == "EURUSD=X"
+    assert Instrument("ASML.AS").ticker == "ASML.AS"
+
+
 def test_instrument_rejects_empty_ticker() -> None:
     with pytest.raises(ValueError):
         Instrument(ticker="  ")
+
+
+def test_instrument_rejects_spaces_and_unsupported_characters() -> None:
+    with pytest.raises(ValueError, match="espaços"):
+        Instrument(ticker="AAPL TEST")
+
+    with pytest.raises(ValueError, match="caracteres"):
+        Instrument(ticker="AAPL@")
 
 
 def test_instrument_rejects_invalid_currency() -> None:

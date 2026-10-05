@@ -10,9 +10,9 @@ Versão de trabalho atual: **V0.2 — Market Data**
 
 Estado da V0.1: **CONCLUÍDA E VALIDADA** localmente em Windows e no GitHub Actions.
 
-Estado da V0.2: **EM DESENVOLVIMENTO, com o núcleo funcional já operacional e validado localmente**.
+Estado da V0.2: **CONCLUÍDA E VALIDADA LOCALMENTE**.
 
-Próximo objetivo: fechar os últimos detalhes da V0.2 e preparar a passagem para a V0.3 — Portfolio.
+Próximo objetivo: iniciar a V0.3 — Portfolio.
 
 ## V0.1 — Fundação concluída
 
@@ -190,36 +190,43 @@ A origem da verdade para a Watchlist é a base local SQLite.
 - carregamento assíncrono dos universos;
 - atualização assíncrona de preços;
 - enriquecimento automático de metadados;
-- cache de universos.
+- cache de universos;
+- persistência das larguras das colunas validada localmente na Watchlist e nos Universos.
 
-## Falta para fechar a V0.2
+### Fecho técnico da V0.2
 
-### Dados de mercado
+- validação sintática de tickers, preservando formatos comuns do Yahoo como `^GSPC`, `BRK-B`, `EURUSD=X` e `ASML.AS`;
+- distinção explícita entre ticker inexistente e indisponibilidade do fornecedor;
+- mensagens de erro de metadados mais claras para a UI;
+- ticker inexistente não é adicionado à Watchlist;
+- atualização de metadados continua para os restantes ativos mesmo que um deles falhe;
+- atualização de preços identifica na barra de estado os tickers cujo preço ficou indisponível;
+- histórico vazio mantém o schema canónico;
+- `Adj Close` em falta permanece explicitamente em falta e não é substituído por `Close`;
+- timestamps com timezone são testados com conversão efetiva para UTC timezone-naive;
+- erros de download de histórico são convertidos para `MarketDataUnavailableError`;
+- política V0.2: sem retries automáticos escondidos; o utilizador pode repetir a operação;
+- edição de notas fica para a fase Research;
+- múltiplas Watchlists ficam fora da V0.2 e serão reavaliadas quando houver necessidade funcional;
+- cache de histórico fica para V0.4 Analysis;
+- GitHub Actions passa a executar testes também em pushes para `dev`.
 
-- confirmar comportamento quando Yahoo não disponibiliza `Adj Close`;
-- rever casos intradiários e timezone em dados reais;
-- introduzir erros de infraestrutura mais específicos onde ainda existam exceções genéricas;
-- definir política de retries/timeouts se vier a ser necessária;
-- rever validação de tickers inexistentes ou inválidos.
+## Validação final da V0.2 concluída
 
-### Universos
+Validação local concluída em Windows através de `dev` e `run.ps1`.
 
-- comparar periodicamente a composição obtida com a fonte oficial Euronext;
-- só acrescentar novos universos do projeto legacy quando houver necessidade concreta;
-- evitar pedidos massivos de preços ao carregar universos completos.
+Foram confirmados:
 
-### Watchlist
+- testes locais sem falhas;
+- adição manual de tickers válidos com metadados;
+- rejeição de tickers sintaticamente inválidos;
+- rejeição de tickers inexistentes sem os adicionar à Watchlist;
+- atualização de preços sem bloquear a interface;
+- funcionamento de S&P 500, NASDAQ 100 e Euronext 100;
+- persistência da Watchlist e dos estados;
+- persistência das larguras das colunas.
 
-- testar localmente a persistência das larguras das colunas;
-- melhorar edição de notas;
-- decidir se múltiplas watchlists entram ainda na V0.2 ou ficam para uma versão posterior;
-- melhorar mensagens de erro de preço e metadados.
-
-### Cache
-
-- cache de universos concluída;
-- cache de histórico de mercado fica para quando a área Analysis consumir séries repetidamente;
-- rever TTL por tipo de dado quando existirem mais fontes.
+A comparação periódica da composição do Euronext 100 com a fonte oficial passa a ser manutenção e não bloqueia o fecho da V0.2.
 
 ## Fases posteriores
 
@@ -333,3 +340,21 @@ A origem da verdade para a Watchlist é a base local SQLite.
 - nenhuma execução automática de ordens é objetivo da fase atual;
 - dados pessoais, posições reais, credenciais, caches e modelos treinados não entram no Git;
 - preferências visuais do utilizador podem ser persistidas localmente com `QSettings`, separadas dos dados financeiros.
+
+
+## Fluxo Git canónico
+
+O desenvolvimento corrente usa duas branches:
+
+- `main`: contém apenas estados validados pelo utilizador;
+- `dev`: contém trabalho em curso, correções, testes e documentação intermédia.
+
+Regras:
+
+- todo o desenvolvimento novo é feito em `dev`;
+- o utilizador testa localmente a branch `dev` através de `run.ps1`;
+- `run.ps1` muda para `dev` quando necessário, atualiza a branch, instala dependências, executa os testes e arranca a aplicação;
+- nenhuma alteração deve ser integrada em `main` sem pedido explícito do utilizador;
+- quando um bloco estiver validado e o utilizador pedir passagem para `main`, a integração é feita por squash para produzir um único commit coerente;
+- depois da integração, o trabalho seguinte continua em `dev`;
+- commits intermédios de `dev` são considerados técnicos e não fazem parte do histórico final pretendido da `main`.

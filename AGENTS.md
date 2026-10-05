@@ -59,3 +59,13 @@ Usa estas fontes conforme o tipo de decisão:
 7. `pyproject.toml` — dependências executáveis e configuração do pacote.
 
 O `README.md` resume e encaminha para estas fontes. Não duplicar informação detalhada no README quando já existir num documento canónico.
+
+
+## Fluxo Git
+
+- `main` representa apenas estados validados pelo utilizador;
+- trabalho intermédio é feito na branch `dev`;
+- não escrever, fazer merge, squash ou atualizar `main` sem pedido explícito do utilizador;
+- correções, experiências, testes e documentação intermédia ficam em `dev`;
+- quando o utilizador disser que um bloco está validado e pedir passagem para `main`, integrar esse bloco através de squash para manter um único commit coerente em `main`;
+- depois da integração, continuar o desenvolvimento seguinte a partir de `dev`.

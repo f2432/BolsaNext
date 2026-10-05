@@ -122,11 +122,28 @@ class WatchlistWidget(QWidget):
         self._metadata_button.setEnabled(False)
 
         thread = FunctionThread(self._service.refresh_metadata)
-        thread.result_ready.connect(self._render_rows)
+        thread.result_ready.connect(self._metadata_refresh_complete)
         thread.failed.connect(self._metadata_refresh_failed)
         thread.finished.connect(self._metadata_refresh_finished)
         self._metadata_thread = thread
         thread.start()
+
+    def _metadata_refresh_complete(self, rows: list[WatchlistRow]) -> None:
+        self._render_rows(rows)
+        warnings = self._service.metadata_warnings
+
+        if warnings:
+            self._status.setText(
+                f"Dados atualizados com {len(warnings)} aviso(s)."
+            )
+            QMessageBox.warning(
+                self,
+                "Watchlist",
+                "Alguns metadados não puderam ser atualizados:\n\n"
+                + "\n".join(warnings),
+            )
+        else:
+            self._status.setText("Dados dos ativos atualizados.")
 
     def _metadata_refresh_failed(self, message: str) -> None:
         self._status.setText("Erro ao atualizar dados dos ativos.")
@@ -134,8 +151,6 @@ class WatchlistWidget(QWidget):
 
     def _metadata_refresh_finished(self) -> None:
         self._metadata_button.setEnabled(True)
-        if self._status.text() == "A atualizar dados dos ativos...":
-            self._status.setText("Dados dos ativos atualizados.")
         if self._metadata_thread is not None:
             self._metadata_thread.deleteLater()
         self._metadata_thread = None
@@ -148,11 +163,23 @@ class WatchlistWidget(QWidget):
         self._refresh_button.setEnabled(False)
 
         thread = FunctionThread(self._service.rows, refresh_prices=True)
-        thread.result_ready.connect(self._render_rows)
+        thread.result_ready.connect(self._price_refresh_complete)
         thread.failed.connect(self._price_refresh_failed)
         thread.finished.connect(self._price_refresh_finished)
         self._price_thread = thread
         thread.start()
+
+    def _price_refresh_complete(self, rows: list[WatchlistRow]) -> None:
+        self._render_rows(rows)
+        unavailable = [row.ticker for row in rows if row.price is None]
+
+        if unavailable:
+            self._status.setText(
+                "Preços atualizados; indisponível para: "
+                + ", ".join(unavailable)
+            )
+        else:
+            self._status.setText("Preços atualizados.")
 
     def _price_refresh_failed(self, message: str) -> None:
         self._status.setText("Erro ao atualizar preços.")
@@ -160,8 +187,6 @@ class WatchlistWidget(QWidget):
 
     def _price_refresh_finished(self) -> None:
         self._refresh_button.setEnabled(True)
-        if self._status.text() == "A atualizar preços...":
-            self._status.setText("Preços atualizados.")
         if self._price_thread is not None:
             self._price_thread.deleteLater()
         self._price_thread = None
@@ -190,11 +215,7 @@ class WatchlistWidget(QWidget):
             self._table.setCellWidget(row_index, 4, state_combo)
 
             price_text = "—" if row.price is None else f"{row.price:.2f}"
-            self._table.setItem(
-                row_index,
-                5,
-                QTableWidgetItem(price_text),
-            )
+            self._table.setItem(row_index, 5, QTableWidgetItem(price_text))
 
             remove_button = QPushButton("Remover")
             remove_button.clicked.connect(
