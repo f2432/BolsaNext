@@ -1,11 +1,13 @@
 import pandas as pd
 import pytest
 
-from bolsa.domain.instruments import AssetType, Instrument
-from bolsa.infrastructure.market_data import (
+from bolsa.app.ports.errors import (
+    CurrentPriceUnavailableError,
     InstrumentNotFoundError,
+    MarketDataFormatError,
     MarketDataUnavailableError,
 )
+from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.infrastructure.market_data.yfinance_provider import (
     YFinanceMarketDataProvider,
 )
@@ -131,6 +133,22 @@ def test_get_instrument_details_distinguishes_provider_failure(monkeypatch) -> N
         )
 
 
+def test_get_instrument_details_rejects_malformed_metadata(monkeypatch) -> None:
+    class FakeTicker:
+        def get_info(self):
+            return ["unexpected"]
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(MarketDataFormatError, match="formato esperado"):
+        YFinanceMarketDataProvider().get_instrument_details(
+            Instrument("AAPL")
+        )
+
+
 def test_get_historical_data_wraps_provider_failure(monkeypatch) -> None:
     def fail_download(**_kwargs):
         raise ConnectionError("offline")
@@ -144,3 +162,119 @@ def test_get_historical_data_wraps_provider_failure(monkeypatch) -> None:
         YFinanceMarketDataProvider().get_historical_data(
             Instrument("AAPL")
         )
+
+
+def test_get_historical_data_rejects_malformed_response(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.download",
+        lambda **_kwargs: ["unexpected"],
+    )
+
+    with pytest.raises(MarketDataFormatError, match="formato esperado"):
+        YFinanceMarketDataProvider().get_historical_data(
+            Instrument("AAPL")
+        )
+
+
+def test_get_current_price_uses_fast_info(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": 123.45}
+
+        def history(self, **_kwargs):
+            raise AssertionError("history não devia ser consultado")
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    price = YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
+
+    assert price == 123.45
+
+
+def test_get_current_price_uses_history_fallback(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": None}
+
+        def history(self, **_kwargs):
+            return pd.DataFrame({"Close": [101.0, 102.5]})
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    price = YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
+
+    assert price == 102.5
+
+
+def test_get_current_price_distinguishes_no_quote(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": None}
+
+        def history(self, **_kwargs):
+            return pd.DataFrame()
+
+        def get_info(self):
+            return {"quoteType": "EQUITY", "currency": "USD"}
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(CurrentPriceUnavailableError, match="cotação atual"):
+        YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
+
+
+def test_get_current_price_distinguishes_unknown_ticker(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": None}
+
+        def history(self, **_kwargs):
+            return pd.DataFrame()
+
+        def get_info(self):
+            return {}
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(InstrumentNotFoundError, match="INVALID"):
+        YFinanceMarketDataProvider().get_current_price(Instrument("INVALID"))
+
+
+def test_get_current_price_distinguishes_provider_failure(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": None}
+
+        def history(self, **_kwargs):
+            raise ConnectionError("offline")
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(MarketDataUnavailableError, match="Tenta novamente"):
+        YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
+
+
+def test_get_current_price_rejects_malformed_response(monkeypatch) -> None:
+    class FakeTicker:
+        fast_info = {"last_price": None}
+
+        def history(self, **_kwargs):
+            return pd.DataFrame({"Open": [100.0]})
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    with pytest.raises(MarketDataFormatError, match="Close"):
+        YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
