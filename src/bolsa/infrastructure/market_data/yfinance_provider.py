@@ -6,7 +6,7 @@ import logging
 import pandas as pd
 import yfinance as yf
 
-from bolsa.domain.instruments import Instrument
+from bolsa.domain.instruments import AssetType, Instrument
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,51 @@ class YFinanceMarketDataProvider:
 
         data = yf.download(**kwargs)
         return self._normalise_history(data, instrument.ticker)
+
+    def get_instrument_details(self, instrument: Instrument) -> Instrument:
+        try:
+            info = yf.Ticker(instrument.ticker).get_info() or {}
+        except Exception:
+            logger.exception(
+                "Erro ao obter metadados de %s; serão usados os dados existentes.",
+                instrument.ticker,
+            )
+            return instrument
+
+        name = (
+            info.get("longName")
+            or info.get("shortName")
+            or instrument.name
+        )
+        market = (
+            info.get("fullExchangeName")
+            or info.get("exchange")
+            or instrument.market
+        )
+        currency = info.get("currency") or instrument.currency
+
+        quote_type = str(info.get("quoteType") or "").upper()
+        asset_type = {
+            "EQUITY": AssetType.STOCK,
+            "ETF": AssetType.ETF,
+            "INDEX": AssetType.INDEX,
+        }.get(quote_type, instrument.asset_type)
+
+        try:
+            return Instrument(
+                ticker=instrument.ticker,
+                name=name,
+                market=market,
+                currency=currency,
+                asset_type=asset_type,
+            )
+        except ValueError:
+            logger.warning(
+                "Metadados inválidos recebidos para %s; serão mantidos os dados existentes.",
+                instrument.ticker,
+                exc_info=True,
+            )
+            return instrument
 
     def get_current_price(self, instrument: Instrument) -> float | None:
         try:
