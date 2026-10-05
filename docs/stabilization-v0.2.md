@@ -10,7 +10,7 @@ O objetivo deste ciclo é **estabilizar definitivamente a V0.2 — Market Data a
 
 A V0.3 **não está iniciada**. Nenhuma entidade `Portfolio`, `Transaction`, `Position`, `PortfolioService` ou funcionalidade de carteira deve ser implementada enquanto este ciclo não estiver fechado e validado pelo utilizador.
 
-Este documento consolida os 16 pontos de incongruência, os blocos adicionais da segunda revisão, o plano `PLANO_PRE_V03.md` preparado pelo utilizador e as correções de execução acordadas posteriormente. O plano fonte é preservado integralmente no Anexo A.
+Este documento consolida os 16 pontos de incongruência, os blocos adicionais da segunda revisão, o plano `PLANO_PRE_V03.md` preparado pelo utilizador e as correções de execução acordadas posteriormente. O plano fonte é preservado integralmente no Anexo A. O ficheiro original de revisão `v02_erros.txt` é também preservado, sem reescrita, em `docs/reference/v02_erros.txt`.
 
 ## Regra absoluta de preservação
 
