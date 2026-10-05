@@ -226,3 +226,16 @@ created_at
 - testes de integração para persistência e dados;
 - nenhuma dependência do projeto antigo;
 - migração apenas de conceitos ou código previamente revisto.
+
+
+### Persistência atualmente implementada
+
+A primeira persistência real do projeto usa SQLAlchemy e SQLite para:
+
+- `instruments`;
+- `watchlists`;
+- `watchlist_items`.
+
+A Watchlist é reconstruída a partir da base de dados no arranque. Alterações de composição e estado são persistidas através de `SqlAlchemyWatchlistRepository`.
+
+A posição de mercado atual não é guardada na Watchlist. Preços continuam a ser obtidos através do `MarketDataProvider`.
