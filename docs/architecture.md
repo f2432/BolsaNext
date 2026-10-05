@@ -269,3 +269,31 @@ A UI não interpreta diretamente exceções internas de `yfinance`.
 Na V0.2 não existem retries automáticos escondidos. Uma falha é apresentada ao utilizador e a repetição é explícita. Esta decisão evita pedidos repetidos inesperados e pode ser revista quando existirem várias fontes de dados.
 
 Históricos sem dados são válidos e devolvem o schema OHLCV canónico vazio. Quando `Adj Close` não é fornecido, a coluna continua presente com valores em falta; `Close` não é usado silenciosamente como substituto.
+
+
+## Governação do ciclo de estabilização V0.2
+
+O ciclo atual não implementa Portfolio. O documento `docs/stabilization-v0.2.md` define a sequência e preserva integralmente o plano fonte.
+
+Decisões arquiteturais que têm de ser tomadas neste ciclo antes da implementação correspondente:
+
+- A6 completa: semântica de `Instrument.market`, eventual separação de conceitos e autoridade/proveniência dos metadados;
+- A7.1: política mínima de backup antes de mover ou migrar a base;
+- parte atual de A5: semântica da configuração `base_currency` e eventual renomeação para `default_base_currency`.
+
+Decisões deliberadamente preservadas para a futura especificação da V0.3:
+
+- âmbito funcional de Portfolio;
+- ledger e regras contabilísticas;
+- Decimal/Numeric e precisão financeira;
+- convenção FX;
+- autoridade de `Portfolio.base_currency`;
+- importação/exportação/duplicados de transações;
+- reconciliação com broker;
+- política pessoal de investimento.
+
+Estas decisões adiadas não devem ser inferidas nem implementadas durante o saneamento da V0.2.
+
+### Regra de preservação arquitetural
+
+Uma decisão arquitetural substituída não é apagada sem rasto. Deve ficar identificada como histórica/superseded, com a nova decisão e respetiva justificação.
