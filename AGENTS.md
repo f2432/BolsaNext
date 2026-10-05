@@ -4,6 +4,7 @@ Lê antes de alterar código:
 
 - `README.md`
 - `docs/status.md`
+- `docs/stabilization-v0.2.md`
 - `docs/architecture.md`
 - `docs/roadmap.md`
 - `docs/ai-roadmap.md`
@@ -51,12 +52,13 @@ Registar experiências e resultados fora da amostra.
 Usa estas fontes conforme o tipo de decisão:
 
 1. `docs/status.md` — o que está efetivamente feito e qual é o próximo trabalho;
-2. `docs/architecture.md` — como o sistema deve ser estruturado;
-3. `docs/roadmap.md` — ordem e âmbito das versões;
-4. `docs/ai-roadmap.md` — decisões específicas da área de IA;
-5. `docs/legacy.md` — referência histórica, nunca autoridade sobre a nova arquitetura;
-6. `docs/development.md` — execução e desenvolvimento local;
-7. `pyproject.toml` — dependências executáveis e configuração do pacote.
+2. `docs/stabilization-v0.2.md` — plano sequencial e rastreabilidade do ciclo atual de estabilização da V0.2;
+3. `docs/architecture.md` — como o sistema deve ser estruturado;
+4. `docs/roadmap.md` — ordem e âmbito das versões;
+5. `docs/ai-roadmap.md` — decisões específicas da área de IA;
+6. `docs/legacy.md` — referência histórica, nunca autoridade sobre a nova arquitetura;
+7. `docs/development.md` — execução e desenvolvimento local;
+8. `pyproject.toml` — dependências executáveis e configuração do pacote.
 
 O `README.md` resume e encaminha para estas fontes. Não duplicar informação detalhada no README quando já existir num documento canónico.
 
@@ -69,3 +71,29 @@ O `README.md` resume e encaminha para estas fontes. Não duplicar informação d
 - correções, experiências, testes e documentação intermédia ficam em `dev`;
 - quando o utilizador disser que um bloco está validado e pedir passagem para `main`, integrar esse bloco através de squash para manter um único commit coerente em `main`;
 - depois da integração, continuar o desenvolvimento seguinte a partir de `dev`.
+
+
+## Regra absoluta de preservação canónica
+
+Esta regra é obrigatória em todas as alterações futuras:
+
+- nunca eliminar informação substantiva já registada apenas para simplificar, condensar ou reorganizar documentação;
+- preservar decisões anteriores quando forem substituídas, marcando-as como históricas/superseded e indicando motivo;
+- preservar problemas identificados até estarem concluídos, decididos, explicitamente adiados ou considerados não aplicáveis com justificação;
+- quando consolidar documentos, manter rastreabilidade para a origem;
+- antes de alterar um canónico, comparar com a versão anterior e confirmar que nenhuma decisão, requisito, pendência ou justificação desapareceu;
+- se houver conflito entre condensação e preservação, prevalece a preservação;
+- nenhum agente pode interpretar "limpar", "simplificar", "atualizar" ou "refatorar documentação" como autorização para apagar informação;
+- cada alteração que mude comportamento documentado atualiza o documento canónico correspondente sem apagar o histórico necessário para compreender a decisão.
+
+## Ciclo atual de estabilização da V0.2
+
+Enquanto este ciclo estiver aberto, `docs/stabilization-v0.2.md` é o plano canónico sequencial e de rastreabilidade.
+
+Regras adicionais:
+
+- a V0.3 ainda não está iniciada;
+- nenhum item do plano de estabilização pode desaparecer por omissão;
+- decisões futuras de Portfolio preservadas no plano não autorizam implementação antecipada;
+- `main` continua protegida e só recebe integração após validação explícita do utilizador;
+- a tag `v0.2.0` só pode ser criada depois do fecho e validação final do saneamento.
