@@ -76,7 +76,7 @@ Decisão vigente:
 - precedência entre fontes pertence à Application, não à UI nem ao repository;
 - a decisão governa B3 e B8.2.
 
-D2 foi decidido e documentado. Próximo passo: **D3 — parte atual de A5: significado de `base_currency` na configuração**.
+D2 e D3 estão decididos e documentados. Próximo passo: **B1 — Ports e direção das dependências**.
 
 ### D2 — backup antes de movimentos e migrações
 
@@ -95,6 +95,20 @@ Decisão vigente:
 - a política aplica-se a B5/B6; o backup/export/import funcional da futura carteira permanece adiado para A7/V0.3.
 
 Próximo passo: **D3 — parte atual de A5: significado de `base_currency` na configuração**.
+
+### D3 — moeda base por omissão
+
+Estado: **DECIDIDO E DOCUMENTADO**.
+
+Decisão vigente:
+
+- `AppConfig.base_currency` é semanticamente apenas a moeda base por omissão;
+- o nome preferido passa a ser `default_base_currency`;
+- a configuração não é autoridade financeira global e não poderá alterar silenciosamente entidades persistidas;
+- a futura `Portfolio.base_currency` será autoridade da própria carteira, mas permanece fora deste ciclo;
+- não se iniciam cálculos financeiros nem FX nesta fase.
+
+Próximo passo: **B1 — Ports e direção das dependências**.
 
 ## V0.1 — Fundação concluída
 
