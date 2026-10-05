@@ -20,6 +20,8 @@ class WatchlistRepository(Protocol):
 class WatchlistRow:
     ticker: str
     name: str | None
+    market: str | None
+    currency: str | None
     state: WatchlistState
     price: float | None
 
@@ -56,6 +58,38 @@ class WatchlistService:
         self._watchlist.add(instrument)
         self._persist()
 
+    def add_ticker_enriched(self, ticker: str) -> Instrument:
+        base = Instrument(ticker=ticker)
+
+        if self._watchlist.get(base.ticker) is not None:
+            raise ValueError(f"{base.ticker} já existe na watchlist.")
+
+        instrument = self._market_service.instrument_details(base)
+        self._watchlist.add(instrument)
+        self._persist()
+        return instrument
+
+    def refresh_metadata(self) -> list[WatchlistRow]:
+        changed = False
+
+        for item in self._watchlist.items:
+            if (
+                item.instrument.name
+                and item.instrument.market
+                and item.instrument.currency
+            ):
+                continue
+
+            enriched = self._market_service.instrument_details(item.instrument)
+            if enriched != item.instrument:
+                item.instrument = enriched
+                changed = True
+
+        if changed:
+            self._persist()
+
+        return self.rows()
+
     def remove_ticker(self, ticker: str) -> None:
         self._watchlist.remove(ticker)
         self._persist()
@@ -76,6 +110,8 @@ class WatchlistService:
                 WatchlistRow(
                     ticker=item.instrument.ticker,
                     name=item.instrument.name,
+                    market=item.instrument.market,
+                    currency=item.instrument.currency,
                     state=item.state,
                     price=price,
                 )
