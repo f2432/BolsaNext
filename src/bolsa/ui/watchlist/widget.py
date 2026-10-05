@@ -171,12 +171,17 @@ class WatchlistWidget(QWidget):
 
     def _price_refresh_complete(self, rows: list[WatchlistRow]) -> None:
         self._render_rows(rows)
-        unavailable = [row.ticker for row in rows if row.price is None]
+        warnings = self._service.price_warnings
 
-        if unavailable:
+        if warnings:
             self._status.setText(
-                "Preços atualizados; indisponível para: "
-                + ", ".join(unavailable)
+                f"Preços atualizados com {len(warnings)} aviso(s)."
+            )
+            QMessageBox.warning(
+                self,
+                "Watchlist",
+                "Alguns preços não puderam ser atualizados:\n\n"
+                + "\n".join(warnings),
             )
         else:
             self._status.setText("Preços atualizados.")
