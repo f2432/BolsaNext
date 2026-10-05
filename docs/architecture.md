@@ -355,3 +355,28 @@ Não é introduzido nesta fase um campo persistente `metadata_source`.
 ### Relação com subunidades monetárias
 
 B3 deve obedecer a esta política. Convenções específicas de cotação de um fornecedor, como moedas/subunidades reportadas pelo Yahoo, devem ser normalizadas junto do adapter/provider apropriado antes de os dados serem expostos como valores canónicos ao resto da aplicação.
+
+
+## Política de backup antes de movimentos e migrações
+
+Decisão canónica D2 do ciclo de estabilização V0.2.
+
+A base SQLite é dado persistente e não pode ser movida, substituída ou migrada sem existir primeiro uma cópia recuperável.
+
+### Regras
+
+- backup obrigatório antes de qualquer migração de schema;
+- backup obrigatório antes de mudar a localização da base;
+- se o backup falhar, a operação principal não começa;
+- origem, destino e caminho do backup devem ser explícitos ao utilizador quando a operação alterar a base existente;
+- backups não entram no Git;
+- backups são imutáveis e timestamped, nunca sobrescritos;
+- usar preferencialmente a SQLite Backup API para criar snapshot consistente;
+- validar o backup com existência, tamanho não nulo, abertura SQLite e `PRAGMA quick_check`;
+- validar também a base resultante depois de movimento/migração;
+- em falha, preservar base original e backup e não promover uma base parcialmente migrada;
+- restauro é explícito e nunca automático;
+- ao restaurar, preservar também a base problemática antes de a substituir;
+- não existe rotação automática de backups nesta fase.
+
+Esta política protege especificamente B5 (localização dos dados) e B6 (migrações). O desenho de backup/export/import de dados de Portfolio permanece adiado para a futura especificação da V0.3.
