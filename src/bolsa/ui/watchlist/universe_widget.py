@@ -20,6 +20,7 @@ from bolsa.app.services.watchlist_service import WatchlistService
 _UNIVERSE_LABELS = {
     "sp500": "S&P 500",
     "nasdaq100": "NASDAQ 100",
+    "euronext100": "Euronext 100",
 }
 
 
