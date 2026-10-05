@@ -76,7 +76,25 @@ Decisão vigente:
 - precedência entre fontes pertence à Application, não à UI nem ao repository;
 - a decisão governa B3 e B8.2.
 
-Próximo passo: **D2/A7.1 — política de backup antes de movimentos e migrações da base**.
+D2 foi decidido e documentado. Próximo passo: **D3 — parte atual de A5: significado de `base_currency` na configuração**.
+
+### D2 — backup antes de movimentos e migrações
+
+Estado: **DECIDIDO E DOCUMENTADO**.
+
+Decisão vigente:
+
+- backup obrigatório antes de qualquer migração de schema ou mudança de localização da base;
+- preferência pela SQLite Backup API para snapshots consistentes;
+- backups imutáveis, timestamped e fora do Git;
+- validação obrigatória do backup e da base resultante com `PRAGMA quick_check`;
+- se o backup falhar, a operação não começa;
+- em falha de migração/movimento, a base original e o backup permanecem preservados;
+- restauro é sempre explícito, nunca automático;
+- não há rotação automática de backups nesta fase;
+- a política aplica-se a B5/B6; o backup/export/import funcional da futura carteira permanece adiado para A7/V0.3.
+
+Próximo passo: **D3 — parte atual de A5: significado de `base_currency` na configuração**.
 
 ## V0.1 — Fundação concluída
 
