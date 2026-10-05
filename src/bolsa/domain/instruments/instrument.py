@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+import re
+
+
+_TICKER_PATTERN = re.compile(r"^[A-Z0-9.^=_-]+$")
 
 
 class AssetType(StrEnum):
@@ -23,8 +27,12 @@ class Instrument:
         ticker = self.ticker.strip().upper()
         if not ticker:
             raise ValueError("O ticker não pode estar vazio.")
+        if len(ticker) > 32:
+            raise ValueError("O ticker é demasiado longo.")
         if any(char.isspace() for char in ticker):
             raise ValueError("O ticker não pode conter espaços.")
+        if _TICKER_PATTERN.fullmatch(ticker) is None:
+            raise ValueError("O ticker contém caracteres não suportados.")
 
         object.__setattr__(self, "ticker", ticker)
 
