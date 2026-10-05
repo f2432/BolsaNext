@@ -63,8 +63,8 @@ class Watchlist:
             None,
         )
 
-    def set_state(self, ticker: str, state: WatchlistState) -> None:
+    def set_state(self, ticker: str, state: WatchlistState | str) -> None:
         item = self.get(ticker)
         if item is None:
             raise KeyError(ticker)
-        item.state = state
+        item.state = WatchlistState(state)
