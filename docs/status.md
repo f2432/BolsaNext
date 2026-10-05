@@ -162,12 +162,9 @@ Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas
 
 #### Watchlist
 
-- permitir remover ativos;
-- permitir alterar o estado entre ideia, em análise, candidato, rejeitado e em revisão;
-- apresentar nome/mercado/moeda quando conhecidos;
-- adicionar ativos a partir de um universo;
-- criar persistência SQLite;
-- restaurar a watchlist no arranque;
+- apresentar mercado/moeda quando conhecidos;
+- melhorar edição de notas;
+- permitir eventualmente múltiplas watchlists;
 - evitar bloqueio da interface durante pedidos de rede;
 - tratar erros de preço de forma visível mas não intrusiva.
 
