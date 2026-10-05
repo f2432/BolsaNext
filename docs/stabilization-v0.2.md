@@ -144,7 +144,32 @@ S0 fica formalmente fechado. O passo seguinte é D1 — A6 completa: semântica 
 
 ### D1 — A6 completa
 
-Fechar sem código a semântica de `market` e proveniência/prioridade dos metadados.
+Estado: **DECIDIDO E DOCUMENTADO** em 2026-10-05.
+
+Decisão canónica:
+
+1. O conceito atualmente chamado `market` deixa de representar mistura de região, país, grupo de mercado e bolsa. O significado canónico passa a ser **bolsa/local de cotação (exchange / listing venue)**.
+2. A implementação deverá preferir o nome `exchange` no domínio e persistência quando essa alteração for executada. A UI deverá apresentar um rótulo simples como **Bolsa**. Região geográfica não é introduzida agora; se vier a ser necessária será um atributo separado.
+3. Providers de universos, incluindo Wikipedia, são autoridade para **composição dos universos** e podem fornecer ticker e nome útil/provisório. Não são autoridade final para exchange, moeda ou tipo de ativo.
+4. Yahoo é a fonte principal dos **metadados canónicos do instrumento** na V0.2: nome canónico quando disponível, exchange, moeda e tipo de ativo.
+5. Informação vinda dos universos é considerada provisória/fallback. Valores pouco precisos como `market="US"` não devem continuar a ser tratados como metadados canónicos permanentes.
+6. Um instrumento proveniente de um universo pode ser adicionado quando Yahoo estiver temporariamente indisponível, mas nesse caso apenas devem ser preservados dados que não sejam apresentados como confirmados pela fonte principal. Exchange/moeda desconhecidos ficam por completar em vez de serem inventados ou inferidos silenciosamente.
+7. A ação explícita **Atualizar dados** deve voltar à fonte principal e atualizar metadados canónicos, mesmo quando nome/exchange/moeda já estejam preenchidos. A regra anterior “não consultar se todos os campos estão preenchidos” fica marcada como comportamento a substituir em B8.
+8. A precedência entre fontes é responsabilidade da camada **Application/serviço**. Nem a UI nem o repository decidem qual origem vence.
+9. O repository recebe um `Instrument` já considerado canónico para persistência; não arbitra proveniência.
+10. Não é introduzido neste ciclo um campo persistente `metadata_source`, por não ser necessário para resolver corretamente a V0.2.
+11. Esta decisão governa B3 (subunidades monetárias) e B8.2 (UniverseWidget/metadados). Em particular, lógica de moeda inferida pelo provider Wikipedia deve ser revista à luz desta decisão, e a normalização de convenções específicas do Yahoo deve ficar junto do adapter/provider de Market Data sempre que for uma característica da fonte.
+
+Consequências esperadas para a implementação posterior:
+
+- `Instrument.market` será migrado conceptualmente para `exchange`;
+- a UI deixará de misturar `US`, `NASDAQ`, `AMSTERDAM`, `PARIS`, etc. no mesmo conceito;
+- universos deixam de ser fonte autoritativa para moeda/exchange;
+- `refresh_metadata` passa a significar atualização real a partir da fonte principal;
+- instrumentos existentes com metadados imprecisos poderão ser corrigidos por atualização;
+- B3 poderá remover ou reduzir mapas de moeda inferidos em Wikipedia e concentrar a conversão de convenções de cotação no adapter apropriado.
+
+D1 fica fechado. Próximo passo: **D2 — A7.1: política de backup antes de movimentos e migrações da base**.
 
 ### D2 — A7.1
 
