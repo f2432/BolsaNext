@@ -30,6 +30,7 @@ class WatchlistService:
         self._market_service = market_service
         self._repository = repository
         self._metadata_warnings: tuple[str, ...] = ()
+        self._price_warnings: tuple[str, ...] = ()
 
     @property
     def name(self) -> str:
@@ -38,6 +39,10 @@ class WatchlistService:
     @property
     def metadata_warnings(self) -> tuple[str, ...]:
         return self._metadata_warnings
+
+    @property
+    def price_warnings(self) -> tuple[str, ...]:
+        return self._price_warnings
 
     def add_ticker(
         self,
@@ -105,13 +110,18 @@ class WatchlistService:
         self._persist()
 
     def rows(self, *, refresh_prices: bool = False) -> list[WatchlistRow]:
+        warnings: list[str] = []
         rows: list[WatchlistRow] = []
+
         for item in self._watchlist.items:
-            price = (
-                self._market_service.current_price(item.instrument)
-                if refresh_prices
-                else None
-            )
+            price: float | None = None
+
+            if refresh_prices:
+                try:
+                    price = self._market_service.current_price(item.instrument)
+                except MarketDataError as exc:
+                    warnings.append(f"{item.instrument.ticker}: {exc}")
+
             rows.append(
                 WatchlistRow(
                     ticker=item.instrument.ticker,
@@ -122,6 +132,10 @@ class WatchlistService:
                     price=price,
                 )
             )
+
+        if refresh_prices:
+            self._price_warnings = tuple(warnings)
+
         return rows
 
     def _persist(self) -> None:
