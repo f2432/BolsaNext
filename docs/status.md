@@ -59,7 +59,7 @@ Medições já confirmadas:
 - CI remoto da `dev` passou em Python 3.12;
 - foi detetado um `ResourceWarning` por ligação SQLite não fechada num teste de integração da Watchlist; fica registado para correção no saneamento de persistência/B4.
 
-Falta apenas confirmar visualmente o `git status --short` local e o SHA local para fechar formalmente S0.
+Clone local confirmado limpo por `git status --short` sem saída e SHA local sincronizado com a `dev` (`ced77dc23897603c8b68a908e946767793e4dffb`). **S0 está CONCLUÍDO E VALIDADO.** Próximo passo: D1/A6 — semântica de `market` e proveniência dos metadados.
 
 ## V0.1 — Fundação concluída
 
