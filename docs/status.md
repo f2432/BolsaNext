@@ -6,13 +6,48 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 ## Estado global
 
-Versão de trabalho atual: **V0.2 — Market Data**
+Última versão funcional concluída e integrada: **V0.2 — Market Data**.
+
+Ciclo de trabalho atual: **estabilização final e saneamento pós-V0.2**.
 
 Estado da V0.1: **CONCLUÍDA E VALIDADA** localmente em Windows e no GitHub Actions.
 
-Estado da V0.2: **CONCLUÍDA E VALIDADA LOCALMENTE**.
+Estado da V0.2: **conclusão funcional mantida**, mas uma revisão posterior identificou melhorias, correções e decisões técnicas que serão fechadas antes de iniciar a V0.3.
 
-Próximo objetivo: iniciar a V0.3 — Portfolio.
+Estado da V0.3: **POR INICIAR**. Não existe autorização para implementar Portfolio durante o ciclo atual.
+
+Próximo objetivo depois deste ciclo: iniciar a V0.3 — Portfolio, apenas após fecho e validação explícita da estabilização.
+
+Plano sequencial canónico do ciclo atual: `docs/stabilization-v0.2.md`.
+
+Nota histórica: em 2026-10-05 a V0.2 foi considerada concluída e integrada na `main`. Essa entrega funcional não é apagada; o ciclo atual acrescenta hardening e corrige incongruências identificadas numa revisão posterior.
+
+## Ciclo atual — estabilização final da V0.2
+
+Objetivo: fechar todas as melhorias, correções e decisões técnicas identificadas após a integração funcional da V0.2, **sem iniciar a V0.3**.
+
+Ordem canónica resumida:
+
+1. S0 — baseline;
+2. D1 — A6 completa: semântica de `market` e proveniência dos metadados;
+3. D2 — A7.1: backup antes de migrações/movimentos;
+4. D3 — parte atual de A5: significado de `base_currency` na configuração;
+5. B1 — ports e direção das dependências;
+6. B2 — erros externos;
+7. B3 — subunidades monetárias;
+8. B4 — integridade SQLite;
+9. B5 — localização dos dados;
+10. B6 — migrações;
+11. B7 — fonte única de versão, sem tag ainda;
+12. B8 — hardening Watchlist/UI;
+13. B9 — CI, dependências e qualidade;
+14. B10 — coerência canónica;
+15. itens avulsos I1–I5;
+16. B11 — fecho, integração autorizada e tag `v0.2.0`.
+
+A1–A4, restante A5, restante A7 e A8 permanecem preservados para a futura especificação da V0.3. Nada é descartado.
+
+Ver detalhes, correções ao plano original e rastreabilidade completa em `docs/stabilization-v0.2.md`.
 
 ## V0.1 — Fundação concluída
 
