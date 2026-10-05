@@ -276,7 +276,63 @@ Próximo passo: **B2 — Taxonomia e comportamento dos erros externos**.
 
 ### B2 — Taxonomia e comportamento dos erros externos
 
-Abrange universos, preço atual, histórico, fonte indisponível, instrumento inexistente, formato inesperado e erros coerentes nos ports. É obrigatório antes da V0.3.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Decisões aprovadas em 2026-10-05:
+
+1. Existe uma raiz comum `ExternalDataError`.
+2. `MarketDataError` e `UniverseError` são famílias paralelas; erros de universos não herdam de Market Data.
+3. A família Market Data distingue pelo menos:
+   - `InstrumentNotFoundError`;
+   - `MarketDataUnavailableError`;
+   - `CurrentPriceUnavailableError`;
+   - `MarketDataFormatError`.
+4. A família Universe distingue:
+   - `UnsupportedUniverseError`;
+   - `UniverseSourceUnavailableError`;
+   - `UniverseFormatError`.
+5. `get_current_price()` passa a devolver `float` em sucesso ou a levantar erro tipado. O `None` ambíguo deixa de fazer parte do contrato.
+6. Histórico vazio continua a ser um resultado válido e preserva o schema canónico; esta decisão anterior não é alterada.
+7. Universos passam a devolver `UniverseLoadResult` na camada Application, com estados:
+   - `LIVE`;
+   - `FRESH_CACHE`;
+   - `STALE_CACHE`.
+8. Uma cache expirada pode ser usada como fallback degradado quando a fonte está indisponível ou muda de formato, desde que tenha no máximo **7 dias**.
+9. O uso de cache stale é sempre explícito, com timestamp e aviso; nunca é apresentado como dado fresco.
+10. Não existe fallback stale para universo não suportado.
+11. Exceções internas de urllib, pandas ou yfinance não devem escapar dos adapters quando correspondem a falhas previsíveis.
+12. A Watchlist preserva as restantes linhas quando um preço individual falha e mantém o motivo como aviso tipado/acionável.
+13. A UI apresenta mensagens diferentes para ausência de cotação, falha do fornecedor e formato inesperado; universos mostram também a frescura dos dados.
+
+Implementação realizada na `dev`:
+
+- hierarquia unificada em `app/ports/errors.py`;
+- contrato de preço atual atualizado em `app/ports/market_data.py`;
+- `UniverseLoadResult` e `UniverseLoadStatus` em `app/ports/universe.py`;
+- YFinance traduz falhas previsíveis para erros tipados;
+- Wikipedia traduz indisponibilidade e alterações de formato para a família Universe;
+- `CachedUniverseProvider` suporta cache fresca e fallback stale até 7 dias;
+- `UniverseService` e `UniverseWidget` transportam/mostram proveniência e frescura;
+- `WatchlistService` preserva a lista quando preços individuais falham e expõe avisos;
+- `WatchlistWidget` mostra os avisos de preço;
+- reexports de compatibilidade foram atualizados;
+- testes de rede usam fontes simuladas e não dependem de Internet.
+
+Validação automática:
+
+- GitHub Actions na `dev`: **58 testes passaram em 2.44s**;
+- o crescimento de 40 para 58 testes corresponde à cobertura adicional de erros de Market Data, erros de universos, fallback stale e comportamento da Watchlist.
+
+Falta para fechar B2 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- correr a suite local;
+- abrir a aplicação;
+- validar carregamento normal de um universo e atualização normal de preços.
+
+O fallback stale e os erros de fonte/formato ficam cobertos por testes automatizados, não exigindo provocar falhas reais de rede manualmente.
+
+Próximo passo depois da validação local: **B3 — Moedas em subunidade**.
 
 ### B3 — Moedas em subunidade
 
