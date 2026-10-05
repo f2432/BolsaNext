@@ -128,6 +128,26 @@ GitHub Actions: **40 testes passaram**. O 40.º teste é a nova proteção arqui
 
 Validação local concluída em Windows: `git pull --ff-only origin dev`, `python -m pytest -q` com **40 passed in 2.71s** e arranque da aplicação com `python -m bolsa.main`. **B1 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B2 — erros externos**.
 
+### B2 — erros externos unificados
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Decisões e implementação:
+
+- raiz comum `ExternalDataError`;
+- famílias paralelas `MarketDataError` e `UniverseError`;
+- preço atual deixa de devolver `None` ambiguamente e passa a usar exceções tipadas;
+- distinguem-se ticker inexistente, fornecedor indisponível, ausência de cotação e formato inesperado;
+- universos distinguem código não suportado, fonte indisponível e formato inválido;
+- `UniverseLoadResult` expõe `LIVE`, `FRESH_CACHE` e `STALE_CACHE`;
+- cache stale pode ser usada até 7 dias quando a fonte falha por indisponibilidade ou formato, sempre com aviso/timestamp;
+- Watchlist preserva as restantes linhas quando um preço falha;
+- UI mostra avisos de preço e frescura dos universos.
+
+GitHub Actions: **58 testes passaram em 2.44s**.
+
+Falta validação local normal da aplicação antes de fechar B2. Próximo bloco depois disso: **B3 — moedas em subunidade**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
