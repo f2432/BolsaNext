@@ -32,16 +32,30 @@ class WikipediaUniverseProvider:
             "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
             "symbol_columns": ("Symbol", "Ticker"),
             "name_columns": ("Security", "Company"),
+            "market_columns": (),
             "market": "US",
             "currency": "USD",
+            "ticker_style": "us",
         },
         "nasdaq100": {
             "name": "NASDAQ 100",
             "url": "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
             "symbol_columns": ("Ticker", "Symbol"),
             "name_columns": ("Company", "Security"),
+            "market_columns": (),
             "market": "NASDAQ",
             "currency": "USD",
+            "ticker_style": "us",
+        },
+        "euronext100": {
+            "name": "Euronext 100",
+            "url": "https://en.wikipedia.org/wiki/Euronext_100",
+            "symbol_columns": ("Ticker",),
+            "name_columns": ("Name", "Company"),
+            "market_columns": ("Main listing",),
+            "market": "EURONEXT",
+            "currency": "EUR",
+            "ticker_style": "yahoo",
         },
     }
 
@@ -65,8 +79,10 @@ class WikipediaUniverseProvider:
             table,
             symbol_columns=config["symbol_columns"],
             name_columns=config["name_columns"],
+            market_columns=config.get("market_columns", ()),
             market=config["market"],
             currency=config["currency"],
+            ticker_style=config.get("ticker_style", "us"),
         )
 
         return Universe(
@@ -126,8 +142,10 @@ class WikipediaUniverseProvider:
         *,
         symbol_columns: tuple[str, ...],
         name_columns: tuple[str, ...],
+        market_columns: tuple[str, ...] = (),
         market: str,
         currency: str,
+        ticker_style: str = "us",
     ) -> list[Instrument]:
         symbol_column = next(
             column for column in symbol_columns if column in table.columns
@@ -144,19 +162,36 @@ class WikipediaUniverseProvider:
             if not raw_symbol or raw_symbol.lower() == "nan":
                 continue
 
-            ticker = raw_symbol.upper().replace(".", "-")
+            ticker = raw_symbol.upper()
+            if ticker_style == "us":
+                ticker = ticker.replace(".", "-")
+
             if ticker in seen:
                 continue
 
             raw_name = row[name_column]
             name = None if pd.isna(raw_name) else str(raw_name).strip()
 
+            instrument_market = market
+            if market_columns:
+                market_column = next(
+                    (column for column in market_columns if column in table.columns),
+                    None,
+                )
+                if market_column is not None and not pd.isna(row[market_column]):
+                    instrument_market = str(row[market_column]).strip().upper()
+
+            instrument_currency = WikipediaUniverseProvider._currency_for_ticker(
+                ticker,
+                default=currency,
+            )
+
             instruments.append(
                 Instrument(
                     ticker=ticker,
                     name=name,
-                    market=market,
-                    currency=currency,
+                    market=instrument_market,
+                    currency=instrument_currency,
                     asset_type=AssetType.STOCK,
                 )
             )
@@ -166,3 +201,20 @@ class WikipediaUniverseProvider:
             raise ValueError("O universo obtido não contém instrumentos válidos.")
 
         return instruments
+
+    @staticmethod
+    def _currency_for_ticker(ticker: str, *, default: str) -> str:
+        suffix_map = {
+            ".PA": "EUR",
+            ".AS": "EUR",
+            ".BR": "EUR",
+            ".IR": "EUR",
+            ".MI": "EUR",
+            ".LS": "EUR",
+            ".OL": "NOK",
+            ".DE": "EUR",
+        }
+        for suffix, currency in suffix_map.items():
+            if ticker.endswith(suffix):
+                return currency
+        return default
