@@ -50,6 +50,7 @@ Implementado até ao momento:
 - seleção de instrumento de um universo e adição à Watchlist;
 - domínio e serviço de watchlist;
 - primeira interface funcional da watchlist;
+- metadados automáticos de instrumentos adicionados manualmente;
 - operações de rede em background para universos e atualização de preços;
 - cache local de universos com TTL;
 - persistência SQLite da watchlist;
