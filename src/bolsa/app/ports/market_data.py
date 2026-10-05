@@ -22,8 +22,8 @@ class MarketDataProvider(Protocol):
     ) -> pd.DataFrame:
         """Devolve OHLCV normalizado e ordenado cronologicamente."""
 
-    def get_current_price(self, instrument: Instrument) -> float | None:
-        """Devolve o preço mais recente disponível, ou None."""
+    def get_current_price(self, instrument: Instrument) -> float:
+        """Devolve o preço mais recente ou levanta uma exceção tipada."""
 
     def get_instrument_details(self, instrument: Instrument) -> Instrument:
         """Devolve o instrumento enriquecido com metadados disponíveis."""
