@@ -13,8 +13,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bolsa.app.services.watchlist_service import WatchlistService
+from bolsa.app.services.watchlist_service import WatchlistRow, WatchlistService
 from bolsa.domain.watchlist import WatchlistState
+from bolsa.ui.workers import FunctionThread
 
 
 _STATE_LABELS = {
@@ -30,6 +31,7 @@ class WatchlistWidget(QWidget):
     def __init__(self, service: WatchlistService, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._service = service
+        self._price_thread: FunctionThread | None = None
 
         layout = QVBoxLayout(self)
 
@@ -46,11 +48,14 @@ class WatchlistWidget(QWidget):
         add_button.clicked.connect(self._add_ticker)
         controls.addWidget(add_button)
 
-        refresh_button = QPushButton("Atualizar preços")
-        refresh_button.clicked.connect(lambda: self._refresh_table(refresh_prices=True))
-        controls.addWidget(refresh_button)
+        self._refresh_button = QPushButton("Atualizar preços")
+        self._refresh_button.clicked.connect(self._start_price_refresh)
+        controls.addWidget(self._refresh_button)
 
         layout.addLayout(controls)
+
+        self._status = QLabel("")
+        layout.addWidget(self._status)
 
         self._table = QTableWidget(0, 5)
         self._table.setHorizontalHeaderLabels(
@@ -76,10 +81,41 @@ class WatchlistWidget(QWidget):
         self._refresh_table()
 
     def refresh(self, *, refresh_prices: bool = False) -> None:
-        self._refresh_table(refresh_prices=refresh_prices)
+        if refresh_prices:
+            self._start_price_refresh()
+        else:
+            self._refresh_table()
 
-    def _refresh_table(self, *, refresh_prices: bool = False) -> None:
-        rows = self._service.rows(refresh_prices=refresh_prices)
+    def _start_price_refresh(self) -> None:
+        if self._price_thread is not None:
+            return
+
+        self._status.setText("A atualizar preços...")
+        self._refresh_button.setEnabled(False)
+
+        thread = FunctionThread(self._service.rows, refresh_prices=True)
+        thread.result_ready.connect(self._render_rows)
+        thread.failed.connect(self._price_refresh_failed)
+        thread.finished.connect(self._price_refresh_finished)
+        self._price_thread = thread
+        thread.start()
+
+    def _price_refresh_failed(self, message: str) -> None:
+        self._status.setText("Erro ao atualizar preços.")
+        QMessageBox.warning(self, "Watchlist", message)
+
+    def _price_refresh_finished(self) -> None:
+        self._refresh_button.setEnabled(True)
+        if self._status.text() == "A atualizar preços...":
+            self._status.setText("Preços atualizados.")
+        if self._price_thread is not None:
+            self._price_thread.deleteLater()
+        self._price_thread = None
+
+    def _refresh_table(self) -> None:
+        self._render_rows(self._service.rows())
+
+    def _render_rows(self, rows: list[WatchlistRow]) -> None:
         self._table.setRowCount(len(rows))
 
         for row_index, row in enumerate(rows):
