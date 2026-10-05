@@ -50,6 +50,8 @@ Implementado até ao momento:
 - seleção de instrumento de um universo e adição à Watchlist;
 - domínio e serviço de watchlist;
 - primeira interface funcional da watchlist;
+- operações de rede em background para universos e atualização de preços;
+- cache local de universos com TTL;
 - persistência SQLite da watchlist;
 - restauro automático no arranque;
 - edição de estados;
@@ -59,7 +61,7 @@ Implementado até ao momento:
 Ainda falta:
 
 - Euronext 100;
-- cache local controlada;
+- cache histórico de mercado quando necessário;
 - tratamento assíncrono dos pedidos de rede;
 - validação final da V0.2.
 
