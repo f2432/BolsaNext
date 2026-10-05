@@ -237,7 +237,7 @@ D3 fica fechado. Próximo passo: **B1 — Ports e direção das dependências**.
 
 ### B1 — Ports e direção das dependências
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementação em `dev`: commit `0f680d36a836c8add5893db0c65d6d3f32fab865` — `refactor: move application contracts to ports`.
 
@@ -264,13 +264,15 @@ Resultado automático:
 - nenhuma asserção funcional anterior foi alterada;
 - B1 não alterou comportamento de negócio, UI, Market Data ou persistência.
 
-Falta para fechar B1 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída em Windows:
 
-- sincronizar o clone local com a `dev`;
-- correr a suite local;
-- confirmar que a aplicação continua a abrir normalmente.
+- `git pull --ff-only origin dev` concluído por fast-forward;
+- `python -m pytest -q`: **40 passed in 2.71s**;
+- `python -m bolsa.main`: aplicação iniciou corretamente, conforme validação local do utilizador.
 
-Depois da validação local, o próximo passo é **B2 — Taxonomia e comportamento dos erros externos**.
+B1 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo passo: **B2 — Taxonomia e comportamento dos erros externos**.
 
 ### B2 — Taxonomia e comportamento dos erros externos
 
