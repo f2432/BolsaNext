@@ -16,6 +16,10 @@ class AppConfig:
         return self.data_dir / self.database_name
 
     @property
+    def cache_dir(self) -> Path:
+        return self.data_dir / "cache"
+
+    @property
     def database_url(self) -> str:
         return f"sqlite:///{self.database_path.as_posix()}"
 
@@ -23,4 +27,5 @@ class AppConfig:
 def load_config() -> AppConfig:
     config = AppConfig()
     config.data_dir.mkdir(parents=True, exist_ok=True)
+    config.cache_dir.mkdir(parents=True, exist_ok=True)
     return config
