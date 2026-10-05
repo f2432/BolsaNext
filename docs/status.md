@@ -112,7 +112,7 @@ Próximo passo: **B1 — Ports e direção das dependências**.
 
 ### B1 — ports e direção das dependências
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado no commit `0f680d36a836c8add5893db0c65d6d3f32fab865`:
 
@@ -126,7 +126,7 @@ Implementado no commit `0f680d36a836c8add5893db0c65d6d3f32fab865`:
 
 GitHub Actions: **40 testes passaram**. O 40.º teste é a nova proteção arquitetural.
 
-Falta apenas validação local antes de fechar B1. Próximo bloco depois disso: **B2 — erros externos**.
+Validação local concluída em Windows: `git pull --ff-only origin dev`, `python -m pytest -q` com **40 passed in 2.71s** e arranque da aplicação com `python -m bolsa.main`. **B1 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B2 — erros externos**.
 
 ## V0.1 — Fundação concluída
 
