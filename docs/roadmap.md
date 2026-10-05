@@ -33,7 +33,7 @@ Validação concluída:
 
 ## V0.2 — Market Data
 
-**Estado: FECHO TÉCNICO CONCLUÍDO NA DEV; AGUARDA VALIDAÇÃO LOCAL FINAL.**
+**Estado: CONCLUÍDA E VALIDADA.**
 
 Implementado até ao momento:
 
@@ -72,7 +72,7 @@ Fecho técnico concluído:
 - cache de histórico remetida para V0.4 Analysis;
 - CI executado também sobre pushes para `dev`.
 
-Falta apenas a validação local final da V0.2 antes da sua conclusão e eventual squash para `main`.
+Validação local concluída. A versão está pronta para integração por squash em `main`.
 
 ## V0.3 — Portfolio
 
