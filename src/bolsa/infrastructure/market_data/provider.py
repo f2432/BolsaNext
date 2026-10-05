@@ -22,3 +22,6 @@ class MarketDataProvider(Protocol):
 
     def get_current_price(self, instrument: Instrument) -> float | None:
         """Devolve o preço mais recente disponível, ou None."""
+
+    def get_instrument_details(self, instrument: Instrument) -> Instrument:
+        """Devolve o instrumento enriquecido com metadados disponíveis."""
