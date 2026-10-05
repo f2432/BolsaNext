@@ -254,3 +254,18 @@ Estas preferências:
 - podem ser reutilizadas por novas tabelas da aplicação.
 
 A Watchlist e a tabela de Universos já usam esta abordagem.
+
+
+### Política de erros de Market Data
+
+Falhas previsíveis do fornecedor de dados são traduzidas para exceções próprias:
+
+- `InstrumentNotFoundError`: o fornecedor respondeu, mas não reconheceu o ticker;
+- `MarketDataUnavailableError`: o fornecedor não pôde ser consultado ou ocorreu uma falha de transporte;
+- `MarketDataError`: base comum para erros previsíveis desta infraestrutura.
+
+A UI não interpreta diretamente exceções internas de `yfinance`.
+
+Na V0.2 não existem retries automáticos escondidos. Uma falha é apresentada ao utilizador e a repetição é explícita. Esta decisão evita pedidos repetidos inesperados e pode ser revista quando existirem várias fontes de dados.
+
+Históricos sem dados são válidos e devolvem o schema OHLCV canónico vazio. Quando `Adj Close` não é fornecido, a coluna continua presente com valores em falta; `Close` não é usado silenciosamente como substituto.
