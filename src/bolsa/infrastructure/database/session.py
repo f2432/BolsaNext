@@ -15,4 +15,7 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 
 def initialize_database(engine: Engine) -> None:
+    # Import registers all ORM mappings in Base.metadata before create_all.
+    from bolsa.infrastructure.database import models  # noqa: F401
+
     Base.metadata.create_all(engine)
