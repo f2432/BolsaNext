@@ -1,5 +1,6 @@
 import pandas as pd
 
+from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.infrastructure.market_data.yfinance_provider import (
     YFinanceMarketDataProvider,
 )
@@ -35,3 +36,28 @@ def test_normalise_history_orders_deduplicates_and_adds_columns() -> None:
         "Volume",
     ]
     assert float(result.loc[pd.Timestamp("2026-01-02 00:00:00"), "Close"]) == 11.0
+
+
+def test_get_instrument_details_maps_yahoo_metadata(monkeypatch) -> None:
+    class FakeTicker:
+        def get_info(self):
+            return {
+                "longName": "Advanced Micro Devices, Inc.",
+                "fullExchangeName": "NasdaqGS",
+                "currency": "USD",
+                "quoteType": "EQUITY",
+            }
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    provider = YFinanceMarketDataProvider()
+    result = provider.get_instrument_details(Instrument("AMD"))
+
+    assert result.ticker == "AMD"
+    assert result.name == "Advanced Micro Devices, Inc."
+    assert result.market == "NASDAQGS"
+    assert result.currency == "USD"
+    assert result.asset_type is AssetType.STOCK
