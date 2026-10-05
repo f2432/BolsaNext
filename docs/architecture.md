@@ -380,3 +380,19 @@ A base SQLite é dado persistente e não pode ser movida, substituída ou migrad
 - não existe rotação automática de backups nesta fase.
 
 Esta política protege especificamente B5 (localização dos dados) e B6 (migrações). O desenho de backup/export/import de dados de Portfolio permanece adiado para a futura especificação da V0.3.
+
+
+## Moeda base por omissão
+
+Decisão canónica D3 do ciclo de estabilização V0.2.
+
+`AppConfig.base_currency` é semanticamente uma **moeda base por omissão**, não uma autoridade financeira global.
+
+O nome preferido passa a ser `default_base_currency`.
+
+Regras:
+
+- serve apenas como valor inicial para funcionalidades futuras que precisem de escolher uma moeda base;
+- alterar a configuração não pode alterar silenciosamente entidades persistidas;
+- a futura `Portfolio.base_currency` será a autoridade da respetiva carteira, mas essa funcionalidade continua fora do ciclo atual;
+- não são introduzidos agora cálculos financeiros ou conversão cambial.
