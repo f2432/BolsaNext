@@ -239,3 +239,18 @@ A primeira persistência real do projeto usa SQLAlchemy e SQLite para:
 A Watchlist é reconstruída a partir da base de dados no arranque. Alterações de composição e estado são persistidas através de `SqlAlchemyWatchlistRepository`.
 
 A posição de mercado atual não é guardada na Watchlist. Preços continuam a ser obtidos através do `MarketDataProvider`.
+
+
+### Preferências locais da interface
+
+Preferências puramente visuais, como larguras e estado dos cabeçalhos das tabelas, são guardadas através de `QSettings`.
+
+Estas preferências:
+
+- pertencem ao utilizador local;
+- não fazem parte da base de dados financeira;
+- não entram no Git;
+- são separadas da persistência de domínio;
+- podem ser reutilizadas por novas tabelas da aplicação.
+
+A Watchlist e a tabela de Universos já usam esta abordagem.
