@@ -82,3 +82,39 @@ def test_nasdaq_source_uses_constituents_page() -> None:
     assert source["url"].endswith("List_of_NASDAQ-100_companies")
     assert source["symbol_columns"] == ("Ticker", "Symbol")
     assert source["name_columns"] == ("Company", "Security")
+
+
+def test_euronext_tickers_keep_yahoo_suffixes() -> None:
+    table = pd.DataFrame(
+        {
+            "Ticker": ["ASML.AS", "AIR.PA", "EQNR.OL"],
+            "Name": ["ASML", "Airbus", "Equinor"],
+            "Main listing": ["Amsterdam", "Paris", "Oslo"],
+        }
+    )
+
+    instruments = WikipediaUniverseProvider._table_to_instruments(
+        table,
+        symbol_columns=("Ticker",),
+        name_columns=("Name", "Company"),
+        market_columns=("Main listing",),
+        market="EURONEXT",
+        currency="EUR",
+        ticker_style="yahoo",
+    )
+
+    assert [item.ticker for item in instruments] == [
+        "ASML.AS",
+        "AIR.PA",
+        "EQNR.OL",
+    ]
+    assert instruments[0].market == "AMSTERDAM"
+    assert instruments[0].currency == "EUR"
+    assert instruments[2].market == "OSLO"
+    assert instruments[2].currency == "NOK"
+
+
+def test_euronext100_is_supported() -> None:
+    provider = WikipediaUniverseProvider()
+
+    assert "euronext100" in provider.supported_universes()
