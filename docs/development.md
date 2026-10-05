@@ -151,3 +151,47 @@ O desenvolvimento corrente usa duas branches:
 O script `run.ps1` garante que os testes locais são feitos sobre `dev`. Se for executado estando noutra branch, tenta mudar automaticamente para `dev`.
 
 A `main` só deve ser atualizada depois de validação explícita. A integração de um bloco validado deve ser feita por squash, para que várias alterações intermédias de `dev` resultem num único commit coerente em `main`.
+
+
+## Protocolo do ciclo de estabilização V0.2
+
+O ciclo atual segue obrigatoriamente `docs/stabilization-v0.2.md`.
+
+### Regras de execução
+
+- trabalhar apenas em `dev`;
+- não iniciar V0.3;
+- não criar `Portfolio`, `Transaction`, `Position` ou serviços de Portfolio;
+- começar por S0 e avançar sequencialmente;
+- não saltar itens silenciosamente;
+- quando uma sessão exigir decisão do utilizador, parar antes de implementar;
+- alterações de comportamento entram com testes sempre que forem testáveis;
+- documentação canónica afetada é atualizada sem eliminar informação anterior;
+- `main` só é alterada com pedido explícito do utilizador;
+- a tag `v0.2.0` só pode ser criada depois do fecho B11.
+
+### Baseline de testes
+
+O início deste ciclo tem como referência histórica 39 testes. Esse valor é **baseline inicial**, não número fixo.
+
+Em sessões posteriores:
+
+- todos os testes existentes devem passar;
+- o número de testes pode e deve aumentar quando houver comportamento novo ou corrigido;
+- uma redução do número de testes exige justificação explícita;
+- a cobertura deve ser medida no S0 e novamente no B11.
+
+### Regra de completude
+
+Cada item do plano termina num estado explícito:
+
+- concluído e validado;
+- decidido e documentado;
+- adiado explicitamente, com destino e razão;
+- não aplicável, com justificação.
+
+Nenhum item pode desaparecer por omissão.
+
+### Preservação documental
+
+Antes de modificar qualquer documento canónico, deve ser verificado que nenhuma decisão, requisito, pendência ou justificação anteriormente registada é perdida. Quando uma decisão muda, a anterior permanece identificável como histórica/superseded.
