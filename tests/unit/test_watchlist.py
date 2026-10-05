@@ -22,3 +22,14 @@ def test_watchlist_rejects_duplicate_ticker() -> None:
 
     with pytest.raises(ValueError):
         watchlist.add(Instrument("aapl"))
+
+
+def test_watchlist_normalises_serialized_state_value() -> None:
+    watchlist = Watchlist("Principal")
+    watchlist.add(Instrument("AMD"))
+
+    watchlist.set_state("AMD", "candidate")
+
+    item = watchlist.get("AMD")
+    assert item is not None
+    assert item.state is WatchlistState.CANDIDATE
