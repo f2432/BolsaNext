@@ -61,6 +61,23 @@ Medições já confirmadas:
 
 Clone local confirmado limpo por `git status --short` sem saída e SHA local sincronizado com a `dev` (`ced77dc23897603c8b68a908e946767793e4dffb`). **S0 está CONCLUÍDO E VALIDADO.** Próximo passo: D1/A6 — semântica de `market` e proveniência dos metadados.
 
+### D1 — metadados e significado de market/exchange
+
+Estado: **DECIDIDO E DOCUMENTADO**.
+
+Decisão vigente:
+
+- `market` deixa de significar mistura de região e bolsa; o conceito canónico passa a ser exchange/listing venue;
+- a implementação deverá evoluir para `exchange` e a UI apresentará **Bolsa**;
+- universos são autoridade para composição e apenas fornecem metadados provisórios/fallback;
+- Yahoo é a fonte principal para nome canónico, exchange, moeda e tipo de ativo;
+- falha temporária do Yahoo não obriga a inventar metadados: ticker/nome provisório podem ser preservados e exchange/moeda ficam por completar;
+- `Atualizar dados` deverá voltar sempre à fonte principal;
+- precedência entre fontes pertence à Application, não à UI nem ao repository;
+- a decisão governa B3 e B8.2.
+
+Próximo passo: **D2/A7.1 — política de backup antes de movimentos e migrações da base**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
