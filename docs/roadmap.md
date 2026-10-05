@@ -50,13 +50,15 @@ Implementado até ao momento:
 - seleção de instrumento de um universo e adição à Watchlist;
 - domínio e serviço de watchlist;
 - primeira interface funcional da watchlist;
+- persistência SQLite da watchlist;
+- restauro automático no arranque;
+- edição de estados;
+- remoção de ativos;
 - testes de domínio e infraestrutura.
 
 Ainda falta:
 
 - Euronext 100;
-- persistência SQLite da watchlist;
-- edição dos estados da watchlist;
 - cache local controlada;
 - tratamento assíncrono dos pedidos de rede;
 - validação final da V0.2.
