@@ -1,20 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
 
+from bolsa.app.ports.errors import MarketDataError
+from bolsa.app.ports.repositories import WatchlistRepository
 from bolsa.app.services.market_service import MarketService
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
-from bolsa.infrastructure.market_data.errors import MarketDataError
-
-
-class WatchlistRepository(Protocol):
-    def load(self, name: str) -> Watchlist | None:
-        ...
-
-    def save(self, watchlist: Watchlist) -> None:
-        ...
 
 
 @dataclass(frozen=True, slots=True)

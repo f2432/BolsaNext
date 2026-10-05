@@ -4,8 +4,8 @@ from datetime import date
 
 import pandas as pd
 
+from bolsa.app.ports.market_data import MarketDataProvider
 from bolsa.domain.instruments import Instrument
-from bolsa.infrastructure.market_data.provider import MarketDataProvider
 
 
 class MarketService:

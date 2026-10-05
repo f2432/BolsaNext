@@ -396,3 +396,72 @@ Regras:
 - alterar a configuração não pode alterar silenciosamente entidades persistidas;
 - a futura `Portfolio.base_currency` será a autoridade da respetiva carteira, mas essa funcionalidade continua fora do ciclo atual;
 - não são introduzidos agora cálculos financeiros ou conversão cambial.
+
+
+## Ports e adapters da Application
+
+Decisão e implementação B1 do ciclo de estabilização V0.2.
+
+A direção canónica das dependências é:
+
+```text
+UI
+ ↓
+Application
+ ├── services
+ └── ports
+ ↓
+Domain
+
+Infrastructure ──implementa──> Application ports
+```
+
+A Application não pode importar `bolsa.infrastructure`.
+
+### Ports atuais
+
+Os contratos vivem em `src/bolsa/app/ports/`:
+
+- `market_data.py` — `MarketDataProvider`;
+- `universe.py` — `UniverseProvider`;
+- `repositories.py` — `WatchlistRepository`;
+- `errors.py` — erros previsíveis que fazem parte do contrato externo conhecido pela Application.
+
+Os services importam estes contratos exclusivamente através de `bolsa.app.ports`.
+
+### Adapters atuais
+
+A Infrastructure fornece as implementações:
+
+- `YFinanceMarketDataProvider`;
+- `WikipediaUniverseProvider`;
+- `CachedUniverseProvider`;
+- `SqlAlchemyWatchlistRepository`.
+
+Os Protocols são estruturais: um adapter não precisa de herdar explicitamente do Protocol para o cumprir.
+
+### Erros como parte do contrato
+
+`MarketDataError`, `InstrumentNotFoundError` e `MarketDataUnavailableError` passam a viver canonicamente em `app/ports/errors.py`.
+
+A razão é arquitetural: estes erros são conhecidos pela Application como parte do contrato com dados externos, mas não são regras de negócio do Domain nem devem obrigar a Application a depender de um adapter concreto da Infrastructure.
+
+A taxonomia será expandida no B2 sem voltar a inverter dependências.
+
+### Compatibilidade transitória
+
+Os módulos históricos:
+
+- `infrastructure/market_data/provider.py`;
+- `infrastructure/market_data/universe_provider.py`;
+- `infrastructure/market_data/errors.py`;
+
+permanecem temporariamente como **reexports de compatibilidade**, mas deixam de ser a origem canónica das definições.
+
+Código novo deve importar os contratos por `bolsa.app.ports`.
+
+### Proteção automática da fronteira
+
+Existe um teste arquitetural que percorre `src/bolsa/app/**/*.py` e falha se encontrar imports diretos de `bolsa.infrastructure`.
+
+Assim, a regra deixa de depender apenas da documentação.

@@ -7,7 +7,7 @@ import pandas as pd
 import yfinance as yf
 
 from bolsa.domain.instruments import AssetType, Instrument
-from bolsa.infrastructure.market_data.errors import (
+from bolsa.app.ports.errors import (
     InstrumentNotFoundError,
     MarketDataUnavailableError,
 )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from bolsa.app.ports.universe import UniverseProvider
 from bolsa.domain.universes import Universe
-from bolsa.infrastructure.market_data.universe_provider import UniverseProvider
 
 
 class UniverseService:

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.domain.universes import Universe
-from bolsa.infrastructure.market_data.universe_provider import UniverseProvider
+from bolsa.app.ports.universe import UniverseProvider
 
 logger = logging.getLogger(__name__)
 
