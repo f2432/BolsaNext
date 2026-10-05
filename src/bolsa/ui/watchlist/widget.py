@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from bolsa.app.services.watchlist_service import WatchlistRow, WatchlistService
+from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import WatchlistState
 from bolsa.ui.workers import FunctionThread
 
@@ -32,6 +33,8 @@ class WatchlistWidget(QWidget):
         super().__init__(parent)
         self._service = service
         self._price_thread: FunctionThread | None = None
+        self._metadata_thread: FunctionThread | None = None
+        self._add_thread: FunctionThread | None = None
 
         layout = QVBoxLayout(self)
 
@@ -44,9 +47,13 @@ class WatchlistWidget(QWidget):
         self._ticker_input.returnPressed.connect(self._add_ticker)
         controls.addWidget(self._ticker_input)
 
-        add_button = QPushButton("Adicionar")
-        add_button.clicked.connect(self._add_ticker)
-        controls.addWidget(add_button)
+        self._add_button = QPushButton("Adicionar")
+        self._add_button.clicked.connect(self._add_ticker)
+        controls.addWidget(self._add_button)
+
+        self._metadata_button = QPushButton("Atualizar dados")
+        self._metadata_button.clicked.connect(self._start_metadata_refresh)
+        controls.addWidget(self._metadata_button)
 
         self._refresh_button = QPushButton("Atualizar preços")
         self._refresh_button.clicked.connect(self._start_price_refresh)
@@ -57,9 +64,9 @@ class WatchlistWidget(QWidget):
         self._status = QLabel("")
         layout.addWidget(self._status)
 
-        self._table = QTableWidget(0, 5)
+        self._table = QTableWidget(0, 7)
         self._table.setHorizontalHeaderLabels(
-            ["Ticker", "Nome", "Estado", "Preço atual", "Ações"]
+            ["Ticker", "Nome", "Mercado", "Moeda", "Estado", "Preço atual", "Ações"]
         )
         self._table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self._table)
@@ -68,23 +75,68 @@ class WatchlistWidget(QWidget):
 
     def _add_ticker(self) -> None:
         ticker = self._ticker_input.text().strip()
-        if not ticker:
+        if not ticker or self._add_thread is not None:
             return
 
-        try:
-            self._service.add_ticker(ticker)
-        except ValueError as exc:
-            QMessageBox.warning(self, "Watchlist", str(exc))
-            return
+        self._status.setText(f"A obter dados de {ticker.upper()}...")
+        self._ticker_input.setEnabled(False)
+        self._add_button.setEnabled(False)
 
+        thread = FunctionThread(self._service.add_ticker_enriched, ticker)
+        thread.result_ready.connect(self._manual_add_complete)
+        thread.failed.connect(self._manual_add_failed)
+        thread.finished.connect(self._manual_add_finished)
+        self._add_thread = thread
+        thread.start()
+
+    def _manual_add_complete(self, instrument: Instrument) -> None:
         self._ticker_input.clear()
         self._refresh_table()
+        self._status.setText(f"{instrument.ticker} adicionado.")
+
+    def _manual_add_failed(self, message: str) -> None:
+        self._status.setText("Não foi possível adicionar o ativo.")
+        QMessageBox.warning(self, "Watchlist", message)
+
+    def _manual_add_finished(self) -> None:
+        self._ticker_input.setEnabled(True)
+        self._add_button.setEnabled(True)
+        if self._add_thread is not None:
+            self._add_thread.deleteLater()
+        self._add_thread = None
+        self._ticker_input.setFocus()
 
     def refresh(self, *, refresh_prices: bool = False) -> None:
         if refresh_prices:
             self._start_price_refresh()
         else:
             self._refresh_table()
+
+    def _start_metadata_refresh(self) -> None:
+        if self._metadata_thread is not None:
+            return
+
+        self._status.setText("A atualizar dados dos ativos...")
+        self._metadata_button.setEnabled(False)
+
+        thread = FunctionThread(self._service.refresh_metadata)
+        thread.result_ready.connect(self._render_rows)
+        thread.failed.connect(self._metadata_refresh_failed)
+        thread.finished.connect(self._metadata_refresh_finished)
+        self._metadata_thread = thread
+        thread.start()
+
+    def _metadata_refresh_failed(self, message: str) -> None:
+        self._status.setText("Erro ao atualizar dados dos ativos.")
+        QMessageBox.warning(self, "Watchlist", message)
+
+    def _metadata_refresh_finished(self) -> None:
+        self._metadata_button.setEnabled(True)
+        if self._status.text() == "A atualizar dados dos ativos...":
+            self._status.setText("Dados dos ativos atualizados.")
+        if self._metadata_thread is not None:
+            self._metadata_thread.deleteLater()
+        self._metadata_thread = None
 
     def _start_price_refresh(self) -> None:
         if self._price_thread is not None:
@@ -120,11 +172,9 @@ class WatchlistWidget(QWidget):
 
         for row_index, row in enumerate(rows):
             self._table.setItem(row_index, 0, QTableWidgetItem(row.ticker))
-            self._table.setItem(
-                row_index,
-                1,
-                QTableWidgetItem(row.name or ""),
-            )
+            self._table.setItem(row_index, 1, QTableWidgetItem(row.name or ""))
+            self._table.setItem(row_index, 2, QTableWidgetItem(row.market or ""))
+            self._table.setItem(row_index, 3, QTableWidgetItem(row.currency or ""))
 
             state_combo = QComboBox()
             for state, label in _STATE_LABELS.items():
@@ -135,12 +185,12 @@ class WatchlistWidget(QWidget):
                     self._change_state(ticker, combo.currentData())
                 )
             )
-            self._table.setCellWidget(row_index, 2, state_combo)
+            self._table.setCellWidget(row_index, 4, state_combo)
 
             price_text = "—" if row.price is None else f"{row.price:.2f}"
             self._table.setItem(
                 row_index,
-                3,
+                5,
                 QTableWidgetItem(price_text),
             )
 
@@ -148,7 +198,7 @@ class WatchlistWidget(QWidget):
             remove_button.clicked.connect(
                 lambda _checked=False, ticker=row.ticker: self._remove_ticker(ticker)
             )
-            self._table.setCellWidget(row_index, 4, remove_button)
+            self._table.setCellWidget(row_index, 6, remove_button)
 
     def _change_state(self, ticker: str, state: str) -> None:
         self._service.set_state(ticker, WatchlistState(state))
