@@ -120,7 +120,7 @@ Se falhar, parar.
 
 #### Registo de execução S0 — 2026-10-05
 
-Estado atual: **PARCIALMENTE CONCLUÍDO — falta apenas confirmação visível do `git status --short` e do SHA local**.
+Estado atual: **CONCLUÍDO E VALIDADO**.
 
 Resultados confirmados:
 
@@ -128,6 +128,8 @@ Resultados confirmados:
 - SHA remoto de referência no arranque deste baseline: `d3796d76adfc0678cfcda6f8268a8dd5178a78e0`;
 - `main` permanece em `d4bbe1113704754f0cb8fe8972d07957aa173ffb` e não foi alterada neste ciclo;
 - CI GitHub Actions sobre a `dev`: sucesso;
+- clone local confirmado limpo por `git status --short` sem saída;
+- SHA local confirmado em `ced77dc23897603c8b68a908e946767793e4dffb`, igual ao HEAD remoto da `dev` após sincronização;
 - suite local Windows: **39 testes passaram**;
 - cobertura global local: **55%**;
 - total medido: 957 statements, 429 não cobertos;
@@ -137,6 +139,8 @@ Resultados confirmados:
 - esse warning não fez falhar a suite, mas fica registado como problema real de baseline e deve ser tratado no saneamento de persistência, em particular B4, sem ser perdido por omissão.
 
 O valor de 55% passa a ser o baseline oficial de cobertura deste ciclo. Os 39 testes passam a ser o baseline inicial de contagem, não um número fixo.
+
+S0 fica formalmente fechado. O passo seguinte é D1 — A6 completa: semântica de `market` e proveniência/prioridade dos metadados.
 
 ### D1 — A6 completa
 
