@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Última atualização canónica: 2026-10-02.
+Última atualização canónica: 2026-10-05.
 
 Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o destino; este ficheiro define o ponto em que o projeto se encontra agora.
 
@@ -8,11 +8,13 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 Versão de trabalho atual: **V0.2 — Market Data**
 
-Estado da V0.1: **CONCLUÍDA E VALIDADA localmente em Windows e no GitHub Actions**.
+Estado da V0.1: **CONCLUÍDA E VALIDADA** localmente em Windows e no GitHub Actions.
 
-Estado da V0.2: **iniciada**.
+Estado da V0.2: **EM DESENVOLVIMENTO, com o núcleo funcional já operacional e validado localmente**.
 
-## Já implementado
+Próximo objetivo: fechar os últimos detalhes da V0.2 e preparar a passagem para a V0.3 — Portfolio.
+
+## V0.1 — Fundação concluída
 
 ### Repositório e documentação
 
@@ -33,204 +35,289 @@ Estado da V0.2: **iniciada**.
 - instalação editável através de `pip install -e .`;
 - dependências de desenvolvimento através de `pip install -e ".[dev]"`;
 - comando de consola `bolsanext`;
-- suporte alternativo a `python -m bolsa.main`.
+- suporte alternativo a `python -m bolsa.main`;
+- script Windows `run.ps1` para atualizar, instalar dependências, testar e arrancar a aplicação com um único comando.
 
-### Estrutura de código
+### Estrutura e infraestrutura
 
 - pacote `src/bolsa`;
-- camada `app`;
-- camada `domain`;
-- camada `infrastructure`;
-- camada `ui`;
+- camadas `app`, `domain`, `infrastructure` e `ui`;
 - área reservada `domain/ai/planning`;
-- estrutura inicial para testes unitários e de integração.
-
-### Configuração
-
-- `AppConfig` imutável;
-- nome da aplicação;
-- moeda base inicial EUR;
-- diretório local `data/`;
-- caminho da base de dados;
-- URL SQLite derivada da configuração.
-
-### Logging
-
-- configuração central de logging;
-- formato uniforme;
-- arranque da aplicação registado.
-
-### Base de dados
-
-- SQLAlchemy configurado;
-- `DeclarativeBase`;
+- configuração central através de `AppConfig`;
+- logging centralizado;
+- SQLite;
+- SQLAlchemy;
 - criação de engine;
 - factory de sessões;
 - inicialização de schema;
-- SQLite local em `data/bolsanext.sqlite3`;
-- base de dados local excluída do Git.
-
-Ainda não existem tabelas de domínio. Nesta fase a inicialização cria apenas a infraestrutura vazia.
+- base local em `data/bolsanext.sqlite3`.
 
 ### Interface
 
-- migração conceptual de PyQt5 para PySide6;
-- `MainWindow` mínima;
-- separadores iniciais:
-  - Resumo;
-  - Watchlist;
-  - Carteira;
-  - Análise;
-  - Backtesting;
-  - IA;
-- placeholders explícitos;
-- barra de estado com indicação da V0.1.
+- PySide6;
+- `MainWindow`;
+- áreas Resumo, Watchlist, Carteira, Análise, Backtesting e IA;
+- barra de estado;
+- aplicação executável em Windows.
 
-### Testes
+### Testes e CI
 
-- teste unitário da configuração;
-- teste de integração da inicialização SQLite em memória;
-- `pytest` configurado;
-- `pytest-cov` disponível em dependências de desenvolvimento.
-
-### Integração contínua
-
-- GitHub Actions em `.github/workflows/tests.yml`;
-- Python 3.12;
-- instalação automática do projeto;
-- execução de `pytest -q`;
-- execução em pushes para `main`;
-- execução em pull requests para `main`.
-
-## Falta validar para fechar V0.1
-
-- clonar o repositório num ambiente local limpo;
-- criar a `.venv`;
-- executar `pip install -e ".[dev]"`;
-- executar `pytest`;
-- confirmar que o workflow do GitHub Actions termina com sucesso;
-- executar `bolsanext`;
-- confirmar criação de `data/bolsanext.sqlite3`;
-- confirmar abertura da janela PySide6;
-- verificar o comportamento inicial em Windows;
-- corrigir qualquer problema de empacotamento, paths ou Qt encontrado nessa validação.
+- `pytest`;
+- `pytest-cov`;
+- testes unitários e de integração;
+- GitHub Actions em pushes e pull requests para `main`;
+- V0.1 validada localmente com aplicação a abrir corretamente;
+- GitHub Actions confirmado com sucesso.
 
 ## V0.2 — Market Data
 
-### Já implementado nesta fase
+### Instrumentos
 
 - entidade de domínio `Instrument`;
 - enum `AssetType` com stock, ETF, index e other;
 - normalização de ticker, mercado e moeda;
 - validação básica de ticker e código de moeda;
+- metadados persistentes: nome, mercado, moeda e tipo de ativo.
+
+### Dados de mercado
+
 - contrato `MarketDataProvider`;
 - adapter `YFinanceMarketDataProvider`;
-- obtenção de histórico OHLCV via `yfinance`;
-- obtenção de preço atual com `fast_info` e fallback para histórico intradiário;
-- `MarketService` na camada Application;
-- validação de intervalos de datas no serviço;
-- normalização de `DatetimeIndex`;
-- conversão de timestamps com timezone para UTC timezone-naive;
+- `MarketService`;
+- histórico OHLCV;
+- preço atual;
+- fallback para preço intradiário quando necessário;
+- enriquecimento de instrumentos com metadados Yahoo;
+- colunas canónicas:
+  - `Open`;
+  - `High`;
+  - `Low`;
+  - `Close`;
+  - `Adj Close`;
+  - `Volume`;
+- `auto_adjust=False`;
+- preservação separada de `Close` e `Adj Close`;
 - ordenação cronológica;
 - remoção de datas duplicadas;
-- colunas canónicas `Open`, `High`, `Low`, `Close`, `Adj Close`, `Volume`;
-- política inicial explícita `auto_adjust=False`, preservando OHLC não ajustado e `Adj Close` separadamente;
-- testes de `Instrument`;
-- testes do `MarketService` com provider falso;
-- teste da normalização do provider Yahoo sem depender da rede.
-
-### Falta nesta fase
-
-#### Dados de mercado
-
-- validar a nova implementação no GitHub Actions após os commits V0.2;
-- fazer um teste manual real com um ticker conhecido;
-- decidir e documentar comportamento quando o Yahoo não fornece `Adj Close`;
-- confirmar tratamento de intervalos intradiários e timezone em casos reais;
-- acrescentar erros de domínio/infraestrutura mais específicos em vez de depender apenas de exceções genéricas;
-- definir política de retries e timeouts quando necessário.
-
-#### Universos
-
-- validar localmente o Euronext 100 em Windows;
-- comparar periodicamente a composição obtida com a fonte oficial Euronext;
-- só depois acrescentar outros universos do legacy;
-- evitar que um carregamento de universo dispare pedidos de preço para centenas de ativos sem controlo;
-- eliminar qualquer risco de duplicação de lógica entre domínio e UI.
-
-#### Watchlist
-
-- melhorar edição de notas;
-- permitir eventualmente múltiplas watchlists;
-- tratar erros de preço e metadados de forma visível mas não intrusiva;
-- rever validação de tickers inexistentes ou inválidos.
-
-#### Cache
-
-- cache de universos já implementada;
-- acrescentar cache de histórico de mercado quando a área Analysis começar a consumir séries repetidamente;
-- manter cache fora do Git;
-- rever TTL por tipo de dado quando existirem mais fontes.
+- normalização de `DatetimeIndex`;
+- conversão de timestamps com timezone para UTC timezone-naive.
 
 ### Universos
 
-- consolidar a ideia de universos do projeto legacy;
+- domínio `Universe`;
+- contrato `UniverseProvider`;
+- `UniverseService`;
+- `WikipediaUniverseProvider`;
 - S&P 500;
 - NASDAQ 100;
 - Euronext 100;
-- outros apenas depois da base estar estável;
-- não duplicar lógica entre domínio e UI.
+- correção de HTTP 403 através de User-Agent explícito;
+- correção da fonte dedicada de constituintes do NASDAQ 100;
+- normalização de tickers norte-americanos para formato Yahoo;
+- preservação de sufixos Yahoo nos mercados europeus;
+- mapeamento inicial de moeda por praça;
+- integração na interface;
+- adição de ativos de um universo diretamente à Watchlist;
+- carregamento em background para não bloquear a UI;
+- validação local em Windows de S&P 500, NASDAQ 100 e Euronext 100.
+
+### Cache de universos
+
+- `CachedUniverseProvider`;
+- cache JSON em `data/cache/universes`;
+- validade inicial de 24 horas;
+- metadados de origem e instante de recolha;
+- fallback automático para a fonte quando o cache está ausente, expirado ou inválido;
+- cache excluída do Git;
+- utilização real validada localmente.
 
 ### Watchlist
 
-- criar modelo de domínio;
-- persistência apenas depois de `Instrument` estar definido;
-- estados iniciais coerentes com o módulo Research.
+- domínio `Watchlist`, `WatchlistItem` e `WatchlistState`;
+- estados:
+  - Ideia;
+  - Em análise;
+  - Candidato;
+  - Rejeitado;
+  - Em revisão;
+- adição manual por ticker;
+- enriquecimento automático de metadados para tickers adicionados manualmente;
+- botão `Atualizar dados` para completar metadados antigos;
+- adição através dos universos;
+- prevenção de duplicados;
+- remoção com confirmação;
+- atualização de preços;
+- atualização de preços em background;
+- colunas de ticker, nome, mercado, moeda, estado, preço atual e ações;
+- sincronização imediata entre Universos e Watchlist;
+- persistência SQLite;
+- restauro automático no arranque;
+- persistência do estado selecionado;
+- correção da normalização dos estados vindos da UI;
+- preço atual deliberadamente não persistido, por ser dado transitório de mercado;
+- composição e estado validados localmente após fechar e reabrir a aplicação.
+
+### Persistência atualmente implementada
+
+Tabelas:
+
+- `instruments`;
+- `watchlists`;
+- `watchlist_items`.
+
+Acesso através de `SqlAlchemyWatchlistRepository`.
+
+A origem da verdade para a Watchlist é a base local SQLite.
+
+### Preferências da interface
+
+- larguras e estado dos cabeçalhos das tabelas da Watchlist e dos Universos são persistidos por utilizador através de `QSettings`;
+- alterações feitas manualmente às larguras das colunas são restauradas no arranque seguinte;
+- a implementação é reutilizável para outras tabelas que venham a ser adicionadas.
+
+### Validações locais concluídas
+
+- adição manual de AAPL, MSFT e NVDA;
+- atualização de preços;
+- rejeição correta de tickers duplicados;
+- S&P 500 carregado;
+- NASDAQ 100 carregado;
+- Euronext 100 carregado;
+- AMD adicionada a partir do NASDAQ 100;
+- sincronização visual Universos → Watchlist;
+- persistência de composição da Watchlist;
+- persistência do estado;
+- carregamento assíncrono dos universos;
+- atualização assíncrona de preços;
+- enriquecimento automático de metadados;
+- cache de universos.
+
+## Falta para fechar a V0.2
+
+### Dados de mercado
+
+- confirmar comportamento quando Yahoo não disponibiliza `Adj Close`;
+- rever casos intradiários e timezone em dados reais;
+- introduzir erros de infraestrutura mais específicos onde ainda existam exceções genéricas;
+- definir política de retries/timeouts se vier a ser necessária;
+- rever validação de tickers inexistentes ou inválidos.
+
+### Universos
+
+- comparar periodicamente a composição obtida com a fonte oficial Euronext;
+- só acrescentar novos universos do projeto legacy quando houver necessidade concreta;
+- evitar pedidos massivos de preços ao carregar universos completos.
+
+### Watchlist
+
+- testar localmente a persistência das larguras das colunas;
+- melhorar edição de notas;
+- decidir se múltiplas watchlists entram ainda na V0.2 ou ficam para uma versão posterior;
+- melhorar mensagens de erro de preço e metadados.
 
 ### Cache
 
-- desenhar cache local controlada;
-- cache fora do Git;
-- metadados de origem e instante de recolha;
-- política explícita de expiração.
+- cache de universos concluída;
+- cache de histórico de mercado fica para quando a área Analysis consumir séries repetidamente;
+- rever TTL por tipo de dado quando existirem mais fontes.
 
-## Fases posteriores ainda por implementar
+## Fases posteriores
 
-### V0.3 Portfolio
+### V0.3 — Portfolio
 
-Portfolio e Transaction, compras/vendas, posições derivadas, preço médio, PnL realizado e não realizado, moeda base, comissões e import/export.
+- entidade `Portfolio`;
+- entidade `Transaction`;
+- compras e vendas;
+- posições calculadas a partir das transações;
+- preço médio;
+- PnL realizado e não realizado;
+- moeda base;
+- comissões;
+- importação e exportação.
 
-### V0.4 Analysis
+### V0.4 — Analysis
 
-Gráficos, volume, SMA, EMA, RSI, MACD, Bollinger, ATR, estatística e validação matemática dos indicadores.
+- gráficos;
+- volume;
+- SMA;
+- EMA;
+- RSI;
+- MACD;
+- Bollinger;
+- ATR;
+- estatística;
+- validação matemática dos indicadores.
 
-### V0.5 Strategies
+### V0.5 — Strategies
 
-Interface comum, SMA Crossover, RSI + MACD, parâmetros e testes de sinais.
+- interface comum de estratégias;
+- SMA Crossover;
+- RSI + MACD;
+- parâmetros;
+- testes de sinais.
 
-### V0.6 Backtesting
+### V0.6 — Backtesting
 
-Motor temporal, execução, custos, slippage, position sizing, equity curve, métricas e benchmark.
+- motor temporal;
+- execução;
+- custos;
+- slippage;
+- position sizing;
+- equity curve;
+- métricas;
+- benchmark.
 
-### V0.7 Investment Research
+### V0.7 — Investment Research
 
-Diário, tese, catalisadores, riscos, invalidação, cenários e revisão.
+- diário;
+- tese;
+- catalisadores;
+- riscos;
+- invalidação;
+- cenários;
+- revisão.
 
-### V0.8 AI Foundation
+### V0.8 — AI Foundation
 
-Datasets, features, targets, pipelines, validação temporal, modelos baseline, `ModelRun`, `Prediction` e avaliação fora da amostra.
+- datasets;
+- features;
+- targets;
+- pipelines;
+- validação temporal;
+- modelos baseline;
+- `ModelRun`;
+- `Prediction`;
+- avaliação fora da amostra.
 
-### V0.9 AI Research
+### V0.9 — AI Research
 
-Calibração, ensembles, regressão de retornos, ranking, explicabilidade e avaliação por regimes/horizontes.
+- calibração;
+- ensembles;
+- regressão de retornos;
+- ranking;
+- explicabilidade;
+- avaliação por regimes e horizontes.
 
-### V0.10 AI Planning
+### V0.10 — AI Planning
 
-Planeamento IA experimental com estados, contexto, ações possíveis, transições, avaliação de planos e histórico de decisões simuladas.
+- Planeamento IA experimental;
+- estados;
+- contexto;
+- ações possíveis;
+- transições;
+- avaliação de planos;
+- histórico de decisões simuladas.
 
 ### V1.0
 
-Integração, testes, documentação, migrações, tratamento de erros, instalação reproduzível, revisão de privacidade e estabilização da interface.
+- integração;
+- testes;
+- documentação;
+- migrações;
+- tratamento de erros;
+- instalação reproduzível;
+- revisão de privacidade;
+- estabilização da interface.
 
 ## Decisões vigentes
 
@@ -244,4 +331,5 @@ Integração, testes, documentação, migrações, tratamento de erros, instala�
 - IA mantém-se no plano desde o início;
 - Planeamento IA mantém-se como componente prevista;
 - nenhuma execução automática de ordens é objetivo da fase atual;
-- dados pessoais, posições reais, credenciais, caches e modelos treinados não entram no Git.
+- dados pessoais, posições reais, credenciais, caches e modelos treinados não entram no Git;
+- preferências visuais do utilizador podem ser persistidas localmente com `QSettings`, separadas dos dados financeiros.
