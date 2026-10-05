@@ -333,3 +333,21 @@ A origem da verdade para a Watchlist é a base local SQLite.
 - nenhuma execução automática de ordens é objetivo da fase atual;
 - dados pessoais, posições reais, credenciais, caches e modelos treinados não entram no Git;
 - preferências visuais do utilizador podem ser persistidas localmente com `QSettings`, separadas dos dados financeiros.
+
+
+## Fluxo Git canónico
+
+O desenvolvimento corrente usa duas branches:
+
+- `main`: contém apenas estados validados pelo utilizador;
+- `dev`: contém trabalho em curso, correções, testes e documentação intermédia.
+
+Regras:
+
+- todo o desenvolvimento novo é feito em `dev`;
+- o utilizador testa localmente a branch `dev` através de `run.ps1`;
+- `run.ps1` muda para `dev` quando necessário, atualiza a branch, instala dependências, executa os testes e arranca a aplicação;
+- nenhuma alteração deve ser integrada em `main` sem pedido explícito do utilizador;
+- quando um bloco estiver validado e o utilizador pedir passagem para `main`, a integração é feita por squash para produzir um único commit coerente;
+- depois da integração, o trabalho seguinte continua em `dev`;
+- commits intermédios de `dev` são considerados técnicos e não fazem parte do histórico final pretendido da `main`.
