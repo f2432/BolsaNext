@@ -297,3 +297,61 @@ Estas decisões adiadas não devem ser inferidas nem implementadas durante o san
 ### Regra de preservação arquitetural
 
 Uma decisão arquitetural substituída não é apagada sem rasto. Deve ficar identificada como histórica/superseded, com a nova decisão e respetiva justificação.
+
+
+## Metadados de instrumentos e autoridade das fontes
+
+Decisão canónica D1 do ciclo de estabilização V0.2.
+
+### Significado de market/exchange
+
+O campo histórico `Instrument.market` é considerado semanticamente ambíguo porque foi usado para região, grupo de mercado e bolsa.
+
+O conceito canónico passa a ser **exchange / listing venue**: a bolsa ou local de cotação do instrumento.
+
+A implementação deverá evoluir de `market` para `exchange` quando a alteração de código/schema for executada. A UI deverá apresentar o conceito como **Bolsa**.
+
+Região geográfica, país ou exposição regional não são sinónimos de exchange e, se vierem a ser necessários, serão atributos separados.
+
+### Autoridade das fontes
+
+A política de proveniência é:
+
+- providers de universos, como Wikipedia, são autoridade para **composição do universo**;
+- podem fornecer ticker e nome útil/provisório para apresentação;
+- não são autoridade final para exchange, moeda ou tipo de ativo;
+- Yahoo é a fonte principal dos metadados canónicos do instrumento na V0.2: nome quando disponível, exchange, moeda e asset type;
+- informação de universos é provisória/fallback e não deve ser promovida silenciosamente a verdade canónica quando a fonte principal não a confirmou.
+
+### Falha temporária da fonte principal
+
+Uma falha temporária do Yahoo não deve impedir necessariamente a adição de um ticker vindo de um universo.
+
+Nesse caso:
+
+- preserva-se o ticker;
+- pode preservar-se um nome provisório vindo do universo;
+- exchange/moeda não confirmados ficam desconhecidos/em falta;
+- não se inventam valores como `US`, `EURONEXT` ou moedas inferidas apenas para preencher campos.
+
+Uma atualização posterior deve poder completar esses metadados.
+
+### Atualização explícita de metadados
+
+A ação `Atualizar dados` significa consultar novamente a fonte principal e atualizar os metadados canónicos, mesmo quando os campos já estejam preenchidos.
+
+A otimização anterior que evitava consulta quando nome, market e currency estavam todos preenchidos fica superseded por esta política.
+
+### Responsabilidade por precedência
+
+A arbitragem entre fontes pertence à camada Application/serviço.
+
+- a UI não decide qual fonte vence;
+- o repository não decide qual fonte vence;
+- o repository persiste um `Instrument` já considerado canónico pela Application.
+
+Não é introduzido nesta fase um campo persistente `metadata_source`.
+
+### Relação com subunidades monetárias
+
+B3 deve obedecer a esta política. Convenções específicas de cotação de um fornecedor, como moedas/subunidades reportadas pelo Yahoo, devem ser normalizadas junto do adapter/provider apropriado antes de os dados serem expostos como valores canónicos ao resto da aplicação.
