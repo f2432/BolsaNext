@@ -465,3 +465,13 @@ Código novo deve importar os contratos por `bolsa.app.ports`.
 Existe um teste arquitetural que percorre `src/bolsa/app/**/*.py` e falha se encontrar imports diretos de `bolsa.infrastructure`.
 
 Assim, a regra deixa de depender apenas da documentação.
+
+
+### Estado de validação B1
+
+B1 concluído e validado em 2026-10-05:
+
+- CI GitHub Actions: 40 testes passaram;
+- validação local Windows: 40 testes passaram;
+- aplicação iniciou corretamente após a refatoração;
+- a fronteira `Application → Infrastructure` fica protegida por teste arquitetural.
