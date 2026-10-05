@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
 
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
+from bolsa.domain.universes import Universe
+from bolsa.ui.workers import FunctionThread
 
 
 _UNIVERSE_LABELS = {
@@ -36,6 +38,7 @@ class UniverseWidget(QWidget):
         super().__init__(parent)
         self._universe_service = universe_service
         self._watchlist_service = watchlist_service
+        self._load_thread: FunctionThread | None = None
 
         layout = QVBoxLayout(self)
 
@@ -47,13 +50,13 @@ class UniverseWidget(QWidget):
             self._combo.addItem(_UNIVERSE_LABELS.get(code, code), code)
         controls.addWidget(self._combo)
 
-        load_button = QPushButton("Carregar")
-        load_button.clicked.connect(self._load_universe)
-        controls.addWidget(load_button)
+        self._load_button = QPushButton("Carregar")
+        self._load_button.clicked.connect(self._load_universe)
+        controls.addWidget(self._load_button)
 
-        add_button = QPushButton("Adicionar selecionado à Watchlist")
-        add_button.clicked.connect(self._add_selected)
-        controls.addWidget(add_button)
+        self._add_button = QPushButton("Adicionar selecionado à Watchlist")
+        self._add_button.clicked.connect(self._add_selected)
+        controls.addWidget(self._add_button)
 
         controls.addStretch()
         layout.addLayout(controls)
@@ -71,19 +74,21 @@ class UniverseWidget(QWidget):
 
     def _load_universe(self) -> None:
         code = self._combo.currentData()
-        if not code:
+        if not code or self._load_thread is not None:
             return
 
         self._status.setText("A carregar universo...")
         self._table.setRowCount(0)
+        self._set_loading(True)
 
-        try:
-            universe = self._universe_service.load(code)
-        except Exception as exc:
-            self._status.setText("Erro ao carregar universo.")
-            QMessageBox.critical(self, "Universos", str(exc))
-            return
+        thread = FunctionThread(self._universe_service.load, code)
+        thread.result_ready.connect(self._render_universe)
+        thread.failed.connect(self._load_failed)
+        thread.finished.connect(self._load_finished)
+        self._load_thread = thread
+        thread.start()
 
+    def _render_universe(self, universe: Universe) -> None:
         self._table.setRowCount(len(universe.instruments))
         for row_index, instrument in enumerate(universe.instruments):
             self._table.setItem(row_index, 0, QTableWidgetItem(instrument.ticker))
@@ -97,6 +102,21 @@ class UniverseWidget(QWidget):
 
         if self._table.rowCount() > 0:
             self._table.selectRow(0)
+
+    def _load_failed(self, message: str) -> None:
+        self._status.setText("Erro ao carregar universo.")
+        QMessageBox.critical(self, "Universos", message)
+
+    def _load_finished(self) -> None:
+        self._set_loading(False)
+        if self._load_thread is not None:
+            self._load_thread.deleteLater()
+        self._load_thread = None
+
+    def _set_loading(self, loading: bool) -> None:
+        self._combo.setEnabled(not loading)
+        self._load_button.setEnabled(not loading)
+        self._add_button.setEnabled(not loading)
 
     def _add_selected(self) -> None:
         row = self._table.currentRow()
