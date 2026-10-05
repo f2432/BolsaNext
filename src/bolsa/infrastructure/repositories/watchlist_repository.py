@@ -102,7 +102,7 @@ class SqlAlchemyWatchlistRepository:
                         )
                         session.add(item_model)
 
-                    item_model.state = domain_item.state.value
+                    item_model.state = WatchlistState(domain_item.state).value
                     item_model.notes = domain_item.notes
 
                 for item_model in list(model.items):
