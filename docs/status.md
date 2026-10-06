@@ -148,6 +148,27 @@ GitHub Actions: **58 testes passaram em 2.44s**.
 
 Validação local confirmada pelo utilizador em 2026-10-06. **B2 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B3 — moedas em subunidade**.
 
+### B3 — subunidades monetárias
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementado no commit `d27342efbb0665db2a44bb39a4da4d728eeaa19b`:
+
+- convenções Yahoo ficam no adapter e não no Domain;
+- `GBp/GBX → GBP × 0.01`, `ZAc → ZAR × 0.01`, `ILA → ILS × 0.01`;
+- códigos canónicos de três letras em maiúsculas usam fator 1;
+- convenções inesperadas produzem `MarketDataFormatError`;
+- preço atual e OHLC + Adj Close são escalados; Volume não é alterado;
+- convenção é mantida em cache de sessão por ticker;
+- moeda do `Instrument` não é usada para inferir escala;
+- regressão `12345 GBp → 123.45 GBP` coberta por teste.
+
+GitHub Actions: **72 testes passaram em 1.01s**.
+
+Falta validação local, incluindo idealmente um ticker de Londres em pence. Próximo bloco depois disso: **B4 — integridade SQLite**.
+
+Nota para B9: CI emitiu aviso de depreciação do runtime Node.js 20 usado pelas versões atuais de checkout/setup-python; não bloqueia B3, mas fica preservado para revisão de CI.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
