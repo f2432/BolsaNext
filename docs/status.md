@@ -130,7 +130,7 @@ Validação local concluída em Windows: `git pull --ff-only origin dev`, `pytho
 
 ### B2 — erros externos unificados
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Decisões e implementação:
 
@@ -146,7 +146,7 @@ Decisões e implementação:
 
 GitHub Actions: **58 testes passaram em 2.44s**.
 
-Falta validação local normal da aplicação antes de fechar B2. Próximo bloco depois disso: **B3 — moedas em subunidade**.
+Validação local confirmada pelo utilizador em 2026-10-06. **B2 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B3 — moedas em subunidade**.
 
 ## V0.1 — Fundação concluída
 
