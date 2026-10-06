@@ -333,7 +333,58 @@ Próximo passo: **B3 — Moedas em subunidade**.
 
 ### B3 — Moedas em subunidade
 
-Depois de D1. Resolver `GBp`/GBP e equivalentes, conversão canónica, responsabilidade da convenção do fornecedor e testes contra erros de fator 100.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Desenho aprovado em 2026-10-06 e subordinado a D1/A6:
+
+1. O domínio conhece apenas moedas canónicas (`GBP`, `ZAR`, `ILS`, etc.).
+2. Convenções de cotação específicas do Yahoo pertencem ao adapter Yahoo e não são persistidas no `Instrument`.
+3. Convenções iniciais suportadas:
+   - `GBp` → `GBP`, fator `0.01`;
+   - `GBX` → `GBP`, fator `0.01`;
+   - `ZAc` → `ZAR`, fator `0.01`;
+   - `ILA` → `ILS`, fator `0.01`;
+   - códigos canónicos de três letras em maiúsculas → fator `1.0`.
+4. Uma convenção desconhecida ou malformada não é silenciosamente convertida; produz `MarketDataFormatError`.
+5. O fator é aplicado ao preço atual e às colunas históricas `Open`, `High`, `Low`, `Close` e `Adj Close`.
+6. `Volume` não é escalado.
+7. O provider mantém uma pequena cache em memória por ticker com a convenção bruta, moeda canónica e fator. Esta cache é apenas da sessão e não é persistida.
+8. `Instrument.currency` nunca é usado para inferir o fator, porque `GBP` persistido não permite distinguir GBP de uma cotação Yahoo em pence.
+9. Wikipedia continua provisoriamente com os seus metadados atuais até B8.2; B3 garante que esses dados não são usados para decidir a escala dos preços Yahoo.
+10. O caso crítico `12345 GBp → 123.45 GBP` fica protegido por teste explícito.
+
+Implementação na `dev`: commit `d27342efbb0665db2a44bb39a4da4d728eeaa19b` — `fix: normalize Yahoo quote subunits`.
+
+Foi implementado:
+
+- objeto interno `_QuoteConvention` no adapter Yahoo;
+- mapa explícito de subunidades;
+- cache de convenção por ticker;
+- normalização da moeda em `get_instrument_details()`;
+- escala do preço atual;
+- escala de OHLC + Adj Close no histórico, sem alterar Volume;
+- erro tipado para convenções inesperadas;
+- testes parametrizados para moedas canónicas/subunidades;
+- teste de histórico com volume preservado;
+- teste de cache da convenção;
+- teste de regressão explícito para fator 100.
+
+Validação automática:
+
+- GitHub Actions na `dev`: **72 testes passaram em 1.01s**;
+- baseline anterior a B3: 58 testes;
+- os 14 testes adicionais cobrem convenções de moeda, rejeição de formatos inesperados, metadados canónicos, escala de preço/histórico e cache da sessão.
+
+Falta para fechar B3 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- correr a suite local;
+- abrir a aplicação;
+- validar pelo menos um ticker cotado em subunidade, preferencialmente um título de Londres como `VOD.L`, confirmando que a moeda apresentada é `GBP` e que o preço não aparece 100 vezes acima do valor esperado.
+
+Observação preservada para B9: o GitHub Actions atual emitiu aviso de depreciação do runtime Node.js 20 nas versões usadas de `actions/checkout@v4` e `actions/setup-python@v5`; o workflow continua a passar, mas este aviso deve ser revisto no bloco de CI/qualidade.
+
+Próximo passo depois da validação local: **B4 — Integridade SQLite**.
 
 ### B4 — Integridade SQLite
 
