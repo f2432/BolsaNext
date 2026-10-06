@@ -558,3 +558,12 @@ A Watchlist trata falhas de preço por instrumento, preserva as restantes linhas
 A UI de universos mostra se os dados vieram de cache fresca ou stale e, neste último caso, apresenta o aviso associado.
 
 Testes dos caminhos de erro usam providers/fontes simulados; o CI não depende de Yahoo ou Wikipedia reais.
+
+
+### Estado de validação B2
+
+B2 concluído e validado em 2026-10-06:
+
+- GitHub Actions na `dev`: 58 testes passaram;
+- validação local confirmada pelo utilizador;
+- a taxonomia de erros externos, o contrato de preço atual e o fallback stale dos universos ficam vigentes como política canónica.
