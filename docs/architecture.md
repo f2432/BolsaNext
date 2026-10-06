@@ -567,3 +567,59 @@ B2 concluído e validado em 2026-10-06:
 - GitHub Actions na `dev`: 58 testes passaram;
 - validação local confirmada pelo utilizador;
 - a taxonomia de erros externos, o contrato de preço atual e o fallback stale dos universos ficam vigentes como política canónica.
+
+
+## Convenções de cotação e subunidades monetárias
+
+Decisão e implementação B3 do ciclo de estabilização V0.2.
+
+### Separação de responsabilidades
+
+O Domain conhece apenas a moeda canónica do instrumento.
+
+Convenções específicas de cotação do fornecedor pertencem ao adapter correspondente. No adapter Yahoo, uma cotação em `GBp`, por exemplo, é convertida antes de o preço ser exposto ao resto da aplicação.
+
+`Instrument.currency` não é usado para inferir a escala do preço.
+
+### Convenções suportadas inicialmente
+
+```text
+GBp → GBP × 0.01
+GBX → GBP × 0.01
+ZAc → ZAR × 0.01
+ILA → ILS × 0.01
+USD/EUR/GBP/... canónico em três letras maiúsculas → × 1.0
+```
+
+A correspondência de subunidades é deliberadamente sensível à forma bruta recebida: `GBp` não é normalizado para `GBP` antes de identificar a convenção.
+
+Uma moeda inesperada/malformada produz `MarketDataFormatError` em vez de assumir silenciosamente fator 1.
+
+### Escala aplicada
+
+O fator é aplicado a:
+
+- preço atual;
+- Open;
+- High;
+- Low;
+- Close;
+- Adj Close.
+
+`Volume` não é alterado.
+
+### Cache da sessão
+
+`YFinanceMarketDataProvider` mantém por ticker uma convenção de cotação em memória, contendo:
+
+- moeda bruta;
+- moeda canónica;
+- fator de preço.
+
+Esta cache evita consultas repetidas durante a sessão e não é persistida em SQLite.
+
+### Relação com universos
+
+Por decisão D1, universos não são autoridade final para moeda/exchange. B3 não utiliza a moeda vinda da Wikipedia para escolher o fator de preços Yahoo.
+
+A limpeza integral da proveniência no fluxo UniverseWidget → Watchlist fica para B8.2.
