@@ -276,7 +276,7 @@ Próximo passo: **B2 — Taxonomia e comportamento dos erros externos**.
 
 ### B2 — Taxonomia e comportamento dos erros externos
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Decisões aprovadas em 2026-10-05:
 
@@ -323,16 +323,13 @@ Validação automática:
 - GitHub Actions na `dev`: **58 testes passaram em 2.44s**;
 - o crescimento de 40 para 58 testes corresponde à cobertura adicional de erros de Market Data, erros de universos, fallback stale e comportamento da Watchlist.
 
-Falta para fechar B2 como **CONCLUÍDO E VALIDADO**:
-
-- sincronizar o clone local;
-- correr a suite local;
-- abrir a aplicação;
-- validar carregamento normal de um universo e atualização normal de preços.
+Validação local confirmada pelo utilizador em 2026-10-06.
 
 O fallback stale e os erros de fonte/formato ficam cobertos por testes automatizados, não exigindo provocar falhas reais de rede manualmente.
 
-Próximo passo depois da validação local: **B3 — Moedas em subunidade**.
+B2 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo passo: **B3 — Moedas em subunidade**.
 
 ### B3 — Moedas em subunidade
 
