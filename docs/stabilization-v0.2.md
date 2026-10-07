@@ -385,7 +385,7 @@ Próximo passo: **B4 — Integridade SQLite**.
 
 ### B4 — Integridade SQLite
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; VALIDAÇÃO LOCAL BLOQUEADA TEMPORARIAMENTE PELO WINDOWS APP CONTROL**.
 
 Desenho aprovado em 2026-10-07:
 
@@ -431,6 +431,21 @@ Falta para fechar B4 como **CONCLUÍDO E VALIDADO**:
 - confirmar que a Watchlist continua persistida normalmente.
 
 Próximo passo depois da validação local: **B5 — Localização estável dos dados**.
+
+#### Incidente de validação local B4 — Windows App Control
+
+Durante a validação local em Windows/Python 3.14.5, a suite e a própria aplicação deixaram de conseguir importar SQLAlchemy porque o Windows bloqueou o módulo binário `sqlalchemy.util._collections_cy` com a mensagem `DLL load failed ... Uma política de Controlo de Aplicações bloqueou este ficheiro`.
+
+Consequências:
+
+- a falha ocorre durante o import de SQLAlchemy, antes de o código B4 ser executado;
+- o mesmo bloqueio afeta os testes de integração e o arranque da aplicação;
+- o CI Linux/Python 3.12 do mesmo commit continua verde com 75 testes;
+- B4 não é marcado como falhado nem concluído; a validação local fica bloqueada até resolver o ambiente Windows;
+- não enfraquecer nem desativar a política de App Control como solução de projeto;
+- preferir corrigir o ambiente Python/SQLAlchemy, idealmente usando uma instalação pure-Python do SQLAlchemy caso a política continue a bloquear a extensão C opcional;
+- depois de corrigido o ambiente, repetir exatamente a validação local B4 antes de avançar para B5.
+
 
 ### B5 — Localização estável dos dados
 
