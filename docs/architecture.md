@@ -712,3 +712,96 @@ B4 concluído e validado em 2026-10-08:
 - o `ResourceWarning` SQLite identificado no S0 deixou de aparecer no CI B4;
 - o bloqueio local do Windows App Control incidia sobre a extensão C opcional do SQLAlchemy e foi resolvido com instalação pure-Python da mesma versão, sem alterar o código da aplicação nem enfraquecer a política de segurança do Windows;
 - a política SQLite deste bloco fica vigente como comportamento canónico.
+
+
+## Localização estável dos dados
+
+Decisão e implementação B5 do ciclo de estabilização V0.2.
+
+### Diretoria de dados
+
+Os dados persistentes deixam de depender do diretório de trabalho atual.
+
+A localização normal é obtida por `platformdirs` com `appauthor=False` e sem criação implícita de diretórios.
+
+Estrutura lógica:
+
+```text
+<user data dir>/BolsaNext/
+├── bolsanext.sqlite3
+├── cache/
+│   └── universes/
+└── backups/
+```
+
+Em Windows, a localização normal é a área Local AppData do utilizador. Em Linux/macOS são usados os locais convencionais do sistema.
+
+### Override
+
+`BOLSANEXT_DATA_DIR` permite definir explicitamente outra diretoria.
+
+O override é deliberado e, quando usado, não ativa a proteção de migração legacy do repositório, porque a escolha de localização já foi explícita.
+
+### Configuração sem efeitos laterais
+
+`load_config()` apenas resolve configuração.
+
+A criação física de diretórios pertence a:
+
+```python
+prepare_environment(config)
+```
+
+Assim, ler configuração não altera o disco.
+
+### Moeda base por omissão
+
+B5 materializa a decisão D3 e renomeia `AppConfig.base_currency` para `AppConfig.default_base_currency`.
+
+Continua a ser apenas um valor por omissão. Não é autoridade financeira global e não introduz lógica de Portfolio.
+
+### Proteção da base legacy
+
+Se a localização nova ainda não contém base, mas existe `data/bolsanext.sqlite3` no repositório local, o arranque normal **não cria uma base vazia nova**.
+
+Em vez disso, pára e exige migração explícita.
+
+Isto evita a situação em que a aplicação aparenta ter perdido a Watchlist quando, na realidade, apenas mudou de ficheiro.
+
+### Migração explícita
+
+A ferramenta:
+
+```text
+python -m bolsa.tools.migrate_data_dir
+```
+
+mostra por omissão um dry-run com:
+
+- origem;
+- destino;
+- caminho do backup;
+- existência de cada um.
+
+Nenhum dado é alterado sem `--execute`.
+
+A execução efetiva:
+
+1. valida a base de origem com `PRAGMA quick_check`;
+2. cria backup imutável via SQLite Backup API;
+3. valida o backup;
+4. cria a nova base a partir do backup;
+5. valida a nova base;
+6. preserva sempre a base de origem.
+
+Se o destino já existir, a operação pára e não sobrescreve nada.
+
+### Cache
+
+Cache de universos não é migrada. É dado derivado e pode ser recriada.
+
+### Relação com B6
+
+B5 trata apenas **localização física dos dados**.
+
+Evolução de schema, baseline e revisões Alembic pertencem ao B6.
