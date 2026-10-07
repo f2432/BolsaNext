@@ -150,7 +150,7 @@ Validação local confirmada pelo utilizador em 2026-10-06. **B2 está CONCLUÍD
 
 ### B3 — subunidades monetárias
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado no commit `d27342efbb0665db2a44bb39a4da4d728eeaa19b`:
 
@@ -165,7 +165,7 @@ Implementado no commit `d27342efbb0665db2a44bb39a4da4d728eeaa19b`:
 
 GitHub Actions: **72 testes passaram em 1.01s**.
 
-Falta validação local, incluindo idealmente um ticker de Londres em pence. Próximo bloco depois disso: **B4 — integridade SQLite**.
+Validação local confirmada pelo utilizador em 2026-10-07. **B3 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B4 — integridade SQLite**.
 
 Nota para B9: CI emitiu aviso de depreciação do runtime Node.js 20 usado pelas versões atuais de checkout/setup-python; não bloqueia B3, mas fica preservado para revisão de CI.
 
