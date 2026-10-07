@@ -30,36 +30,40 @@ def main() -> int:
     config = load_config()
 
     engine = create_database_engine(config.database_url)
-    initialize_database(engine)
-    session_factory = create_session_factory(engine)
 
-    watchlist_repository = SqlAlchemyWatchlistRepository(session_factory)
-    watchlist = watchlist_repository.load("Principal") or Watchlist("Principal")
+    try:
+        initialize_database(engine)
+        session_factory = create_session_factory(engine)
 
-    market_service = MarketService(YFinanceMarketDataProvider())
-    universe_service = UniverseService(
-        CachedUniverseProvider(
-            WikipediaUniverseProvider(),
-            config.cache_dir / "universes",
+        watchlist_repository = SqlAlchemyWatchlistRepository(session_factory)
+        watchlist = watchlist_repository.load("Principal") or Watchlist("Principal")
+
+        market_service = MarketService(YFinanceMarketDataProvider())
+        universe_service = UniverseService(
+            CachedUniverseProvider(
+                WikipediaUniverseProvider(),
+                config.cache_dir / "universes",
+            )
         )
-    )
-    watchlist_service = WatchlistService(
-        watchlist,
-        market_service,
-        repository=watchlist_repository,
-    )
+        watchlist_service = WatchlistService(
+            watchlist,
+            market_service,
+            repository=watchlist_repository,
+        )
 
-    logger.info("A iniciar %s", config.app_name)
+        logger.info("A iniciar %s", config.app_name)
 
-    app = QApplication(sys.argv)
-    window = MainWindow(
-        config.app_name,
-        watchlist_service=watchlist_service,
-        universe_service=universe_service,
-    )
-    window.show()
+        app = QApplication(sys.argv)
+        window = MainWindow(
+            config.app_name,
+            watchlist_service=watchlist_service,
+            universe_service=universe_service,
+        )
+        window.show()
 
-    return app.exec()
+        return app.exec()
+    finally:
+        engine.dispose()
 
 
 if __name__ == "__main__":
