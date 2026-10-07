@@ -385,7 +385,7 @@ Próximo passo: **B4 — Integridade SQLite**.
 
 ### B4 — Integridade SQLite
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; VALIDAÇÃO LOCAL BLOQUEADA TEMPORARIAMENTE PELO WINDOWS APP CONTROL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-07:
 
@@ -422,15 +422,15 @@ Validação automática:
 - o log do CI desta execução não apresentou o `ResourceWarning` SQLite observado no baseline S0;
 - o aviso já preservado sobre Node.js 20 no GitHub Actions continua remetido para B9.
 
-Falta para fechar B4 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída pelo utilizador em 2026-10-08.
 
-- sincronizar o clone local;
-- correr a suite local e confirmar 75 testes;
-- confirmar que o `ResourceWarning` SQLite deixou de aparecer;
-- abrir a aplicação, fechar e reabrir;
-- confirmar que a Watchlist continua persistida normalmente.
+O bloqueio do Windows App Control sobre `sqlalchemy.util._collections_cy` foi resolvido sem enfraquecer a política de segurança do Windows, reinstalando a mesma versão do SQLAlchemy em modo pure-Python através de `DISABLE_SQLALCHEMY_CEXT=1` e instalação a partir da source distribution.
 
-Próximo passo depois da validação local: **B5 — Localização estável dos dados**.
+Após a correção do ambiente local, a validação B4 foi considerada concluída pelo utilizador.
+
+B4 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo passo: **B5 — Localização estável dos dados**.
 
 #### Incidente de validação local B4 — Windows App Control
 
@@ -446,6 +446,23 @@ Consequências:
 - preferir corrigir o ambiente Python/SQLAlchemy, idealmente usando uma instalação pure-Python do SQLAlchemy caso a política continue a bloquear a extensão C opcional;
 - depois de corrigido o ambiente, repetir exatamente a validação local B4 antes de avançar para B5.
 
+
+
+#### Resolução do incidente de validação local B4
+
+O incidente foi resolvido em 2026-10-08 sem alterar o código B4 e sem desativar/enfraquecer o Windows App Control.
+
+Solução aplicada no ambiente local:
+
+- identificar a versão já instalada do SQLAlchemy;
+- desinstalar essa instalação;
+- definir temporariamente `DISABLE_SQLALCHEMY_CEXT=1`;
+- reinstalar a mesma versão a partir da source distribution com `--no-binary=SQLAlchemy`;
+- remover a variável de ambiente temporária;
+- confirmar que `import sqlalchemy` volta a funcionar;
+- repetir a validação local B4.
+
+Conclusão: a falha era do ambiente Windows/App Control sobre a extensão C opcional do SQLAlchemy, não do código B4. A instalação pure-Python é aceite como solução local suportada. Este detalhe fica preservado para B9, onde será revista a política de dependências/ambientes.
 
 ### B5 — Localização estável dos dados
 
