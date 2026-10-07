@@ -701,3 +701,14 @@ Reavaliar WAL apenas se surgirem bloqueios reais ou necessidades de concorrênci
 `Base.metadata.create_all()` continua temporariamente ativo no B4.
 
 A sua substituição por migrações controladas pertence ao B6 e não é antecipada aqui.
+
+
+### Estado de validação B4
+
+B4 concluído e validado em 2026-10-08:
+
+- GitHub Actions na `dev`: 75 testes passaram;
+- validação local concluída pelo utilizador;
+- o `ResourceWarning` SQLite identificado no S0 deixou de aparecer no CI B4;
+- o bloqueio local do Windows App Control incidia sobre a extensão C opcional do SQLAlchemy e foi resolvido com instalação pure-Python da mesma versão, sem alterar o código da aplicação nem enfraquecer a política de segurança do Windows;
+- a política SQLite deste bloco fica vigente como comportamento canónico.
