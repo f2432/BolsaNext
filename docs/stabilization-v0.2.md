@@ -333,7 +333,7 @@ Próximo passo: **B3 — Moedas em subunidade**.
 
 ### B3 — Moedas em subunidade
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-06 e subordinado a D1/A6:
 
@@ -375,16 +375,13 @@ Validação automática:
 - baseline anterior a B3: 58 testes;
 - os 14 testes adicionais cobrem convenções de moeda, rejeição de formatos inesperados, metadados canónicos, escala de preço/histórico e cache da sessão.
 
-Falta para fechar B3 como **CONCLUÍDO E VALIDADO**:
-
-- sincronizar o clone local;
-- correr a suite local;
-- abrir a aplicação;
-- validar pelo menos um ticker cotado em subunidade, preferencialmente um título de Londres como `VOD.L`, confirmando que a moeda apresentada é `GBP` e que o preço não aparece 100 vezes acima do valor esperado.
+Validação local confirmada pelo utilizador em 2026-10-07, incluindo o fluxo normal da aplicação e a validação do tratamento de subunidades.
 
 Observação preservada para B9: o GitHub Actions atual emitiu aviso de depreciação do runtime Node.js 20 nas versões usadas de `actions/checkout@v4` e `actions/setup-python@v5`; o workflow continua a passar, mas este aviso deve ser revisto no bloco de CI/qualidade.
 
-Próximo passo depois da validação local: **B4 — Integridade SQLite**.
+B3 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo passo: **B4 — Integridade SQLite**.
 
 ### B4 — Integridade SQLite
 
