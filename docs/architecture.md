@@ -623,3 +623,12 @@ Esta cache evita consultas repetidas durante a sessão e não é persistida em S
 Por decisão D1, universos não são autoridade final para moeda/exchange. B3 não utiliza a moeda vinda da Wikipedia para escolher o fator de preços Yahoo.
 
 A limpeza integral da proveniência no fluxo UniverseWidget → Watchlist fica para B8.2.
+
+
+### Estado de validação B3
+
+B3 concluído e validado em 2026-10-07:
+
+- GitHub Actions na `dev`: 72 testes passaram;
+- validação local confirmada pelo utilizador;
+- a política de normalização de subunidades Yahoo fica vigente como comportamento canónico do adapter.
