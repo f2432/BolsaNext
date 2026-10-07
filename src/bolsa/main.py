@@ -6,11 +6,13 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from bolsa.app.services import MarketService, UniverseService, WatchlistService
-from bolsa.config import load_config
+from bolsa.config import load_config, prepare_environment
 from bolsa.domain.watchlist import Watchlist
 from bolsa.infrastructure.database import (
+    LegacyDatabaseMigrationRequiredError,
     create_database_engine,
     create_session_factory,
+    ensure_database_location_ready,
     initialize_database,
 )
 from bolsa.infrastructure.market_data import (
@@ -29,6 +31,14 @@ def main() -> int:
     configure_logging()
     config = load_config()
 
+    try:
+        ensure_database_location_ready(config)
+    except LegacyDatabaseMigrationRequiredError as exc:
+        logger.error("%s", exc)
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    prepare_environment(config)
     engine = create_database_engine(config.database_url)
 
     try:
@@ -51,7 +61,11 @@ def main() -> int:
             repository=watchlist_repository,
         )
 
-        logger.info("A iniciar %s", config.app_name)
+        logger.info(
+            "A iniciar %s com dados em %s",
+            config.app_name,
+            config.data_dir,
+        )
 
         app = QApplication(sys.argv)
         window = MainWindow(

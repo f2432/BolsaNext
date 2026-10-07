@@ -14,6 +14,7 @@ dependencies = [
     "numpy",
     "SQLAlchemy",
     "yfinance",
+    "platformdirs",
     "scikit-learn",
     "matplotlib",
     "PyYAML",
@@ -28,6 +29,7 @@ dev = [
 
 [project.scripts]
 bolsanext = "bolsa.main:main"
+bolsanext-migrate-data = "bolsa.tools.migrate_data_dir:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
