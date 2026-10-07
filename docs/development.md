@@ -54,13 +54,40 @@ Em alternativa:
 python -m bolsa.main
 ```
 
-Na primeira execução é criada a pasta `data/` e a base de dados local:
+Os dados persistentes usam uma diretoria estável do utilizador, independente da pasta a partir da qual a aplicação é arrancada.
+
+Em Windows, a localização normal fica na área Local AppData, tipicamente:
 
 ```text
-data/bolsanext.sqlite3
+%LOCALAPPDATA%\\BolsaNext\\bolsanext.sqlite3
 ```
 
-A base de dados é local e está excluída do Git.
+A aplicação cria explicitamente as pastas de dados, cache e backups através de `prepare_environment()`.
+
+Para usar uma localização diferente:
+
+```powershell
+$env:BOLSANEXT_DATA_DIR = "C:\\caminho\\pretendido"
+python -m bolsa.main
+```
+
+### Migração da base antiga
+
+Se existir a antiga `data/bolsanext.sqlite3` no repositório e ainda não existir base na nova localização, o arranque pára sem criar uma base vazia.
+
+Primeiro consulta o plano, sem alterar dados:
+
+```powershell
+python -m bolsa.tools.migrate_data_dir
+```
+
+Depois de confirmares origem, destino e backup, executa:
+
+```powershell
+python -m bolsa.tools.migrate_data_dir --execute
+```
+
+A ferramenta cria backup com SQLite Backup API, valida as bases com `PRAGMA quick_check`, preserva a base antiga e nunca sobrescreve uma base já existente no destino.
 
 ## Executar os testes
 
