@@ -171,7 +171,7 @@ Nota para B9: CI emitiu aviso de depreciação do runtime Node.js 20 usado pelas
 
 ### B4 — integridade SQLite
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; VALIDAÇÃO LOCAL BLOQUEADA PELO WINDOWS APP CONTROL**.
 
 Implementado no commit `ec1c7eb3e3e1577daa08112d76c70858f979f5c0`:
 
@@ -187,7 +187,7 @@ Implementado no commit `ec1c7eb3e3e1577daa08112d76c70858f979f5c0`:
 
 GitHub Actions: **75 testes passaram em 1.71s**. O `ResourceWarning` SQLite do baseline S0 não apareceu neste CI.
 
-Falta validação local, incluindo persistência da Watchlist após fechar/reabrir. Próximo bloco depois disso: **B5 — localização estável dos dados**.
+A validação local foi iniciada, mas o Windows App Control bloqueou `sqlalchemy.util._collections_cy` durante o import do SQLAlchemy. A falha acontece antes de o código B4 correr e também impede o arranque da aplicação. O CI do commit B4 continua verde com 75 testes. B4 fica temporariamente bloqueado até corrigir o ambiente Python/SQLAlchemy; B5 não começa antes de repetir a validação local.
 
 ## V0.1 — Fundação concluída
 
