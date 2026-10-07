@@ -632,3 +632,72 @@ B3 concluído e validado em 2026-10-07:
 - GitHub Actions na `dev`: 72 testes passaram;
 - validação local confirmada pelo utilizador;
 - a política de normalização de subunidades Yahoo fica vigente como comportamento canónico do adapter.
+
+
+## Integridade e configuração SQLite
+
+Decisão e implementação B4 do ciclo de estabilização V0.2.
+
+### PRAGMAs obrigatórios
+
+Cada nova ligação SQLite criada pelo engine recebe:
+
+```text
+PRAGMA foreign_keys = ON
+PRAGMA busy_timeout = 5000
+```
+
+A configuração é aplicada no evento de ligação do SQLAlchemy, garantindo que não depende de uma única execução no arranque.
+
+### Integridade referencial
+
+As foreign keys declaradas nos modelos são consideradas efetivas apenas porque `foreign_keys=ON` é ativado e testado.
+
+A suite verifica:
+
+- foreign keys inválidas são rejeitadas com `IntegrityError`;
+- depois da falha é feito rollback e não ficam alterações parciais;
+- `ON DELETE CASCADE` remove `watchlist_items` quando a Watchlist é eliminada ao nível da base.
+
+### Instrumentos órfãos
+
+A existência de um `Instrument` não depende da sua presença numa Watchlist.
+
+Remover um item da Watchlist:
+
+- remove o `WatchlistItem`;
+- preserva o `Instrument`.
+
+Isto é comportamento intencional e protege reutilização futura do instrumento, incluindo futuras relações com Portfolio.
+
+### Encerramento de recursos
+
+Engines usados em testes de integração são libertados explicitamente com `engine.dispose()`.
+
+A aplicação também liberta o engine em `main()` através de `try/finally`, incluindo quando o encerramento passa por exceção.
+
+Esta decisão responde ao `ResourceWarning` SQLite detetado no baseline S0.
+
+### Concorrência SQLite
+
+`busy_timeout=5000` permite esperar até cinco segundos por um lock SQLite transitório antes de falhar.
+
+Isto é independente da política de retries de Market Data e não introduz retries escondidos de rede.
+
+### WAL
+
+WAL foi avaliado no B4 e **não é ativado nesta fase**.
+
+Razões:
+
+- a concorrência atual não o exige;
+- B5/B6 ainda vão alterar localização, backups e migrações;
+- WAL acrescentaria ficheiros `-wal`/`-shm` e complexidade operacional sem benefício demonstrado.
+
+Reavaliar WAL apenas se surgirem bloqueios reais ou necessidades de concorrência superiores.
+
+### Evolução de schema
+
+`Base.metadata.create_all()` continua temporariamente ativo no B4.
+
+A sua substituição por migrações controladas pertence ao B6 e não é antecipada aqui.
