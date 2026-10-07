@@ -189,6 +189,28 @@ GitHub Actions: **75 testes passaram em 1.71s**. O `ResourceWarning` SQLite do b
 
 Durante a primeira validação local, o Windows App Control bloqueou `sqlalchemy.util._collections_cy`. O problema foi resolvido sem enfraquecer a política de segurança, reinstalando a mesma versão do SQLAlchemy em modo pure-Python. A validação local foi depois concluída pelo utilizador em 2026-10-08. **B4 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B5 — localização estável dos dados**.
 
+### B5 — localização estável dos dados
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA MIGRAÇÃO EXPLÍCITA E VALIDAÇÃO LOCAL**.
+
+Implementado no commit `66e257a75fa0deb0a9a6d3731b1ea79a79fc91f8`:
+
+- dados deixam de depender de `Path("data")` relativo;
+- localização normal por utilizador/SO através de `platformdirs`;
+- override explícito com `BOLSANEXT_DATA_DIR`;
+- `load_config()` deixa de criar diretórios;
+- `prepare_environment()` cria data/cache/backups apenas quando necessário;
+- `base_currency` passa a `default_base_currency` conforme D3;
+- existência de base legacy bloqueia criação silenciosa de uma base vazia nova;
+- ferramenta de migração em dry-run por omissão;
+- migração efetiva usa SQLite Backup API + `PRAGMA quick_check`;
+- origem é preservada e destino existente nunca é sobrescrito;
+- cache antiga não é migrada.
+
+GitHub Actions: **83 testes passaram em 1.47s**.
+
+Falta executar a migração real no PC do utilizador e validar a aplicação sobre a nova localização. Próximo bloco depois disso: **B6 — migrações de schema**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
