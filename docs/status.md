@@ -169,6 +169,26 @@ Validação local confirmada pelo utilizador em 2026-10-07. **B3 está CONCLUÍD
 
 Nota para B9: CI emitiu aviso de depreciação do runtime Node.js 20 usado pelas versões atuais de checkout/setup-python; não bloqueia B3, mas fica preservado para revisão de CI.
 
+### B4 — integridade SQLite
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementado no commit `ec1c7eb3e3e1577daa08112d76c70858f979f5c0`:
+
+- `PRAGMA foreign_keys = ON` em todas as ligações SQLite;
+- `PRAGMA busy_timeout = 5000` ms;
+- foreign keys inválidas são rejeitadas e o rollback deixa a base consistente;
+- `ON DELETE CASCADE` foi testado diretamente na base;
+- remover Watchlist/WatchlistItem não elimina `Instrument` órfão;
+- testes de integração fazem `engine.dispose()`;
+- `main()` liberta o engine em `finally`;
+- WAL foi avaliado e fica deliberadamente desativado nesta fase;
+- `create_all()` mantém-se temporariamente até B6.
+
+GitHub Actions: **75 testes passaram em 1.71s**. O `ResourceWarning` SQLite do baseline S0 não apareceu neste CI.
+
+Falta validação local, incluindo persistência da Watchlist após fechar/reabrir. Próximo bloco depois disso: **B5 — localização estável dos dados**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
