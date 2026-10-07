@@ -195,3 +195,22 @@ Nenhum item pode desaparecer por omissão.
 ### Preservação documental
 
 Antes de modificar qualquer documento canónico, deve ser verificado que nenhuma decisão, requisito, pendência ou justificação anteriormente registada é perdida. Quando uma decisão muda, a anterior permanece identificável como histórica/superseded.
+
+
+## Nota Windows App Control e SQLAlchemy
+
+Durante a validação B4 em Windows/Python 3.14.5, uma política de Windows App Control bloqueou a extensão C opcional `sqlalchemy.util._collections_cy`, impedindo o próprio import do SQLAlchemy.
+
+A solução local validada foi reinstalar **a mesma versão** do SQLAlchemy em modo pure-Python, sem desativar nem enfraquecer o App Control:
+
+```powershell
+$saVersion = ((python -m pip show SQLAlchemy | Select-String '^Version:').Line -split ':',2)[1].Trim()
+python -m pip uninstall -y SQLAlchemy
+$env:DISABLE_SQLALCHEMY_CEXT="1"
+python -m pip install --no-cache-dir --no-binary=SQLAlchemy --no-deps "SQLAlchemy==$saVersion"
+Remove-Item Env:DISABLE_SQLALCHEMY_CEXT
+```
+
+Esta é uma exceção de ambiente local, não uma alteração funcional do BolsaNext nem uma exigência geral para todos os sistemas.
+
+A política de dependências/ambientes será revista no B9.
