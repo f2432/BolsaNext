@@ -466,7 +466,58 @@ Conclusão: a falha era do ambiente Windows/App Control sobre a extensão C opci
 
 ### B5 — Localização estável dos dados
 
-Depois de D2. Eliminar dependência de `Path("data")` relativo, usar diretoria estável por utilizador/SO e override adequado, separar leitura de configuração de criação de ambiente e proteger a base antiga.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA MIGRAÇÃO EXPLÍCITA E VALIDAÇÃO LOCAL**.
+
+Desenho aprovado em 2026-10-08:
+
+1. A localização normal dos dados deixa de depender do working directory e passa a usar a diretoria de dados do utilizador do sistema operativo através de `platformdirs`.
+2. Em Windows, o destino normal é a área Local AppData do utilizador, tipicamente `%LOCALAPPDATA%\\BolsaNext`.
+3. Em Linux/macOS são usados os caminhos convencionais devolvidos por `platformdirs`.
+4. A variável `BOLSANEXT_DATA_DIR` permite override explícito para testes, desenvolvimento ou instalações especiais.
+5. `load_config()` deixa de criar diretórios. A criação de `data_dir`, `cache_dir` e `backups_dir` passa a `prepare_environment(config)`.
+6. `AppConfig.base_currency` é renomeado para `default_base_currency`, conforme decisão D3, sem introduzir qualquer lógica de Portfolio.
+7. A base antiga no repositório não é apagada nem movida silenciosamente.
+8. Se existir uma base antiga e ainda não existir base no novo destino, o arranque normal pára com instruções explícitas para executar a ferramenta de migração.
+9. A ferramenta de migração funciona em modo dry-run por omissão e mostra origem, destino e backup sem alterar nada.
+10. A execução efetiva exige `--execute` e confirmação interativa, salvo uso explícito de `--yes`.
+11. A migração usa SQLite Backup API, valida origem/backup/destino com `PRAGMA quick_check`, preserva a origem e nunca sobrescreve uma base já existente no destino.
+12. O backup é criado na nova pasta de backups com nome `bolsanext_before_move_YYYYMMDD_HHMMSS.sqlite3`.
+13. A cache antiga não é migrada; pode ser recriada.
+14. A base antiga permanece no repositório local depois da migração e não é apagada neste ciclo.
+
+Implementação na `dev`: commit `66e257a75fa0deb0a9a6d3731b1ea79a79fc91f8` — `feat: move runtime data to stable user directory`.
+
+Foi implementado:
+
+- dependência real `platformdirs`;
+- localização estável por utilizador/SO;
+- override `BOLSANEXT_DATA_DIR`;
+- separação `load_config()` / `prepare_environment()`;
+- propriedade `backups_dir`;
+- renomeação para `default_base_currency`;
+- proteção contra criação silenciosa de uma base nova quando existe uma base legacy por migrar;
+- módulo de migração explícita e validada;
+- comando `python -m bolsa.tools.migrate_data_dir`;
+- entry point `bolsanext-migrate-data`;
+- testes com ficheiro SQLite temporário real para migração, backup, conflito no destino e origem inválida.
+
+Validação automática:
+
+- GitHub Actions na `dev`: **83 testes passaram em 1.47s**;
+- baseline anterior a B5: 75 testes;
+- os 8 testes adicionais cobrem configuração sem efeitos laterais, override, criação explícita do ambiente, bloqueio de migração pendente e migração SQLite segura.
+
+Falta para fechar B5 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- executar primeiro apenas o dry-run da ferramenta e confirmar os caminhos reais;
+- só depois executar a migração explícita;
+- confirmar backup, nova base e preservação da base antiga;
+- arrancar a aplicação com a nova localização;
+- confirmar Watchlist/estados;
+- fechar e reabrir para confirmar persistência.
+
+Próximo passo depois da validação local: **B6 — Migrações de schema**.
 
 ### B6 — Migrações
 
