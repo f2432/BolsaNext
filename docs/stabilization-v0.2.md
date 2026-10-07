@@ -385,7 +385,52 @@ Próximo passo: **B4 — Integridade SQLite**.
 
 ### B4 — Integridade SQLite
 
-Ativar e testar foreign keys, rever cascatas, confirmar instrumentos órfãos intencionais, avaliar WAL sem ativação automática injustificada, preservar atomicidade e rollback.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Desenho aprovado em 2026-10-07:
+
+1. Todas as ligações SQLite devem ativar `PRAGMA foreign_keys = ON`.
+2. Todas as ligações SQLite usam `PRAGMA busy_timeout = 5000` ms.
+3. Foreign keys têm de ser verificadas por teste real no motor SQLite, não apenas pela definição ORM.
+4. `ON DELETE CASCADE` deve ser comprovado ao nível da base.
+5. Remover um instrumento da Watchlist remove o `watchlist_item`, mas **não elimina o Instrument**. Instrumentos órfãos são intencionais e preservados.
+6. Engines/sessões de teste devem ser fechados explicitamente para eliminar o `ResourceWarning` identificado no S0.
+7. A aplicação liberta explicitamente o engine quando termina, incluindo em caminhos de exceção.
+8. A atomicidade atual do repository permanece: `commit` em sucesso, `rollback` em falha.
+9. `WAL` foi avaliado e **deliberadamente não é ativado nesta fase**. Reavaliar apenas perante necessidade real de maior concorrência/bloqueios.
+10. `Base.metadata.create_all()` continua temporariamente em vigor; migrações pertencem ao B6 e não são antecipadas no B4.
+
+Implementação na `dev`: commit `ec1c7eb3e3e1577daa08112d76c70858f979f5c0` — `fix: enforce SQLite integrity settings`.
+
+Foi implementado:
+
+- configuração por evento de ligação SQLAlchemy para `foreign_keys=ON` e `busy_timeout=5000`;
+- teste que lê os próprios PRAGMAs e confirma os valores ativos;
+- teste que tenta inserir foreign keys inválidas e exige `IntegrityError`;
+- rollback explícito depois da falha e verificação de que não ficou um item parcial;
+- teste de `ON DELETE CASCADE` feito através de DELETE direto na base;
+- confirmação de que o Instrument associado permanece depois da cascata da Watchlist;
+- teste do repository reforçado para confirmar que remover AAPL da Watchlist preserva o registo de AAPL em `instruments`;
+- `engine.dispose()` garantido nos testes de integração;
+- `engine.dispose()` garantido em `main()` através de `try/finally`.
+
+Validação automática:
+
+- GitHub Actions na `dev`: **75 testes passaram em 1.71s**;
+- baseline anterior a B4: 72 testes;
+- os 3 testes adicionais cobrem PRAGMAs, rejeição de foreign keys inválidas e cascata real;
+- o log do CI desta execução não apresentou o `ResourceWarning` SQLite observado no baseline S0;
+- o aviso já preservado sobre Node.js 20 no GitHub Actions continua remetido para B9.
+
+Falta para fechar B4 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- correr a suite local e confirmar 75 testes;
+- confirmar que o `ResourceWarning` SQLite deixou de aparecer;
+- abrir a aplicação, fechar e reabrir;
+- confirmar que a Watchlist continua persistida normalmente.
+
+Próximo passo depois da validação local: **B5 — Localização estável dos dados**.
 
 ### B5 — Localização estável dos dados
 
