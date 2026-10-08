@@ -21,6 +21,8 @@ from bolsa.domain.universes import Universe
 
 logger = logging.getLogger(__name__)
 
+_CACHE_FORMAT_VERSION = 2
+
 
 @dataclass(frozen=True, slots=True)
 class _CachedSnapshot:
@@ -29,12 +31,7 @@ class _CachedSnapshot:
 
 
 class CachedUniverseProvider:
-    """Cache local em JSON para universos de mercado.
-
-    Cache fresca é reutilizada diretamente. Cache expirada até ao limite
-    stale_ttl pode ser usada como fallback explícito se a fonte estiver
-    indisponível ou deixar de ser interpretável.
-    """
+    """Cache local em JSON para universos de mercado."""
 
     def __init__(
         self,
@@ -120,6 +117,14 @@ class CachedUniverseProvider:
 
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
+
+            if payload.get("format_version") != _CACHE_FORMAT_VERSION:
+                logger.info(
+                    "Cache do universo %s usa formato antigo; será reconstruída.",
+                    code,
+                )
+                return None
+
             saved_at = datetime.fromisoformat(payload["saved_at"])
             if saved_at.tzinfo is None:
                 saved_at = saved_at.replace(tzinfo=timezone.utc)
@@ -128,9 +133,9 @@ class CachedUniverseProvider:
                 Instrument(
                     ticker=item["ticker"],
                     name=item.get("name"),
-                    market=item.get("market"),
-                    currency=item.get("currency"),
-                    asset_type=AssetType(item.get("asset_type", "stock")),
+                    exchange=None,
+                    currency=None,
+                    asset_type=AssetType.OTHER,
                 )
                 for item in payload["instruments"]
             )
@@ -157,6 +162,7 @@ class CachedUniverseProvider:
 
     def _save_cache(self, universe: Universe) -> None:
         payload = {
+            "format_version": _CACHE_FORMAT_VERSION,
             "code": universe.code,
             "name": universe.name,
             "source": universe.source,
@@ -166,9 +172,6 @@ class CachedUniverseProvider:
                 {
                     "ticker": item.ticker,
                     "name": item.name,
-                    "market": item.market,
-                    "currency": item.currency,
-                    "asset_type": item.asset_type.value,
                 }
                 for item in universe.instruments
             ],

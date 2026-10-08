@@ -21,11 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 class WikipediaUniverseProvider:
-    """Provider de constituintes de índices através da Wikipedia.
+    """Provider de composição de universos através da Wikipedia.
 
-    São suportados S&P 500, NASDAQ 100 e Euronext 100. Os símbolos são
-    normalizados para a convenção usada pelo Yahoo Finance, substituindo
-    pontos por hífen em tickers norte-americanos (ex.: BRK.B -> BRK-B).
+    A Wikipedia é autoridade apenas para composição do universo e pode fornecer
+    ticker e nome provisório. Exchange, moeda e tipo canónico pertencem à fonte
+    principal de Market Data.
     """
 
     _USER_AGENT = (
@@ -39,9 +39,6 @@ class WikipediaUniverseProvider:
             "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
             "symbol_columns": ("Symbol", "Ticker"),
             "name_columns": ("Security", "Company"),
-            "market_columns": (),
-            "market": "US",
-            "currency": "USD",
             "ticker_style": "us",
         },
         "nasdaq100": {
@@ -49,9 +46,6 @@ class WikipediaUniverseProvider:
             "url": "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
             "symbol_columns": ("Ticker", "Symbol"),
             "name_columns": ("Company", "Security"),
-            "market_columns": (),
-            "market": "NASDAQ",
-            "currency": "USD",
             "ticker_style": "us",
         },
         "euronext100": {
@@ -59,9 +53,6 @@ class WikipediaUniverseProvider:
             "url": "https://en.wikipedia.org/wiki/Euronext_100",
             "symbol_columns": ("Ticker",),
             "name_columns": ("Name", "Company"),
-            "market_columns": ("Main listing",),
-            "market": "EURONEXT",
-            "currency": "EUR",
             "ticker_style": "yahoo",
         },
     }
@@ -88,9 +79,6 @@ class WikipediaUniverseProvider:
                 table,
                 symbol_columns=config["symbol_columns"],
                 name_columns=config["name_columns"],
-                market_columns=config.get("market_columns", ()),
-                market=config["market"],
-                currency=config["currency"],
                 ticker_style=config.get("ticker_style", "us"),
             )
         except (
@@ -119,8 +107,6 @@ class WikipediaUniverseProvider:
 
     @classmethod
     def _read_tables(cls, url: str) -> list[pd.DataFrame]:
-        """Obtém o HTML e extrai tabelas, traduzindo falhas externas."""
-
         request = Request(
             url,
             headers={
@@ -170,9 +156,6 @@ class WikipediaUniverseProvider:
         *,
         symbol_columns: tuple[str, ...],
         name_columns: tuple[str, ...],
-        market_columns: tuple[str, ...] = (),
-        market: str,
-        currency: str,
         ticker_style: str = "us",
     ) -> list[Instrument]:
         symbol_column = next(
@@ -208,30 +191,13 @@ class WikipediaUniverseProvider:
                 raw_name = row[name_column]
                 name = None if pd.isna(raw_name) else str(raw_name).strip()
 
-                instrument_market = market
-                if market_columns:
-                    market_column = next(
-                        (column for column in market_columns if column in table.columns),
-                        None,
-                    )
-                    if (
-                        market_column is not None
-                        and not pd.isna(row[market_column])
-                    ):
-                        instrument_market = str(row[market_column]).strip().upper()
-
-                instrument_currency = WikipediaUniverseProvider._currency_for_ticker(
-                    ticker,
-                    default=currency,
-                )
-
                 instruments.append(
                     Instrument(
                         ticker=ticker,
                         name=name,
-                        market=instrument_market,
-                        currency=instrument_currency,
-                        asset_type=AssetType.STOCK,
+                        exchange=None,
+                        currency=None,
+                        asset_type=AssetType.OTHER,
                     )
                 )
                 seen.add(ticker)
@@ -248,20 +214,3 @@ class WikipediaUniverseProvider:
             )
 
         return instruments
-
-    @staticmethod
-    def _currency_for_ticker(ticker: str, *, default: str) -> str:
-        suffix_map = {
-            ".PA": "EUR",
-            ".AS": "EUR",
-            ".BR": "EUR",
-            ".IR": "EUR",
-            ".MI": "EUR",
-            ".LS": "EUR",
-            ".OL": "NOK",
-            ".DE": "EUR",
-        }
-        for suffix, currency in suffix_map.items():
-            if ticker.endswith(suffix):
-                return currency
-        return default

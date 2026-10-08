@@ -127,10 +127,9 @@ class YFinanceMarketDataProvider:
         self._quote_conventions[instrument.ticker] = convention
 
         name = info.get("longName") or info.get("shortName") or instrument.name
-        market = (
+        exchange = (
             info.get("fullExchangeName")
             or info.get("exchange")
-            or instrument.market
         )
 
         quote_type = str(info.get("quoteType") or "").upper()
@@ -138,12 +137,12 @@ class YFinanceMarketDataProvider:
             "EQUITY": AssetType.STOCK,
             "ETF": AssetType.ETF,
             "INDEX": AssetType.INDEX,
-        }.get(quote_type, instrument.asset_type)
+        }.get(quote_type, AssetType.OTHER)
 
         return Instrument(
             ticker=instrument.ticker,
             name=name,
-            market=market,
+            exchange=exchange,
             currency=convention.currency,
             asset_type=asset_type,
         )

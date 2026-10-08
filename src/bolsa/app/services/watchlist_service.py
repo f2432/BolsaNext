@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from threading import RLock
 
-from bolsa.app.ports.errors import MarketDataError
+from bolsa.app.ports.errors import (
+    InstrumentNotFoundError,
+    MarketDataError,
+)
 from bolsa.app.ports.repositories import WatchlistRepository
 from bolsa.app.services.market_service import MarketService
-from bolsa.domain.instruments import Instrument
+from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
 
 
@@ -14,10 +17,17 @@ from bolsa.domain.watchlist import Watchlist, WatchlistState
 class WatchlistRow:
     ticker: str
     name: str | None
-    market: str | None
+    exchange: str | None
     currency: str | None
     state: WatchlistState
     price: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class UniverseInstrumentAddResult:
+    instrument: Instrument
+    provisional: bool
+    warning: str | None = None
 
 
 class WatchlistService:
@@ -54,14 +64,14 @@ class WatchlistService:
         ticker: str,
         *,
         name: str | None = None,
-        market: str | None = None,
+        exchange: str | None = None,
         currency: str | None = None,
     ) -> None:
         with self._lock:
             instrument = Instrument(
                 ticker=ticker,
                 name=name,
-                market=market,
+                exchange=exchange,
                 currency=currency,
             )
             self._watchlist.add(instrument)
@@ -79,19 +89,51 @@ class WatchlistService:
             self._persist()
             return instrument
 
+    def add_universe_instrument(
+        self,
+        instrument: Instrument,
+    ) -> UniverseInstrumentAddResult:
+        with self._lock:
+            provisional = Instrument(
+                ticker=instrument.ticker,
+                name=instrument.name,
+                exchange=None,
+                currency=None,
+                asset_type=AssetType.OTHER,
+            )
+
+            if self._watchlist.get(provisional.ticker) is not None:
+                raise ValueError(
+                    f"{provisional.ticker} já existe na watchlist."
+                )
+
+            try:
+                chosen = self._market_service.instrument_details(provisional)
+            except InstrumentNotFoundError:
+                raise
+            except MarketDataError as exc:
+                chosen = provisional
+                result = UniverseInstrumentAddResult(
+                    instrument=chosen,
+                    provisional=True,
+                    warning=str(exc),
+                )
+            else:
+                result = UniverseInstrumentAddResult(
+                    instrument=chosen,
+                    provisional=False,
+                )
+
+            self._watchlist.add(chosen)
+            self._persist()
+            return result
+
     def refresh_metadata(self) -> list[WatchlistRow]:
         with self._lock:
             changed = False
             warnings: list[str] = []
 
             for item in self._watchlist.items:
-                if (
-                    item.instrument.name
-                    and item.instrument.market
-                    and item.instrument.currency
-                ):
-                    continue
-
                 try:
                     enriched = self._market_service.instrument_details(
                         item.instrument
@@ -141,7 +183,7 @@ class WatchlistService:
                     WatchlistRow(
                         ticker=item.instrument.ticker,
                         name=item.instrument.name,
-                        market=item.instrument.market,
+                        exchange=item.instrument.exchange,
                         currency=item.instrument.currency,
                         state=item.state,
                         price=price,
