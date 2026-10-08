@@ -211,6 +211,8 @@ GitHub Actions: **83 testes passaram em 1.47s**.
 
 Falta executar a migração real no PC do utilizador e validar a aplicação sobre a nova localização. Próximo bloco depois disso: **B6 — migrações de schema**.
 
+Primeira validação local B5 em Windows: o dry-run mostrou corretamente origem/destino/backup, mas um teste falhou com `WinError 32` porque ligações `sqlite3` permaneciam abertas após o context manager. A implementação e fixtures foram corrigidos com fecho explícito via `contextlib.closing`. Aguarda repetição da suite local e só depois migração real.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
