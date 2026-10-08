@@ -217,7 +217,7 @@ Migração real B5 concluída em 2026-10-08: suite local com **83 testes passado
 
 ### B6 — migrações de schema
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA ADOÇÃO ALEMBIC E VALIDAÇÃO LOCAL DA BASE REAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado:
 
@@ -234,7 +234,7 @@ Implementado:
 
 GitHub Actions: **92 testes passaram em 1.99s**.
 
-Falta adoção Alembic da base real Windows e validação de que os dados persistem. Próximo bloco depois disso: **B7 — fonte única de versão**.
+Validação local concluída em 2026-10-08: 92 testes passaram; a base real recebeu a baseline `0001_v02_baseline` com backup prévio; os dados foram preservados; e um segundo arranque em head não criou novo backup. **B6 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B7 — fonte única de versão**.
 
 ## V0.1 — Fundação concluída
 
