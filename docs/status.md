@@ -236,6 +236,24 @@ GitHub Actions: **92 testes passaram em 1.99s**.
 
 Validação local concluída em 2026-10-08: 92 testes passaram; a base real recebeu a baseline `0001_v02_baseline` com backup prévio; os dados foram preservados; e um segundo arranque em head não criou novo backup. **B6 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B7 — fonte única de versão**.
 
+### B7 — fonte única de versão
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementado no commit `090c1ccea0300292dd69f96dd22a4189c553bb81`:
+
+- versão canónica em `src/bolsa/version.py`;
+- valor canónico atual: `0.2.0`;
+- `bolsa.__version__` reexporta essa fonte;
+- `pyproject.toml` usa metadata dinâmico em vez de versão literal;
+- User-Agent usa a versão canónica;
+- UI apresenta a versão através de `version_label()`;
+- tag `v0.2.0` continua proibida até B11.
+
+GitHub Actions: **96 testes passaram em 3.16s**.
+
+Falta validação local. Próximo bloco depois disso: **B8 — Hardening Watchlist/UI**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
