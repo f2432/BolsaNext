@@ -943,3 +943,13 @@ A UI usa `version_label(stage)` para combinar a versão canónica com o nome fun
 Não devem ser introduzidas novas strings literais de versão em módulos funcionais.
 
 A existência da versão `0.2.0` no código não autoriza a criação antecipada da tag Git `v0.2.0`. A tag continua reservada para B11, depois da integração final validada em `main`.
+
+
+### Estado de validação B7
+
+B7 concluído e validado em 2026-10-08:
+
+- GitHub Actions: 97 testes passaram;
+- validação local confirmou a versão canónica `0.2.0`;
+- metadata instalado, User-Agent e UI usam a mesma fonte;
+- a tag Git `v0.2.0` continua reservada para B11.
