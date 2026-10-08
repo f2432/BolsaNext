@@ -15,6 +15,7 @@ from bolsa.app.ports.errors import (
 from bolsa.app.ports.universe import UniverseLoadResult, UniverseLoadStatus
 from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.domain.universes import Universe
+from bolsa.version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class WikipediaUniverseProvider:
     """
 
     _USER_AGENT = (
-        "BolsaNext/0.1 "
+        f"BolsaNext/{__version__} "
         "(educational investment research; https://github.com/f2432/BolsaNext)"
     )
 

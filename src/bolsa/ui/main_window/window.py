@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
 from bolsa.ui.watchlist import UniverseWidget, WatchlistWidget
+from bolsa.version import version_label
 
 
 class MainWindow(QMainWindow):
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabs)
 
         status = QStatusBar()
-        status.showMessage("V0.2 — Market Data")
+        status.showMessage(version_label("Market Data"))
         self.setStatusBar(status)
 
     @staticmethod
