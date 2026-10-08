@@ -564,7 +564,7 @@ Próximo passo: **B6 — Migrações de schema**.
 
 ### B6 — Migrações
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA ADOÇÃO ALEMBIC E VALIDAÇÃO LOCAL DA BASE REAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-08:
 
@@ -604,18 +604,9 @@ Validação automática:
 - baseline anterior a B6: 83 testes;
 - os testes adicionais cobrem criação de base nova/vazia, adoção de legacy V0.2, preservação de dados, backup antes de stamp, base já em head, schema incompatível, revisão desconhecida, falha de stamp, ausência de `create_all()` no runtime e caminho backup+upgrade para uma base atrasada.
 
-Falta para fechar B6 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída em 2026-10-08: 92 testes passaram; a base real foi validada como baseline V0.2, recebeu backup prévio e `stamp` em `0001_v02_baseline`; Watchlist e estados foram preservados; a revisão final ficou igual ao head; e um segundo arranque não criou novo backup. B6 fica **CONCLUÍDO E VALIDADO**.
 
-- sincronizar o clone local e instalar a nova dependência Alembic;
-- confirmar 92 testes locais;
-- confirmar que a base real atual ainda não tem revisão Alembic;
-- arrancar a aplicação uma vez, permitindo validação + backup + stamp da baseline;
-- confirmar que Watchlist/estados permanecem intactos;
-- confirmar `alembic_version = 0001_v02_baseline`;
-- confirmar criação do backup `before_migration`;
-- fechar/reabrir e confirmar que uma base já em head não cria outro backup.
-
-Próximo passo depois da validação local: **B7 — Fonte única de versão**.
+Próximo passo: **B7 — Fonte única de versão**.
 
 ### B7 — Fonte única de versão
 
