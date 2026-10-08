@@ -256,7 +256,7 @@ Validação local concluída em 2026-10-08: versão canónica, metadata instalad
 
 ### B8.1 — concorrência global
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado:
 
@@ -270,7 +270,7 @@ Implementado:
 
 GitHub Actions final: **101 testes passaram em 2.04s**. A primeira execução falhou apenas por import eager de QtWidgets/libEGL no runner headless e foi corrigida sem alterar o desenho funcional.
 
-Falta validação local da coordenação visual. Depois disso: **B8.2 — UniverseWidget e decisão D1**.
+Validação local concluída em 2026-10-08: os controlos mutáveis ficaram bloqueados durante as operações e foram libertados no fim, incluindo coordenação entre Watchlist e Universos. **B8.1 está CONCLUÍDO E VALIDADO.** Próximo sub-bloco: **B8.2 — UniverseWidget e decisão D1**.
 
 ## V0.1 — Fundação concluída
 
