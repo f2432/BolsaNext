@@ -10,10 +10,11 @@ from bolsa.config import load_config, prepare_environment
 from bolsa.domain.watchlist import Watchlist
 from bolsa.infrastructure.database import (
     LegacyDatabaseMigrationRequiredError,
+    SchemaMigrationError,
     create_database_engine,
     create_session_factory,
     ensure_database_location_ready,
-    initialize_database,
+    ensure_database_schema,
 )
 from bolsa.infrastructure.market_data import (
     CachedUniverseProvider,
@@ -39,10 +40,24 @@ def main() -> int:
         return 2
 
     prepare_environment(config)
+
+    try:
+        schema_result = ensure_database_schema(config)
+    except SchemaMigrationError as exc:
+        logger.error("Falha ao validar/migrar schema: %s", exc)
+        print(f"Erro de schema: {exc}", file=sys.stderr)
+        return 3
+
+    if schema_result.backup_path is not None:
+        logger.info(
+            "Schema atualizado para %s; backup preservado em %s",
+            schema_result.current_revision,
+            schema_result.backup_path,
+        )
+
     engine = create_database_engine(config.database_url)
 
     try:
-        initialize_database(engine)
         session_factory = create_session_factory(engine)
 
         watchlist_repository = SqlAlchemyWatchlistRepository(session_factory)
@@ -62,9 +77,10 @@ def main() -> int:
         )
 
         logger.info(
-            "A iniciar %s com dados em %s",
+            "A iniciar %s com dados em %s (schema %s)",
             config.app_name,
             config.data_dir,
+            schema_result.current_revision,
         )
 
         app = QApplication(sys.argv)

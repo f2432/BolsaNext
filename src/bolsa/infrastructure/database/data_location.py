@@ -147,6 +147,15 @@ def _sqlite_backup_atomic(source: Path, target: Path) -> None:
         raise
 
 
+def create_validated_database_backup(source: Path, target: Path) -> Path:
+    """Cria um snapshot SQLite validado sem alterar a base de origem."""
+
+    validate_sqlite_database(source)
+    _sqlite_backup_atomic(source, target)
+    validate_sqlite_database(target)
+    return target
+
+
 def execute_data_location_migration(
     plan: DataLocationMigrationPlan,
 ) -> DataLocationMigrationResult:
@@ -163,8 +172,7 @@ def execute_data_location_migration(
 
     validate_sqlite_database(plan.source)
 
-    _sqlite_backup_atomic(plan.source, plan.backup)
-    validate_sqlite_database(plan.backup)
+    create_validated_database_backup(plan.source, plan.backup)
 
     _sqlite_backup_atomic(plan.backup, plan.destination)
     validate_sqlite_database(plan.destination)

@@ -1,11 +1,14 @@
+from pathlib import Path
+
 from sqlalchemy import func, select
 
+from bolsa.config import AppConfig, prepare_environment
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
 from bolsa.infrastructure.database import (
     create_database_engine,
     create_session_factory,
-    initialize_database,
+    ensure_database_schema,
 )
 from bolsa.infrastructure.database.models import (
     InstrumentModel,
@@ -14,12 +17,19 @@ from bolsa.infrastructure.database.models import (
 from bolsa.infrastructure.repositories import SqlAlchemyWatchlistRepository
 
 
-def test_watchlist_persists_and_reloads() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
-    try:
-        initialize_database(engine)
-        repository = SqlAlchemyWatchlistRepository(create_session_factory(engine))
+def _repository(tmp_path: Path):
+    config = AppConfig(data_dir=tmp_path)
+    prepare_environment(config)
+    ensure_database_schema(config)
+    engine = create_database_engine(config.database_url)
+    return engine, SqlAlchemyWatchlistRepository(
+        create_session_factory(engine)
+    )
 
+
+def test_watchlist_persists_and_reloads(tmp_path) -> None:
+    engine, repository = _repository(tmp_path)
+    try:
         watchlist = Watchlist("Principal")
         watchlist.add(
             Instrument(
@@ -45,13 +55,9 @@ def test_watchlist_persists_and_reloads() -> None:
         engine.dispose()
 
 
-def test_watchlist_repository_persists_removal() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
+def test_watchlist_repository_persists_removal(tmp_path) -> None:
+    engine, repository = _repository(tmp_path)
     try:
-        initialize_database(engine)
-        session_factory = create_session_factory(engine)
-        repository = SqlAlchemyWatchlistRepository(session_factory)
-
         watchlist = Watchlist("Principal")
         watchlist.add(Instrument("AAPL"))
         watchlist.add(Instrument("MSFT"))
@@ -65,6 +71,7 @@ def test_watchlist_repository_persists_removal() -> None:
         assert loaded.get("AAPL") is None
         assert loaded.get("MSFT") is not None
 
+        session_factory = create_session_factory(engine)
         with session_factory() as session:
             aapl = session.scalar(
                 select(InstrumentModel).where(

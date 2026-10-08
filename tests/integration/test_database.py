@@ -1,11 +1,14 @@
+from pathlib import Path
+
 import pytest
 from sqlalchemy import func, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 
+from bolsa.config import AppConfig, prepare_environment
 from bolsa.infrastructure.database import (
     create_database_engine,
     create_session_factory,
-    initialize_database,
+    ensure_database_schema,
 )
 from bolsa.infrastructure.database.models import (
     InstrumentModel,
@@ -14,13 +17,20 @@ from bolsa.infrastructure.database.models import (
 )
 
 
-def test_database_initialization_creates_initial_schema() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
-    try:
-        initialize_database(engine)
+def _ready_database(tmp_path: Path):
+    config = AppConfig(data_dir=tmp_path)
+    prepare_environment(config)
+    ensure_database_schema(config)
+    engine = create_database_engine(config.database_url)
+    return config, engine
 
+
+def test_database_initialization_creates_initial_schema(tmp_path) -> None:
+    _, engine = _ready_database(tmp_path)
+    try:
         inspector = inspect(engine)
         assert set(inspector.get_table_names()) == {
+            "alembic_version",
             "instruments",
             "watchlists",
             "watchlist_items",
@@ -29,8 +39,8 @@ def test_database_initialization_creates_initial_schema() -> None:
         engine.dispose()
 
 
-def test_sqlite_engine_enables_foreign_keys_and_busy_timeout() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
+def test_sqlite_engine_enables_foreign_keys_and_busy_timeout(tmp_path) -> None:
+    _, engine = _ready_database(tmp_path)
     try:
         with engine.connect() as connection:
             foreign_keys = connection.exec_driver_sql(
@@ -46,10 +56,9 @@ def test_sqlite_engine_enables_foreign_keys_and_busy_timeout() -> None:
         engine.dispose()
 
 
-def test_sqlite_rejects_invalid_foreign_keys() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
+def test_sqlite_rejects_invalid_foreign_keys(tmp_path) -> None:
+    _, engine = _ready_database(tmp_path)
     try:
-        initialize_database(engine)
         session_factory = create_session_factory(engine)
 
         with session_factory() as session:
@@ -76,10 +85,9 @@ def test_sqlite_rejects_invalid_foreign_keys() -> None:
         engine.dispose()
 
 
-def test_sqlite_on_delete_cascade_removes_watchlist_items_only() -> None:
-    engine = create_database_engine("sqlite:///:memory:")
+def test_sqlite_on_delete_cascade_removes_watchlist_items_only(tmp_path) -> None:
+    _, engine = _ready_database(tmp_path)
     try:
-        initialize_database(engine)
         session_factory = create_session_factory(engine)
 
         with session_factory() as session:
