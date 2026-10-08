@@ -94,7 +94,7 @@ def test_sqlite_on_delete_cascade_removes_watchlist_items_only(tmp_path) -> None
             instrument = InstrumentModel(
                 ticker="AAPL",
                 name="Apple Inc.",
-                market="NASDAQ",
+                exchange="NASDAQ",
                 currency="USD",
                 asset_type="stock",
             )
