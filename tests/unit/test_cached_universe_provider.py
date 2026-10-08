@@ -31,7 +31,7 @@ class FakeUniverseProvider:
         universe = Universe(
             code=code,
             name="S&P 500",
-            instruments=(Instrument("AAPL", name="Apple Inc.", currency="USD"),),
+            instruments=(Instrument("AAPL", name="Apple Inc."),),
             source="https://example.test",
             retrieved_at=datetime.now(timezone.utc),
         )
@@ -145,3 +145,24 @@ def test_stale_ttl_cannot_be_shorter_than_fresh_ttl(tmp_path) -> None:
             ttl=timedelta(days=2),
             stale_ttl=timedelta(days=1),
         )
+
+
+
+def test_old_cache_format_is_ignored_and_rebuilt(tmp_path) -> None:
+    source = FakeUniverseProvider()
+    provider = CachedUniverseProvider(source, tmp_path)
+
+    provider.get_universe("sp500")
+    path = tmp_path / "sp500.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["format_version"] = 1
+    payload["instruments"][0]["market"] = "US"
+    payload["instruments"][0]["currency"] = "USD"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = provider.get_universe("sp500")
+
+    assert source.calls == 2
+    assert result.status is UniverseLoadStatus.LIVE
+    assert result.universe.instruments[0].exchange is None
+    assert result.universe.instruments[0].currency is None
