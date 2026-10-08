@@ -842,3 +842,74 @@ B5 concluído e validado em 2026-10-08:
 - a base antiga e o backup permanecem preservados.
 
 A diretoria estável do utilizador passa a ser a origem operacional dos dados V0.2. A base legacy no repositório permanece apenas como cópia histórica de segurança até ao fecho do ciclo de estabilização.
+
+## Migrações de schema com Alembic
+
+Decisão e implementação B6 do ciclo de estabilização V0.2.
+
+Alembic é a autoridade única para criação e evolução do schema persistente.
+
+### Baseline V0.2
+
+A revisão inicial é `0001_v02_baseline` e representa o schema V0.2 já existente, mantendo deliberadamente o campo `market`.
+
+A alteração futura `market → exchange` não é incluída na baseline e deverá ser uma revisão posterior.
+
+### Estados suportados no arranque
+
+```text
+DB inexistente/vazia
+    → upgrade head
+
+DB V0.2 válida sem alembic_version
+    → validar baseline
+    → backup
+    → stamp baseline
+    → upgrade head se existirem revisões posteriores
+
+DB versionada em head
+    → nenhuma alteração
+
+DB versionada atrás de head
+    → validar caminho
+    → backup
+    → upgrade head
+
+DB incompatível / revisão desconhecida
+    → parar
+```
+
+Não existe downgrade automático.
+
+### Validação da base legacy
+
+Antes de aceitar uma base não versionada como V0.2, são comparados:
+
+- tabelas;
+- colunas e tipos essenciais;
+- NOT NULL relevantes;
+- primary keys;
+- unicidade de ticker, nome da Watchlist e par watchlist/instrument;
+- foreign keys com `ON DELETE CASCADE`.
+
+Só uma base compatível pode receber `stamp`.
+
+### Backups
+
+Qualquer escrita de adoção/migração sobre uma base com dados é precedida de snapshot SQLite validado.
+
+Formato: `bolsanext_before_migration_<revision>_<timestamp>.sqlite3`.
+
+A infraestrutura reutiliza `create_validated_database_backup()` de B5/D2.
+
+### Falhas e runtime
+
+Uma falha de `stamp` ou upgrade preserva a base e o backup existente. Não existe restauro automático.
+
+`Base.metadata.create_all()` foi removido do mecanismo operacional. O arranque chama `ensure_database_schema()` antes de construir repositories.
+
+Se o schema não puder ser validado ou migrado de forma conhecida, a aplicação termina com erro em vez de abrir sobre uma base ambígua.
+
+### Testes
+
+A suite inclui proteção contra reintrodução de `create_all()` no runtime e cenários de base nova/vazia, legacy V0.2, base corrente, incompatibilidade, revisão desconhecida, falha durante adoção e base versionada atrás de head com backup + upgrade orquestrado.
