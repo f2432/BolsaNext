@@ -507,6 +507,30 @@ Validação automática:
 - baseline anterior a B5: 75 testes;
 - os 8 testes adicionais cobrem configuração sem efeitos laterais, override, criação explícita do ambiente, bloqueio de migração pendente e migração SQLite segura.
 
+#### Incidente Windows durante validação local B5
+
+Na primeira validação local em Windows/Python 3.14.5, o dry-run mostrou corretamente os caminhos reais, mas a suite local falhou num teste de migração com `PermissionError [WinError 32]` ao renomear o ficheiro temporário SQLite.
+
+Causa confirmada: o context manager nativo de `sqlite3.Connection` faz commit/rollback, mas **não fecha a ligação**. Em Windows isso manteve o ficheiro temporário aberto e bloqueou `Path.replace()`/cleanup.
+
+Correção aplicada na `dev`:
+
+- commit `000683c8a611b2804c87e0895bb590ef84453325` — fecha explicitamente ligações SQLite da migração com `contextlib.closing`;
+- commit `a12130721ad776e31312510a50f2a9dbe978f5b2` — fecha explicitamente as ligações usadas pelos fixtures/testes Windows;
+- o cleanup deixa de mascarar o erro original se um processo externo mantiver temporariamente o ficheiro aberto.
+
+O dry-run local confirmou:
+
+- origem: `C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3`;
+- destino: `C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3`;
+- backup: `C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_<timestamp>.sqlite3`;
+- origem existente;
+- destino ainda inexistente;
+- backup ainda inexistente;
+- nenhuma alteração efetuada.
+
+B5 permanece aberto até repetir a suite local depois da correção e executar/validar a migração real.
+
 Falta para fechar B5 como **CONCLUÍDO E VALIDADO**:
 
 - sincronizar o clone local;
