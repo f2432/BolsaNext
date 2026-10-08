@@ -827,3 +827,18 @@ C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3
 A origem foi preservada. A nova base foi criada apenas depois do backup e da validação SQLite.
 
 A validação funcional final da aplicação sobre a nova base permanece como último critério de fecho do B5.
+
+
+### Estado de validação B5
+
+B5 concluído e validado em 2026-10-08:
+
+- GitHub Actions: 83 testes passaram;
+- suite local Windows: 83 testes passaram;
+- a migração real preservou origem, criou backup validado e criou a nova base na diretoria estável;
+- a aplicação arrancou sobre a nova base;
+- Watchlist e estados existentes foram preservados;
+- uma alteração de estado persistiu depois de fechar e reabrir;
+- a base antiga e o backup permanecem preservados.
+
+A diretoria estável do utilizador passa a ser a origem operacional dos dados V0.2. A base legacy no repositório permanece apenas como cópia histórica de segurança até ao fecho do ciclo de estabilização.
