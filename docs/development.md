@@ -263,3 +263,15 @@ C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3
 A ferramenta de migração reportou sucesso depois de validar os ficheiros SQLite.
 
 A base antiga deve permanecer intacta pelo menos até ao fecho do ciclo de estabilização V0.2.
+
+
+### Validação funcional final B5
+
+Em 2026-10-08 foi validado o uso efetivo da nova base em Windows:
+
+- aplicação arrancou normalmente usando a base em Local AppData;
+- Watchlist e estados anteriores estavam presentes;
+- uma alteração de estado foi gravada;
+- depois de fechar e reabrir, a alteração permaneceu.
+
+B5 fica concluído. A antiga base `data/bolsanext.sqlite3` deve continuar preservada até ao fecho do ciclo de estabilização V0.2.
