@@ -953,3 +953,37 @@ B7 concluído e validado em 2026-10-08:
 - validação local confirmou a versão canónica `0.2.0`;
 - metadata instalado, User-Agent e UI usam a mesma fonte;
 - a tag Git `v0.2.0` continua reservada para B11.
+
+
+## Concorrência da Watchlist
+
+Decisão e implementação B8.1.
+
+A proteção contra concorrência existe em duas camadas complementares.
+
+### Camada Application
+
+`WatchlistService` possui um `threading.RLock` próprio.
+
+O lock protege o agregado durante leituras e mutações relevantes, incluindo operações que consultam Market Data e a persistência subsequente.
+
+Isto garante integridade mesmo quando o serviço é chamado fora da UI.
+
+### Camada UI
+
+`WatchlistOperationCoordinator` coordena uma única operação assíncrona da área Watchlist/Universos.
+
+`MainWindow` cria uma instância e partilha-a entre:
+
+- `WatchlistWidget`;
+- `UniverseWidget`.
+
+Enquanto o coordenador está busy, ficam desativados todos os controlos que podem iniciar outra operação de rede ou alterar a Watchlist, incluindo widgets embebidos nas células da tabela.
+
+O estado busy é sempre libertado a partir de `QThread.finished`, incluindo em erro. Uma falha ao iniciar a thread liberta-o imediatamente.
+
+A UI evita operações incompatíveis e bloqueios visíveis; o lock do serviço permanece a garantia final de integridade.
+
+### Teste de concorrência
+
+A suite executa duas threads Python contra o mesmo `WatchlistService`: uma atualização de metadados bloqueada deliberadamente no provider e uma remoção concorrente. A remoção espera pelo lock e o estado final é coerente, sem exceções.
