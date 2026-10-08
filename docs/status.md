@@ -191,7 +191,7 @@ Durante a primeira validação local, o Windows App Control bloqueou `sqlalchemy
 
 ### B5 — localização estável dos dados
 
-Estado: **IMPLEMENTADO, MIGRAÇÃO EXECUTADA E VALIDADA; AGUARDA VALIDAÇÃO FINAL DA APLICAÇÃO**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado no commit `66e257a75fa0deb0a9a6d3731b1ea79a79fc91f8`:
 
@@ -213,7 +213,7 @@ Falta executar a migração real no PC do utilizador e validar a aplicação sob
 
 Primeira validação local B5 em Windows: o dry-run mostrou corretamente origem/destino/backup, mas um teste falhou com `WinError 32` porque ligações `sqlite3` permaneciam abertas após o context manager. A implementação e fixtures foram corrigidos com fecho explícito via `contextlib.closing`. Aguarda repetição da suite local e só depois migração real.
 
-Migração real B5 concluída em 2026-10-08: suite local com **83 testes passados**, origem preservada em `C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3`, backup criado em `C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3` e nova base ativa em `C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3`. A ferramenta confirmou migração e validação com sucesso. Falta apenas abrir a aplicação, confirmar Watchlist/estados e fechar/reabrir para validar persistência na nova localização.
+Migração real B5 concluída em 2026-10-08: suite local com **83 testes passados**, origem preservada em `C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3`, backup criado em `C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3` e nova base ativa em `C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3`. A ferramenta confirmou migração e validação com sucesso. A aplicação foi depois aberta sobre a nova base, a Watchlist/estados foram confirmados, foi alterado um estado e, após fechar/reabrir, a alteração permaneceu. **B5 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B6 — migrações de schema**.
 
 ## V0.1 — Fundação concluída
 
