@@ -73,7 +73,7 @@ class WatchlistWidget(QWidget):
 
         self._table = QTableWidget(0, 7)
         self._table.setHorizontalHeaderLabels(
-            ["Ticker", "Nome", "Mercado", "Moeda", "Estado", "Preço atual", "Ações"]
+            ["Ticker", "Nome", "Bolsa", "Moeda", "Estado", "Preço atual", "Ações"]
         )
         self._table.horizontalHeader().setStretchLastSection(True)
         enable_table_header_persistence(self._table, "watchlist/main")
@@ -254,7 +254,7 @@ class WatchlistWidget(QWidget):
         for row_index, row in enumerate(rows):
             self._table.setItem(row_index, 0, QTableWidgetItem(row.ticker))
             self._table.setItem(row_index, 1, QTableWidgetItem(row.name or ""))
-            self._table.setItem(row_index, 2, QTableWidgetItem(row.market or ""))
+            self._table.setItem(row_index, 2, QTableWidgetItem(row.exchange or ""))
             self._table.setItem(row_index, 3, QTableWidgetItem(row.currency or ""))
 
             state_combo = QComboBox()

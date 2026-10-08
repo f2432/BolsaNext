@@ -15,7 +15,11 @@ from PySide6.QtWidgets import (
 
 from bolsa.app.ports.universe import UniverseLoadResult, UniverseLoadStatus
 from bolsa.app.services.universe_service import UniverseService
-from bolsa.app.services.watchlist_service import WatchlistService
+from bolsa.app.services.watchlist_service import (
+    UniverseInstrumentAddResult,
+    WatchlistService,
+)
+from bolsa.domain.instruments import Instrument
 from bolsa.ui.table_preferences import enable_table_header_persistence
 from bolsa.ui.watchlist.operation_coordinator import WatchlistOperationCoordinator
 from bolsa.ui.workers import FunctionThread
@@ -42,7 +46,8 @@ class UniverseWidget(QWidget):
         self._universe_service = universe_service
         self._watchlist_service = watchlist_service
         self._coordinator = coordinator or WatchlistOperationCoordinator(self)
-        self._load_thread: FunctionThread | None = None
+        self._operation_thread: FunctionThread | None = None
+        self._loaded_instruments: tuple[Instrument, ...] = ()
         self._external_status_text: str | None = None
 
         layout = QVBoxLayout(self)
@@ -69,8 +74,8 @@ class UniverseWidget(QWidget):
         self._status = QLabel("Seleciona um universo e carrega os constituintes.")
         layout.addWidget(self._status)
 
-        self._table = QTableWidget(0, 4)
-        self._table.setHorizontalHeaderLabels(["Ticker", "Nome", "Mercado", "Moeda"])
+        self._table = QTableWidget(0, 2)
+        self._table.setHorizontalHeaderLabels(["Ticker", "Nome"])
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -100,9 +105,36 @@ class UniverseWidget(QWidget):
         self._load_button.setEnabled(enabled)
         self._add_button.setEnabled(enabled)
 
+    def _start_thread(
+        self,
+        thread: FunctionThread,
+        *,
+        result_handler,
+        failure_handler,
+    ) -> None:
+        thread.result_ready.connect(result_handler)
+        thread.failed.connect(failure_handler)
+        thread.finished.connect(self._operation_finished)
+        self._operation_thread = thread
+
+        try:
+            thread.start()
+        except Exception:
+            self._operation_thread = None
+            self._coordinator.finish(self)
+            thread.deleteLater()
+            raise
+
+    def _operation_finished(self) -> None:
+        thread = self._operation_thread
+        self._operation_thread = None
+        self._coordinator.finish(self)
+        if thread is not None:
+            thread.deleteLater()
+
     def _load_universe(self) -> None:
         code = self._combo.currentData()
-        if not code or self._load_thread is not None:
+        if not code or self._operation_thread is not None:
             return
 
         label = f"A carregar {_UNIVERSE_LABELS.get(code, code)}..."
@@ -110,30 +142,24 @@ class UniverseWidget(QWidget):
             return
 
         self._status.setText(label)
+        self._loaded_instruments = ()
         self._table.setRowCount(0)
 
         thread = FunctionThread(self._universe_service.load, code)
-        thread.result_ready.connect(self._render_universe)
-        thread.failed.connect(self._load_failed)
-        thread.finished.connect(self._load_finished)
-        self._load_thread = thread
-
-        try:
-            thread.start()
-        except Exception:
-            self._load_thread = None
-            self._coordinator.finish(self)
-            thread.deleteLater()
-            raise
+        self._start_thread(
+            thread,
+            result_handler=self._render_universe,
+            failure_handler=self._load_failed,
+        )
 
     def _render_universe(self, result: UniverseLoadResult) -> None:
         universe = result.universe
-        self._table.setRowCount(len(universe.instruments))
-        for row_index, instrument in enumerate(universe.instruments):
+        self._loaded_instruments = universe.instruments
+
+        self._table.setRowCount(len(self._loaded_instruments))
+        for row_index, instrument in enumerate(self._loaded_instruments):
             self._table.setItem(row_index, 0, QTableWidgetItem(instrument.ticker))
             self._table.setItem(row_index, 1, QTableWidgetItem(instrument.name or ""))
-            self._table.setItem(row_index, 2, QTableWidgetItem(instrument.market or ""))
-            self._table.setItem(row_index, 3, QTableWidgetItem(instrument.currency or ""))
 
         status = f"{universe.name}: {len(universe.instruments)} instrumentos carregados."
 
@@ -159,22 +185,16 @@ class UniverseWidget(QWidget):
             self._table.selectRow(0)
 
     def _load_failed(self, message: str) -> None:
+        self._loaded_instruments = ()
         self._status.setText("Erro ao carregar universo.")
         QMessageBox.critical(self, "Universos", message)
 
-    def _load_finished(self) -> None:
-        thread = self._load_thread
-        self._load_thread = None
-        self._coordinator.finish(self)
-        if thread is not None:
-            thread.deleteLater()
-
     def _add_selected(self) -> None:
-        if self._coordinator.busy:
+        if self._coordinator.busy or self._operation_thread is not None:
             return
 
         row = self._table.currentRow()
-        if row < 0:
+        if row < 0 or row >= len(self._loaded_instruments):
             QMessageBox.information(
                 self,
                 "Universos",
@@ -182,25 +202,45 @@ class UniverseWidget(QWidget):
             )
             return
 
-        ticker = self._table.item(row, 0).text()
-        name = self._table.item(row, 1).text() or None
-        market = self._table.item(row, 2).text() or None
-        currency = self._table.item(row, 3).text() or None
+        instrument = self._loaded_instruments[row]
+        label = f"A confirmar dados de {instrument.ticker}..."
 
-        try:
-            self._watchlist_service.add_ticker(
-                ticker,
-                name=name,
-                market=market,
-                currency=currency,
-            )
-        except ValueError as exc:
-            QMessageBox.warning(self, "Watchlist", str(exc))
+        if not self._coordinator.begin(self, label):
             return
 
+        self._status.setText(label)
+        thread = FunctionThread(
+            self._watchlist_service.add_universe_instrument,
+            instrument,
+        )
+        self._start_thread(
+            thread,
+            result_handler=self._add_complete,
+            failure_handler=self._add_failed,
+        )
+
+    def _add_complete(self, result: UniverseInstrumentAddResult) -> None:
+        ticker = result.instrument.ticker
         self.instrument_added.emit(ticker)
+
+        if result.provisional:
+            self._status.setText(f"{ticker} adicionado com dados provisórios.")
+            detail = (
+                f"{ticker} foi adicionado com ticker e nome do universo. "
+                "Bolsa, moeda e tipo ficam por confirmar pela fonte principal."
+            )
+            if result.warning:
+                detail += f"\n\nMotivo: {result.warning}"
+            QMessageBox.warning(self, "Watchlist", detail)
+            return
+
+        self._status.setText(f"{ticker} adicionado com dados confirmados.")
         QMessageBox.information(
             self,
             "Watchlist",
-            f"{ticker} adicionado à Watchlist.",
+            f"{ticker} adicionado à Watchlist com dados confirmados.",
         )
+
+    def _add_failed(self, message: str) -> None:
+        self._status.setText("Não foi possível adicionar o ativo.")
+        QMessageBox.warning(self, "Watchlist", message)
