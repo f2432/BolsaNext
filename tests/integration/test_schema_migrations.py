@@ -99,6 +99,20 @@ def _legacy_value(path: Path) -> tuple[str, str]:
         ).fetchone()
 
 
+def _current_exchange_value(path: Path) -> str | None:
+    with closing(sqlite3.connect(path)) as connection:
+        return connection.execute(
+            "SELECT exchange FROM instruments WHERE id = 1"
+        ).fetchone()[0]
+
+
+def _legacy_market_value(path: Path) -> str | None:
+    with closing(sqlite3.connect(path)) as connection:
+        return connection.execute(
+            "SELECT market FROM instruments WHERE id = 1"
+        ).fetchone()[0]
+
+
 def test_new_database_is_created_at_head(tmp_path) -> None:
     config = AppConfig(data_dir=tmp_path)
     prepare_environment(config)
@@ -112,12 +126,19 @@ def test_new_database_is_created_at_head(tmp_path) -> None:
 
     engine = create_database_engine(config.database_url)
     try:
-        assert set(inspect(engine).get_table_names()) == {
+        inspector = inspect(engine)
+        assert set(inspector.get_table_names()) == {
             "alembic_version",
             "instruments",
             "watchlists",
             "watchlist_items",
         }
+        instrument_columns = {
+            column["name"]
+            for column in inspector.get_columns("instruments")
+        }
+        assert "exchange" in instrument_columns
+        assert "market" not in instrument_columns
     finally:
         engine.dispose()
 
@@ -143,8 +164,8 @@ def test_legacy_v02_is_validated_backed_up_and_stamped(tmp_path) -> None:
         now=datetime(2026, 10, 8, 2, 0, 0),
     )
 
-    assert result.status is SchemaMigrationStatus.STAMPED_BASELINE
-    assert result.current_revision == BASELINE_REVISION
+    assert result.status is SchemaMigrationStatus.UPGRADED
+    assert result.current_revision == get_schema_head_revision()
     assert result.backup_path == (
         config.backups_dir
         / "bolsanext_before_migration_0001_v02_baseline_20261008_020000.sqlite3"
@@ -152,7 +173,9 @@ def test_legacy_v02_is_validated_backed_up_and_stamped(tmp_path) -> None:
     assert result.backup_path.is_file()
     assert _legacy_value(config.database_path) == ("AAPL", "candidate")
     assert _legacy_value(result.backup_path) == ("AAPL", "candidate")
-    assert get_database_revision(config.database_path) == BASELINE_REVISION
+    assert get_database_revision(config.database_path) == result.head_revision
+    assert _current_exchange_value(config.database_path) == "US"
+    assert _legacy_market_value(result.backup_path) == "US"
     validate_sqlite_database(config.database_path)
     validate_sqlite_database(result.backup_path)
 
@@ -260,8 +283,9 @@ def test_versioned_database_behind_head_is_backed_up_and_upgraded(
     config = AppConfig(data_dir=tmp_path)
     prepare_environment(config)
     ensure_database_schema(config)
+    current_before = get_database_revision(config.database_path)
 
-    fake_head = "0002_test_head"
+    fake_head = "9998_test_head"
 
     monkeypatch.setattr(
         schema_migrations,
@@ -294,11 +318,11 @@ def test_versioned_database_behind_head_is_backed_up_and_upgraded(
     )
 
     assert result.status is SchemaMigrationStatus.UPGRADED
-    assert result.previous_revision == BASELINE_REVISION
+    assert result.previous_revision == current_before
     assert result.current_revision == fake_head
     assert result.backup_path == (
         config.backups_dir
-        / "bolsanext_before_migration_0002_test_head_20261008_030000.sqlite3"
+        / "bolsanext_before_migration_9998_test_head_20261008_030000.sqlite3"
     )
     assert result.backup_path.is_file()
     validate_sqlite_database(result.backup_path)
