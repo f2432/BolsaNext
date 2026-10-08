@@ -913,3 +913,8 @@ Se o schema não puder ser validado ou migrado de forma conhecida, a aplicação
 ### Testes
 
 A suite inclui proteção contra reintrodução de `create_all()` no runtime e cenários de base nova/vazia, legacy V0.2, base corrente, incompatibilidade, revisão desconhecida, falha durante adoção e base versionada atrás de head com backup + upgrade orquestrado.
+
+
+### Estado de validação B6
+
+B6 concluído e validado em 2026-10-08: CI e suite local com 92 testes; adoção real da baseline `0001_v02_baseline` com backup prévio; dados preservados; segundo arranque em head sem backup redundante. Alembic fica como autoridade operacional do schema.

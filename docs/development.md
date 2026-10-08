@@ -299,3 +299,8 @@ bolsanext_before_migration_<revision>_<timestamp>.sqlite3
 ```
 
 A base antiga preservada em `data/bolsanext.sqlite3` continua fora deste mecanismo operacional e permanece apenas como cópia histórica até ao fecho do ciclo V0.2.
+
+
+### Validação real B6
+
+Em 2026-10-08, a base real foi validada como V0.2, recebeu backup e `stamp` em `0001_v02_baseline`. Watchlist/estados permaneceram intactos e um segundo arranque não criou novo backup. B6 fica concluído e validado.
