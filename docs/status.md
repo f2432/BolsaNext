@@ -238,7 +238,7 @@ Validação local concluída em 2026-10-08: 92 testes passaram; a base real rece
 
 ### B7 — fonte única de versão
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado no commit `090c1ccea0300292dd69f96dd22a4189c553bb81`:
 
@@ -252,7 +252,7 @@ Implementado no commit `090c1ccea0300292dd69f96dd22a4189c553bb81`:
 
 GitHub Actions: **97 testes passaram em 1.81s**.
 
-Falta validação local. Próximo bloco depois disso: **B8 — Hardening Watchlist/UI**.
+Validação local concluída em 2026-10-08: versão canónica, metadata instalado, User-Agent e UI confirmados em `0.2.0`. **B7 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B8 — Hardening Watchlist/UI**.
 
 ## V0.1 — Fundação concluída
 
