@@ -647,15 +647,78 @@ Próximo passo: **B8 — Hardening Watchlist/UI**.
 
 ### B8 — Hardening Watchlist/UI
 
-Obrigatório antes da V0.3:
+Obrigatório antes da V0.3.
 
-- B8.1 concorrência global;
-- B8.2 UniverseWidget e decisão D1;
-- B8.3 cache de preços da sessão;
-- B8.4 validação realista de tickers;
-- B8.5 estado desconhecido defensivo;
-- coordenação UI + proteção de serviço;
-- testes quando aplicável.
+#### B8.1 — Concorrência global
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Desenho aprovado em 2026-10-08:
+
+1. A integridade do agregado não depende apenas da UI.
+2. `WatchlistService` usa um `threading.RLock` próprio e serializa leituras/mutações relevantes do agregado.
+3. O lock cobre também operações que consultam providers e a persistência associada, impedindo que o agregado mude a meio da operação.
+4. A UI usa um `WatchlistOperationCoordinator` único, partilhado entre `WatchlistWidget` e `UniverseWidget`.
+5. Enquanto existir uma operação assíncrona da área Watchlist/Universos, ficam bloqueados:
+   - adicionar ticker manualmente;
+   - atualizar metadados;
+   - atualizar preços;
+   - carregar outro universo;
+   - adicionar do UniverseWidget;
+   - alterar estado;
+   - remover ticker.
+6. Os widgets de célula já existentes e os que forem reconstruídos durante uma operação respeitam o estado global busy.
+7. A libertação do estado busy acontece no sinal `finished`, tanto em sucesso como em erro.
+8. Se `thread.start()` falhar, o coordenador é libertado imediatamente.
+9. Operações iniciadas num separador apresentam estado visual também no outro separador e restauram o texto anterior quando terminam.
+10. O serviço continua protegido mesmo se futuramente for chamado fora da UI.
+
+Implementação:
+
+- commit `9a50b862f2d185c8734d36cc30158c129c2778ac` — `fix: coordinate concurrent watchlist operations`;
+- commit `7239570909e02e1baa34b416b304132e55980424` — `fix: keep watchlist coordinator tests headless`;
+- criado `WatchlistOperationCoordinator`;
+- `MainWindow` passa a criar uma única instância e partilhá-la pelos dois widgets;
+- `WatchlistWidget` passa de três flags/threads independentes para um único `_operation_thread` e o coordenador global;
+- `UniverseWidget` participa no mesmo estado busy;
+- `WatchlistService` ganhou proteção `RLock`;
+- teste real com duas threads confirma que uma mutação espera por uma atualização em curso e que o estado final permanece coerente;
+- testes do coordenador confirmam exclusão mútua, ownership e transições busy/idle.
+
+Validação automática:
+
+- primeira execução do CI falhou durante collection porque importar `bolsa.ui.watchlist.operation_coordinator` fazia o package importar também `QtWidgets`, exigindo `libEGL.so.1` no runner headless;
+- a falha não era funcional nem de concorrência;
+- os imports do package `bolsa.ui.watchlist` foram tornados lazy, permitindo testar o coordenador com apenas QtCore;
+- GitHub Actions final: **101 testes passaram em 2.04s**;
+- baseline anterior a B8.1: 97 testes.
+
+Falta para fechar B8.1 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- confirmar 101 testes locais;
+- abrir a aplicação;
+- iniciar atualização de preços ou metadados e confirmar que os restantes controlos mutáveis ficam desativados nos dois separadores;
+- confirmar que, no fim, todos os controlos voltam a ficar disponíveis;
+- repetir pelo menos uma operação que produza erro/aviso e confirmar que a UI não fica bloqueada.
+
+#### B8.2 — UniverseWidget e decisão D1
+
+PENDENTE. Implementar depois de B8.1 validado.
+
+#### B8.3 — Cache de preços da sessão
+
+PENDENTE. Implementar depois de B8.2.
+
+#### B8.4 — Validação realista de tickers
+
+PENDENTE. Implementar depois de B8.3.
+
+#### B8.5 — Estado desconhecido defensivo
+
+PENDENTE. Implementar depois de B8.4.
+
+B8 só fica concluído depois dos cinco sub-blocos e respetiva validação.
 
 ### B9 — CI, dependências e qualidade
 
