@@ -353,3 +353,27 @@ Em 2026-10-08 foi confirmada localmente a coordenação global de operações:
 - no fim das operações, os controlos voltam a ficar disponíveis.
 
 B8.1 fica concluído e validado.
+
+
+## B8.2 — metadados de instrumentos
+
+Desde B8.2:
+
+- usar `Instrument.exchange`, não `Instrument.market`;
+- a UI chama ao campo **Bolsa**;
+- Wikipedia/universos fornecem apenas ticker e nome provisório;
+- Yahoo decide exchange, moeda e tipo canónicos;
+- `UniverseWidget` deve manter os objetos `Instrument` recebidos, não reconstruí-los a partir de texto da tabela;
+- a cache de universos usa formato v2 e não deve reintroduzir exchange/moeda;
+- `refresh_metadata()` consulta sempre a fonte principal;
+- alterações futuras do schema devem ser novas migrations Alembic.
+
+Migration atual:
+
+```text
+0001_v02_baseline
+        ↓
+0002_market_to_exchange
+```
+
+No primeiro arranque com B8.2 sobre uma base em `0001_v02_baseline`, o runtime cria backup e executa automaticamente o upgrade para `0002_market_to_exchange`.
