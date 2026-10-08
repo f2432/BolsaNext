@@ -35,7 +35,7 @@ def test_watchlist_persists_and_reloads(tmp_path) -> None:
             Instrument(
                 ticker="AAPL",
                 name="Apple Inc.",
-                market="NASDAQ",
+                exchange="NASDAQ",
                 currency="USD",
             ),
             state=WatchlistState.CANDIDATE,
@@ -48,7 +48,7 @@ def test_watchlist_persists_and_reloads(tmp_path) -> None:
         item = loaded.get("AAPL")
         assert item is not None
         assert item.instrument.name == "Apple Inc."
-        assert item.instrument.market == "NASDAQ"
+        assert item.instrument.exchange == "NASDAQ"
         assert item.instrument.currency == "USD"
         assert item.state == WatchlistState.CANDIDATE
     finally:
