@@ -651,7 +651,7 @@ Obrigatório antes da V0.3.
 
 #### B8.1 — Concorrência global
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-08:
 
@@ -693,14 +693,12 @@ Validação automática:
 - GitHub Actions final: **101 testes passaram em 2.04s**;
 - baseline anterior a B8.1: 97 testes.
 
-Falta para fechar B8.1 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída pelo utilizador em 2026-10-08:
 
-- sincronizar o clone local;
-- confirmar 101 testes locais;
-- abrir a aplicação;
-- iniciar atualização de preços ou metadados e confirmar que os restantes controlos mutáveis ficam desativados nos dois separadores;
-- confirmar que, no fim, todos os controlos voltam a ficar disponíveis;
-- repetir pelo menos uma operação que produza erro/aviso e confirmar que a UI não fica bloqueada.
+- os controlos mutáveis ficaram bloqueados durante operações em curso;
+- o bloqueio foi observado entre os separadores Watchlist e Universos;
+- no final das operações os controlos voltaram a ficar disponíveis;
+- B8.1 fica **CONCLUÍDO E VALIDADO**.
 
 #### B8.2 — UniverseWidget e decisão D1
 
