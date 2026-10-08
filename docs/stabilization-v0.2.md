@@ -466,7 +466,7 @@ Conclusão: a falha era do ambiente Windows/App Control sobre a extensão C opci
 
 ### B5 — Localização estável dos dados
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA MIGRAÇÃO EXPLÍCITA E VALIDAÇÃO LOCAL**.
+Estado: **IMPLEMENTADO, MIGRAÇÃO EXECUTADA E VALIDADA; AGUARDA VALIDAÇÃO FINAL DA APLICAÇÃO**.
 
 Desenho aprovado em 2026-10-08:
 
@@ -530,6 +530,24 @@ O dry-run local confirmou:
 - nenhuma alteração efetuada.
 
 B5 permanece aberto até repetir a suite local depois da correção e executar/validar a migração real.
+
+#### Migração real B5 executada
+
+Validação local em Windows concluída em 2026-10-08 até ao ponto de migração dos dados:
+
+- `git pull --ff-only origin dev` concluído por fast-forward;
+- suite local depois da correção Windows: **83 passed in 2.20s**;
+- dry-run confirmou origem, destino e backup antes de qualquer alteração;
+- migração real executada com confirmação interativa;
+- origem preservada: `C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3`;
+- backup criado: `C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3`;
+- nova base ativa: `C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3`;
+- a ferramenta reportou **Migração concluída e validada**;
+- a base antiga não foi apagada;
+- o destino não foi sobrescrito;
+- o backup foi criado antes da promoção da nova base.
+
+Falta apenas validar o uso efetivo da nova base pela aplicação, confirmar a Watchlist/estados e fechar/reabrir para confirmar persistência.
 
 Falta para fechar B5 como **CONCLUÍDO E VALIDADO**:
 
