@@ -999,3 +999,70 @@ B8.1 concluído e validado em 2026-10-08:
 - os controlos foram libertados corretamente no fim das operações.
 
 A política de duas camadas permanece vigente: coordenação visual na UI e `RLock` no serviço.
+
+
+## Proveniência de metadados e UniverseWidget
+
+Implementação B8.2 da decisão D1.
+
+### Conceito canónico
+
+O atributo canónico é `exchange`, entendido como bolsa/local de cotação.
+
+`market` deixa de existir no domínio e no modelo operacional depois da migration `0002_market_to_exchange`.
+
+A baseline histórica `0001_v02_baseline` conserva `market` por representar fielmente o schema V0.2 anterior; o validador de bases legacy também o mantém deliberadamente.
+
+### Autoridade dos metadados
+
+Providers de universos são autoridade apenas para composição.
+
+Podem fornecer:
+
+- ticker;
+- nome provisório.
+
+Não fornecem como dados canónicos:
+
+- exchange;
+- moeda;
+- tipo de ativo.
+
+Yahoo é a fonte principal destes metadados na V0.2.
+
+### Fluxo Universe → Watchlist
+
+```text
+Universe provider
+    ticker + nome provisório
+        ↓
+UniverseWidget mantém Instrument
+        ↓
+WatchlistService
+        ↓
+Yahoo instrument_details
+        ↓
+dados canónicos persistidos
+```
+
+Se Yahoo estiver temporariamente indisponível, a Application pode persistir um instrumento provisório com ticker/nome e exchange/moeda desconhecidos. Tipo = `OTHER`.
+
+Se Yahoo declarar que o ticker não existe, a adição falha.
+
+### Atualização explícita
+
+`refresh_metadata()` consulta sempre a fonte principal para todos os instrumentos. O facto de um instrumento já ter campos preenchidos não impede a atualização.
+
+Assim, dados históricos imprecisos podem ser corrigidos.
+
+### Cache de universos
+
+O formato de cache passa a versão 2 e guarda apenas composição/ticker/nome provisório.
+
+Caches anteriores são ignoradas e reconstruídas.
+
+### Migração
+
+`0002_market_to_exchange` renomeia a coluna sem apagar valores.
+
+A migration não tenta decidir semanticamente se valores antigos como `US` são válidos; essa correção é responsabilidade do refresh de metadados através da fonte principal.
