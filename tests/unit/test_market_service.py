@@ -29,12 +29,12 @@ class FakeProvider:
         return Instrument(
             ticker=instrument.ticker,
             name="Apple Inc.",
-            market="NASDAQ",
+            exchange="NASDAQ",
             currency="USD",
         )
 
 
-def test_market_service_delegates_to_provider() -> None:
+def test_exchange_service_delegates_to_provider() -> None:
     service = MarketService(FakeProvider())
     instrument = Instrument("AAPL")
 
@@ -45,11 +45,11 @@ def test_market_service_delegates_to_provider() -> None:
     assert float(history["Close"].iloc[0]) == 100.0
     assert price == 123.45
     assert details.name == "Apple Inc."
-    assert details.market == "NASDAQ"
+    assert details.exchange == "NASDAQ"
     assert details.currency == "USD"
 
 
-def test_market_service_rejects_invalid_date_range() -> None:
+def test_exchange_service_rejects_invalid_date_range() -> None:
     service = MarketService(FakeProvider())
     instrument = Instrument("AAPL")
 
