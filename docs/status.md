@@ -215,6 +215,27 @@ Primeira validação local B5 em Windows: o dry-run mostrou corretamente origem/
 
 Migração real B5 concluída em 2026-10-08: suite local com **83 testes passados**, origem preservada em `C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3`, backup criado em `C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3` e nova base ativa em `C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3`. A ferramenta confirmou migração e validação com sucesso. A aplicação foi depois aberta sobre a nova base, a Watchlist/estados foram confirmados, foi alterado um estado e, após fechar/reabrir, a alteração permaneceu. **B5 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B6 — migrações de schema**.
 
+### B6 — migrações de schema
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA ADOÇÃO ALEMBIC E VALIDAÇÃO LOCAL DA BASE REAL**.
+
+Implementado:
+
+- Alembic passa a ser autoridade do schema;
+- baseline V0.2: `0001_v02_baseline`;
+- `create_all()` removido do runtime;
+- bases novas usam `upgrade head`;
+- base V0.2 existente é validada, recebe backup e só depois `stamp baseline`;
+- bases atrasadas recebem backup + upgrade;
+- revisões desconhecidas/incompatíveis são bloqueadas;
+- não existe downgrade automático;
+- backups reutilizam a infraestrutura D2/B5;
+- `market → exchange` permanece para uma migration posterior real.
+
+GitHub Actions: **92 testes passaram em 1.99s**.
+
+Falta adoção Alembic da base real Windows e validação de que os dados persistem. Próximo bloco depois disso: **B7 — fonte única de versão**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
