@@ -331,3 +331,14 @@ Em 2026-10-08 foi confirmada localmente a fonte única de versão:
 - UI: `V0.2.0 — Market Data`.
 
 B7 fica concluído e validado. A tag Git continua proibida até B11.
+
+
+## Coordenação de operações Watchlist/UI
+
+Desde B8.1, operações assíncronas da Watchlist e Universos usam um `WatchlistOperationCoordinator` partilhado pelo `MainWindow`.
+
+Não criar flags busy independentes por botão/widget. A exclusão visual é global para esta área.
+
+A integridade real do agregado é garantida adicionalmente por `RLock` dentro de `WatchlistService`.
+
+Os imports de `bolsa.ui.watchlist` são lazy para que módulos baseados apenas em QtCore possam ser testados no CI headless sem carregar QtWidgets/libEGL.
