@@ -34,7 +34,7 @@ class FakeProvider:
         )
 
 
-def test_exchange_service_delegates_to_provider() -> None:
+def test_market_service_delegates_to_provider() -> None:
     service = MarketService(FakeProvider())
     instrument = Instrument("AAPL")
 
@@ -49,7 +49,7 @@ def test_exchange_service_delegates_to_provider() -> None:
     assert details.currency == "USD"
 
 
-def test_exchange_service_rejects_invalid_date_range() -> None:
+def test_market_service_rejects_invalid_date_range() -> None:
     service = MarketService(FakeProvider())
     instrument = Instrument("AAPL")
 
