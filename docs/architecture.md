@@ -987,3 +987,15 @@ A UI evita operações incompatíveis e bloqueios visíveis; o lock do serviço 
 ### Teste de concorrência
 
 A suite executa duas threads Python contra o mesmo `WatchlistService`: uma atualização de metadados bloqueada deliberadamente no provider e uma remoção concorrente. A remoção espera pelo lock e o estado final é coerente, sem exceções.
+
+
+### Estado de validação B8.1
+
+B8.1 concluído e validado em 2026-10-08:
+
+- GitHub Actions: 101 testes passaram;
+- validação local confirmou o bloqueio global dos controlos mutáveis durante operações em curso;
+- a coordenação foi confirmada entre Watchlist e Universos;
+- os controlos foram libertados corretamente no fim das operações.
+
+A política de duas camadas permanece vigente: coordenação visual na UI e `RLock` no serviço.
