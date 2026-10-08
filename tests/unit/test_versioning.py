@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib.metadata import version as installed_version
 from pathlib import Path
 import tomllib
 
@@ -17,6 +18,10 @@ def _project_root() -> Path:
 def test_package_version_has_single_canonical_value() -> None:
     assert __version__ == "0.2.0"
     assert bolsa.__version__ == __version__
+
+
+def test_installed_package_metadata_matches_canonical_version() -> None:
+    assert installed_version("bolsanext") == __version__
 
 
 def test_pyproject_reads_version_dynamically_from_canonical_module() -> None:
