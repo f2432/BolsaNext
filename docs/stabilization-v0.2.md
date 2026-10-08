@@ -610,7 +610,47 @@ Próximo passo: **B7 — Fonte única de versão**.
 
 ### B7 — Fonte única de versão
 
-Unificar package/UI/User-Agent. Não criar ainda tag.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Desenho aprovado em 2026-10-08:
+
+1. A versão canónica da aplicação vive apenas em `src/bolsa/version.py`.
+2. O valor canónico deste ciclo é `0.2.0`.
+3. `src/bolsa/__init__.py` apenas reexporta `__version__`; não mantém uma cópia independente.
+4. O metadata do pacote em `pyproject.toml` deixa de ter versão literal e passa a usar versão dinâmica através de `bolsa.version.__version__`.
+5. O User-Agent dos providers usa a mesma versão canónica.
+6. A UI constrói o rótulo de versão a partir da mesma fonte através de `version_label()`.
+7. O nome funcional da fase, por exemplo `Market Data`, não faz parte do número de versão.
+8. A tag Git `v0.2.0` **não é criada neste bloco**. Continua reservada para B11, depois da integração final validada em `main`.
+
+Implementação na `dev`:
+
+- commit `090c1ccea0300292dd69f96dd22a4189c553bb81` — `refactor: centralize application version`;
+- criado `src/bolsa/version.py` com `__version__ = "0.2.0"`;
+- criado `version_label(stage)`;
+- `bolsa.__version__` passa a reexportar a versão canónica;
+- `pyproject.toml` usa `dynamic = ["version"]` e `[tool.setuptools.dynamic]`;
+- `WikipediaUniverseProvider._USER_AGENT` passa a usar `__version__`;
+- a barra de estado da UI passa a usar `version_label("Market Data")`;
+- criada proteção automática contra regressão das strings antigas.
+
+Validação automática:
+
+- GitHub Actions: **96 testes passaram em 3.16s**;
+- baseline anterior a B7: 92 testes;
+- os 4 testes adicionais validam package version, metadata dinâmico do projeto, User-Agent e rótulo da UI;
+- o aviso já conhecido do GitHub Actions sobre Node.js 20 continua preservado para B9.
+
+Falta para fechar B7 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local;
+- reinstalar o projeto em modo editável para atualizar o metadata do pacote;
+- confirmar 96 testes locais;
+- confirmar `bolsa.__version__ == 0.2.0`;
+- confirmar que o metadata instalado do pacote também é `0.2.0`;
+- abrir a aplicação e confirmar `V0.2.0 — Market Data` na barra de estado.
+
+Próximo passo depois da validação local: **B8 — Hardening Watchlist/UI**.
 
 ### B8 — Hardening Watchlist/UI
 
