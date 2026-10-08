@@ -275,3 +275,27 @@ Em 2026-10-08 foi validado o uso efetivo da nova base em Windows:
 - depois de fechar e reabrir, a alteração permaneceu.
 
 B5 fica concluído. A antiga base `data/bolsanext.sqlite3` deve continuar preservada até ao fecho do ciclo de estabilização V0.2.
+
+## Migrações de schema
+
+Desde B6, Alembic é responsável pela criação e evolução do schema SQLite.
+
+A baseline atual é `0001_v02_baseline`.
+
+No arranque:
+
+- uma base nova é criada através de `alembic upgrade head`;
+- uma base V0.2 legacy compatível recebe backup e `stamp` da baseline;
+- uma base versionada atrasada recebe backup antes de `upgrade head`;
+- uma revisão desconhecida/incompatível bloqueia o arranque;
+- nunca é feito downgrade automático.
+
+`Base.metadata.create_all()` não é usado pelo runtime.
+
+Os backups de migração ficam em `config.backups_dir` e seguem o formato:
+
+```text
+bolsanext_before_migration_<revision>_<timestamp>.sqlite3
+```
+
+A base antiga preservada em `data/bolsanext.sqlite3` continua fora deste mecanismo operacional e permanece apenas como cópia histórica até ao fecho do ciclo V0.2.
