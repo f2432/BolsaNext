@@ -1,3 +1,5 @@
+from threading import Event, Thread
+
 import pytest
 
 from bolsa.app.ports.errors import (
@@ -172,3 +174,64 @@ def test_metadata_enrichment_is_persisted() -> None:
     service.add_ticker_enriched("AMD")
 
     assert repository.saved[-1][0][1] == "Advanced Micro Devices, Inc."
+
+
+
+def test_watchlist_service_serializes_concurrent_access() -> None:
+    provider_started = Event()
+    release_provider = Event()
+    remove_attempted = Event()
+    remove_finished = Event()
+    errors: list[BaseException] = []
+
+    class BlockingProvider(FakeProvider):
+        def get_instrument_details(self, instrument):
+            provider_started.set()
+            if not release_provider.wait(timeout=2):
+                raise TimeoutError("provider test timeout")
+            return Instrument(
+                ticker=instrument.ticker,
+                name="Apple Inc.",
+                market="NASDAQ",
+                currency="USD",
+            )
+
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(BlockingProvider()),
+    )
+    service.add_ticker("AAPL")
+
+    def refresh_metadata() -> None:
+        try:
+            service.refresh_metadata()
+        except BaseException as exc:
+            errors.append(exc)
+
+    def remove_ticker() -> None:
+        try:
+            remove_attempted.set()
+            service.remove_ticker("AAPL")
+            remove_finished.set()
+        except BaseException as exc:
+            errors.append(exc)
+
+    refresh_thread = Thread(target=refresh_metadata)
+    remove_thread = Thread(target=remove_ticker)
+
+    refresh_thread.start()
+    assert provider_started.wait(timeout=1)
+
+    remove_thread.start()
+    assert remove_attempted.wait(timeout=1)
+    assert not remove_finished.wait(timeout=0.1)
+
+    release_provider.set()
+    refresh_thread.join(timeout=2)
+    remove_thread.join(timeout=2)
+
+    assert not refresh_thread.is_alive()
+    assert not remove_thread.is_alive()
+    assert errors == []
+    assert remove_finished.is_set()
+    assert service.rows() == []

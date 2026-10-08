@@ -17,6 +17,7 @@ from bolsa.app.ports.universe import UniverseLoadResult, UniverseLoadStatus
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
 from bolsa.ui.table_preferences import enable_table_header_persistence
+from bolsa.ui.watchlist.operation_coordinator import WatchlistOperationCoordinator
 from bolsa.ui.workers import FunctionThread
 
 
@@ -34,12 +35,15 @@ class UniverseWidget(QWidget):
         self,
         universe_service: UniverseService,
         watchlist_service: WatchlistService,
+        coordinator: WatchlistOperationCoordinator | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._universe_service = universe_service
         self._watchlist_service = watchlist_service
+        self._coordinator = coordinator or WatchlistOperationCoordinator(self)
         self._load_thread: FunctionThread | None = None
+        self._external_status_text: str | None = None
 
         layout = QVBoxLayout(self)
 
@@ -74,21 +78,53 @@ class UniverseWidget(QWidget):
         enable_table_header_persistence(self._table, "watchlist/universes")
         layout.addWidget(self._table)
 
+        self._coordinator.busy_changed.connect(self._on_busy_changed)
+
+    def _on_busy_changed(
+        self,
+        busy: bool,
+        label: str,
+        owner: object,
+    ) -> None:
+        self._set_mutation_controls_enabled(not busy)
+
+        if busy and owner is not self:
+            self._external_status_text = self._status.text()
+            self._status.setText(label)
+        elif not busy and owner is not self and self._external_status_text is not None:
+            self._status.setText(self._external_status_text)
+            self._external_status_text = None
+
+    def _set_mutation_controls_enabled(self, enabled: bool) -> None:
+        self._combo.setEnabled(enabled)
+        self._load_button.setEnabled(enabled)
+        self._add_button.setEnabled(enabled)
+
     def _load_universe(self) -> None:
         code = self._combo.currentData()
         if not code or self._load_thread is not None:
             return
 
-        self._status.setText("A carregar universo...")
+        label = f"A carregar {_UNIVERSE_LABELS.get(code, code)}..."
+        if not self._coordinator.begin(self, label):
+            return
+
+        self._status.setText(label)
         self._table.setRowCount(0)
-        self._set_loading(True)
 
         thread = FunctionThread(self._universe_service.load, code)
         thread.result_ready.connect(self._render_universe)
         thread.failed.connect(self._load_failed)
         thread.finished.connect(self._load_finished)
         self._load_thread = thread
-        thread.start()
+
+        try:
+            thread.start()
+        except Exception:
+            self._load_thread = None
+            self._coordinator.finish(self)
+            thread.deleteLater()
+            raise
 
     def _render_universe(self, result: UniverseLoadResult) -> None:
         universe = result.universe
@@ -127,17 +163,16 @@ class UniverseWidget(QWidget):
         QMessageBox.critical(self, "Universos", message)
 
     def _load_finished(self) -> None:
-        self._set_loading(False)
-        if self._load_thread is not None:
-            self._load_thread.deleteLater()
+        thread = self._load_thread
         self._load_thread = None
-
-    def _set_loading(self, loading: bool) -> None:
-        self._combo.setEnabled(not loading)
-        self._load_button.setEnabled(not loading)
-        self._add_button.setEnabled(not loading)
+        self._coordinator.finish(self)
+        if thread is not None:
+            thread.deleteLater()
 
     def _add_selected(self) -> None:
+        if self._coordinator.busy:
+            return
+
         row = self._table.currentRow()
         if row < 0:
             QMessageBox.information(

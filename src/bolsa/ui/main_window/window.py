@@ -11,7 +11,11 @@ from PySide6.QtWidgets import (
 
 from bolsa.app.services.universe_service import UniverseService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.ui.watchlist import UniverseWidget, WatchlistWidget
+from bolsa.ui.watchlist import (
+    UniverseWidget,
+    WatchlistOperationCoordinator,
+    WatchlistWidget,
+)
 from bolsa.version import version_label
 
 
@@ -33,11 +37,19 @@ class MainWindow(QMainWindow):
             tabs.addTab(self._placeholder("Watchlist"), "Watchlist")
         else:
             watchlist_area = QTabWidget()
-            watchlist_widget = WatchlistWidget(watchlist_service)
+            operation_coordinator = WatchlistOperationCoordinator(self)
+            watchlist_widget = WatchlistWidget(
+                watchlist_service,
+                coordinator=operation_coordinator,
+            )
             watchlist_area.addTab(watchlist_widget, "A minha Watchlist")
 
             if universe_service is not None:
-                universe_widget = UniverseWidget(universe_service, watchlist_service)
+                universe_widget = UniverseWidget(
+                    universe_service,
+                    watchlist_service,
+                    coordinator=operation_coordinator,
+                )
                 universe_widget.instrument_added.connect(
                     lambda _ticker: watchlist_widget.refresh()
                 )
