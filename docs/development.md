@@ -241,3 +241,25 @@ Remove-Item Env:DISABLE_SQLALCHEMY_CEXT
 Esta é uma exceção de ambiente local, não uma alteração funcional do BolsaNext nem uma exigência geral para todos os sistemas.
 
 A política de dependências/ambientes será revista no B9.
+
+
+### Migração real validada em Windows
+
+Em 2026-10-08 foi executada a primeira migração real da base V0.2 para a nova diretoria estável do utilizador.
+
+Resultado:
+
+```text
+Origem preservada:
+C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3
+
+Backup:
+C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3
+
+Nova base:
+C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3
+```
+
+A ferramenta de migração reportou sucesso depois de validar os ficheiros SQLite.
+
+A base antiga deve permanecer intacta pelo menos até ao fecho do ciclo de estabilização V0.2.
