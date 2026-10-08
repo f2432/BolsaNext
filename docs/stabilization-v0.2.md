@@ -702,7 +702,70 @@ Validação local concluída pelo utilizador em 2026-10-08:
 
 #### B8.2 — UniverseWidget e decisão D1
 
-PENDENTE. Implementar depois de B8.1 validado.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL E MIGRAÇÃO REAL DA BASE**.
+
+Implementação alinhada com D1:
+
+1. O conceito de domínio/persistência `market` foi substituído por `exchange`.
+2. A UI passa a apresentar o rótulo **Bolsa** na Watchlist.
+3. Foi criada a primeira migration real após a baseline:
+   - `0001_v02_baseline`;
+   - `0002_market_to_exchange`.
+4. A migration renomeia a coluna existente e preserva os valores atuais; não tenta decidir quais valores antigos são precisos ou imprecisos.
+5. Wikipedia deixa de fornecer exchange, moeda ou tipo canónico.
+6. O provider de universos passa a fornecer apenas:
+   - ticker;
+   - nome provisório quando disponível;
+   - `exchange=None`;
+   - `currency=None`;
+   - `AssetType.OTHER`.
+7. Foram removidas inferências de moeda/exchange baseadas no universo ou sufixo do ticker.
+8. A cache de universos passa a ter `format_version = 2`; caches antigas com metadados autoritativos são ignoradas e reconstruídas.
+9. O `UniverseWidget` guarda os próprios objetos `Instrument` carregados e deixa de reconstruir instrumentos a partir do texto da tabela.
+10. A tabela de universos apresenta apenas **Ticker** e **Nome**.
+11. Adicionar um instrumento vindo de universo passa por `WatchlistService.add_universe_instrument()`.
+12. A precedência entre fontes fica na Application:
+    - Yahoo disponível → nome/exchange/moeda/tipo Yahoo vencem;
+    - Yahoo indisponível/erro previsível → ticker + nome provisórios são preservados, com exchange/moeda desconhecidos e tipo `OTHER`;
+    - `InstrumentNotFoundError` → não existe fallback silencioso e o instrumento não é adicionado.
+13. A adição a partir de Universos é assíncrona e participa no coordenador global introduzido em B8.1.
+14. O `YFinanceMarketDataProvider` deixa de reutilizar exchange provisório de entrada quando Yahoo não fornece exchange.
+15. Tipo de ativo não reconhecido pela fonte principal passa a `OTHER` em vez de herdar silenciosamente o tipo anterior.
+16. **Atualizar dados** consulta novamente Yahoo para todos os instrumentos, mesmo quando nome/exchange/moeda já estão preenchidos.
+17. Isto permite substituir valores históricos imprecisos como `US`, `EURONEXT` ou outros dados provenientes dos universos.
+18. O repository persiste o `Instrument` já decidido pela Application; não contém regras de precedência entre fontes.
+19. Não foi introduzido `metadata_source`, conforme D1.
+
+Implementação principal na `dev`:
+
+- `3d58ca5f5419362163866a34877752ceef9ed3d3` — `refactor: make Yahoo authoritative for instrument metadata`;
+- `7ba4e1404fe582aef55efc2fba9b62ff71b686e8` — `refactor: keep universe metadata provisional in UI`;
+- migration `0002_market_to_exchange`;
+- testes de domínio, providers, cache, serviço, repository e migrations adaptados ao novo contrato;
+- teste headless protege o requisito de o `UniverseWidget` usar os objetos `Instrument` carregados em vez de reconstruir a partir das células.
+
+Validação automática:
+
+- GitHub Actions final: **107 testes passaram em 2.61s**;
+- baseline anterior a B8.2: 101 testes;
+- o CI confirmou também a migration real `market → exchange` sobre uma base V0.2 temporária, preservando o valor existente;
+- testes confirmam que caches antigas são invalidadas;
+- testes confirmam prioridade Yahoo, fallback provisório seguro, rejeição de ticker inexistente e refresh de metadados já preenchidos.
+
+Falta para fechar B8.2 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar a `dev`;
+- confirmar 107 testes locais;
+- arrancar a aplicação e permitir o upgrade real da base de `0001_v02_baseline` para `0002_market_to_exchange`;
+- confirmar criação automática do backup `before_migration_0002_market_to_exchange_...`;
+- confirmar revisão final `0002_market_to_exchange`;
+- confirmar que a Watchlist abre normalmente e a coluna aparece como **Bolsa**;
+- carregar um universo e confirmar que a tabela apresenta apenas Ticker/Nome;
+- adicionar um ativo do universo e confirmar que Yahoo preenche Bolsa/Moeda quando disponível;
+- carregar em **Atualizar dados** e confirmar que metadados antigos/imprecisos são atualizados;
+- fechar/reabrir e confirmar persistência.
+
+Depois da validação local: **B8.3 — Cache de preços da sessão**.
 
 #### B8.3 — Cache de preços da sessão
 
