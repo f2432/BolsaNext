@@ -24,13 +24,13 @@ def test_table_to_instruments_normalises_us_tickers() -> None:
         table,
         symbol_columns=("Symbol", "Ticker"),
         name_columns=("Security", "Company"),
-        market="US",
-        currency="USD",
     )
 
     assert [item.ticker for item in instruments] == ["AAPL", "BRK-B"]
     assert instruments[0].name == "Apple Inc."
-    assert instruments[0].currency == "USD"
+    assert instruments[0].exchange is None
+    assert instruments[0].currency is None
+    assert instruments[0].asset_type.value == "other"
 
 
 def test_find_constituents_table_ignores_unrelated_tables() -> None:
@@ -173,9 +173,6 @@ def test_euronext_tickers_keep_yahoo_suffixes() -> None:
         table,
         symbol_columns=("Ticker",),
         name_columns=("Name", "Company"),
-        market_columns=("Main listing",),
-        market="EURONEXT",
-        currency="EUR",
         ticker_style="yahoo",
     )
 
@@ -184,10 +181,9 @@ def test_euronext_tickers_keep_yahoo_suffixes() -> None:
         "AIR.PA",
         "EQNR.OL",
     ]
-    assert instruments[0].market == "AMSTERDAM"
-    assert instruments[0].currency == "EUR"
-    assert instruments[2].market == "OSLO"
-    assert instruments[2].currency == "NOK"
+    assert all(item.exchange is None for item in instruments)
+    assert all(item.currency is None for item in instruments)
+    assert all(item.asset_type.value == "other" for item in instruments)
 
 
 def test_euronext100_is_supported() -> None:
