@@ -250,7 +250,7 @@ Implementado no commit `090c1ccea0300292dd69f96dd22a4189c553bb81`:
 - UI apresenta a versão através de `version_label()`;
 - tag `v0.2.0` continua proibida até B11.
 
-GitHub Actions: **96 testes passaram em 3.16s**.
+GitHub Actions: **97 testes passaram em 1.81s**.
 
 Falta validação local. Próximo bloco depois disso: **B8 — Hardening Watchlist/UI**.
 
