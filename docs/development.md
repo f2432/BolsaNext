@@ -304,3 +304,18 @@ A base antiga preservada em `data/bolsanext.sqlite3` continua fora deste mecanis
 ### Validação real B6
 
 Em 2026-10-08, a base real foi validada como V0.2, recebeu backup e `stamp` em `0001_v02_baseline`. Watchlist/estados permaneceram intactos e um segundo arranque não criou novo backup. B6 fica concluído e validado.
+
+
+## Versão canónica
+
+A versão do BolsaNext é definida exclusivamente em:
+
+```text
+src/bolsa/version.py
+```
+
+O valor atual é `0.2.0`.
+
+Não editar manualmente versões noutros ficheiros. `pyproject.toml` lê a versão dinamicamente de `bolsa.version.__version__`, e package/UI/User-Agent derivam da mesma origem.
+
+A tag Git `v0.2.0` só será criada no fecho B11, depois da integração final validada em `main`.
