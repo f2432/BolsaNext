@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 import sqlite3
@@ -19,7 +20,7 @@ from bolsa.infrastructure.database import (
 
 def _create_source_database(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.execute(
             "CREATE TABLE sample (id INTEGER PRIMARY KEY, value TEXT NOT NULL)"
         )
@@ -31,7 +32,7 @@ def _create_source_database(path: Path) -> None:
 
 
 def _read_value(path: Path) -> str:
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         return connection.execute(
             "SELECT value FROM sample WHERE id = 1"
         ).fetchone()[0]
