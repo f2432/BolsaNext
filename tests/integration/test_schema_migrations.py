@@ -251,3 +251,55 @@ def test_runtime_database_code_does_not_use_create_all() -> None:
             offenders.append(path.name)
 
     assert offenders == []
+
+
+def test_versioned_database_behind_head_is_backed_up_and_upgraded(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    config = AppConfig(data_dir=tmp_path)
+    prepare_environment(config)
+    ensure_database_schema(config)
+
+    fake_head = "0002_test_head"
+
+    monkeypatch.setattr(
+        schema_migrations,
+        "get_schema_head_revision",
+        lambda: fake_head,
+    )
+    monkeypatch.setattr(
+        schema_migrations,
+        "_assert_revision_can_upgrade",
+        lambda _current, _head: None,
+    )
+
+    def fake_upgrade(path, _revision="head"):
+        with closing(sqlite3.connect(path)) as connection:
+            connection.execute(
+                "UPDATE alembic_version SET version_num = ?",
+                (fake_head,),
+            )
+            connection.commit()
+
+    monkeypatch.setattr(
+        schema_migrations,
+        "_run_upgrade",
+        fake_upgrade,
+    )
+
+    result = ensure_database_schema(
+        config,
+        now=datetime(2026, 10, 8, 3, 0, 0),
+    )
+
+    assert result.status is SchemaMigrationStatus.UPGRADED
+    assert result.previous_revision == BASELINE_REVISION
+    assert result.current_revision == fake_head
+    assert result.backup_path == (
+        config.backups_dir
+        / "bolsanext_before_migration_0002_test_head_20261008_030000.sqlite3"
+    )
+    assert result.backup_path.is_file()
+    validate_sqlite_database(result.backup_path)
+    assert get_database_revision(config.database_path) == fake_head
