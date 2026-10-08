@@ -638,7 +638,7 @@ Validação automática:
 
 - GitHub Actions: **96 testes passaram em 3.16s**;
 - baseline anterior a B7: 92 testes;
-- os 4 testes adicionais validam package version, metadata dinâmico do projeto, User-Agent e rótulo da UI;
+- os 5 testes adicionais validam package version, metadata instalado e dinâmico do projeto, User-Agent e rótulo da UI;
 - o aviso já conhecido do GitHub Actions sobre Node.js 20 continua preservado para B9.
 
 Falta para fechar B7 como **CONCLUÍDO E VALIDADO**:
