@@ -319,3 +319,15 @@ O valor atual é `0.2.0`.
 Não editar manualmente versões noutros ficheiros. `pyproject.toml` lê a versão dinamicamente de `bolsa.version.__version__`, e package/UI/User-Agent derivam da mesma origem.
 
 A tag Git `v0.2.0` só será criada no fecho B11, depois da integração final validada em `main`.
+
+
+### Validação real B7
+
+Em 2026-10-08 foi confirmada localmente a fonte única de versão:
+
+- package: `0.2.0`;
+- metadata instalado: `0.2.0`;
+- User-Agent: derivado da versão canónica;
+- UI: `V0.2.0 — Market Data`.
+
+B7 fica concluído e validado. A tag Git continua proibida até B11.
