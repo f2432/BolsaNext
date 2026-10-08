@@ -272,6 +272,28 @@ GitHub Actions final: **101 testes passaram em 2.04s**. A primeira execução fa
 
 Validação local concluída em 2026-10-08: os controlos mutáveis ficaram bloqueados durante as operações e foram libertados no fim, incluindo coordenação entre Watchlist e Universos. **B8.1 está CONCLUÍDO E VALIDADO.** Próximo sub-bloco: **B8.2 — UniverseWidget e decisão D1**.
 
+### B8.2 — UniverseWidget e D1
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL E MIGRAÇÃO REAL DA BASE**.
+
+Implementado:
+
+- `market` passa a `exchange` no domínio, repository e persistência;
+- nova migration `0002_market_to_exchange` preserva os valores existentes;
+- Watchlist apresenta **Bolsa**;
+- Wikipedia fica limitada a composição + ticker/nome provisório;
+- exchange/moeda/tipo deixam de ser inferidos pelo universo;
+- cache de universos v2 invalida caches antigas;
+- UniverseWidget conserva os objetos `Instrument` e não os reconstrói a partir das células;
+- Yahoo é a autoridade dos metadados canónicos;
+- fallback de universo perante indisponibilidade Yahoo preserva apenas ticker/nome e deixa exchange/moeda desconhecidos;
+- ticker inexistente no Yahoo não é adicionado;
+- **Atualizar dados** volta sempre ao Yahoo, mesmo para instrumentos já completos.
+
+GitHub Actions: **107 testes passaram em 2.61s**.
+
+Falta validação local da migration real e do fluxo Universe → Watchlist. Depois disso: **B8.3 — cache de preços da sessão**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
