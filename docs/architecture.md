@@ -805,3 +805,25 @@ Cache de universos não é migrada. É dado derivado e pode ser recriada.
 B5 trata apenas **localização física dos dados**.
 
 Evolução de schema, baseline e revisões Alembic pertencem ao B6.
+
+
+### Migração B5 executada no ambiente Windows
+
+Em 2026-10-08 a migração real da base V0.2 foi executada e validada no ambiente Windows do utilizador.
+
+Caminhos confirmados:
+
+```text
+Origem:
+C:\Users\Portatil\Documents\GitHub\BolsaNext\data\bolsanext.sqlite3
+
+Backup:
+C:\Users\Portatil\AppData\Local\BolsaNext\backups\bolsanext_before_move_20261008_010523.sqlite3
+
+Nova base ativa:
+C:\Users\Portatil\AppData\Local\BolsaNext\bolsanext.sqlite3
+```
+
+A origem foi preservada. A nova base foi criada apenas depois do backup e da validação SQLite.
+
+A validação funcional final da aplicação sobre a nova base permanece como último critério de fecho do B5.
