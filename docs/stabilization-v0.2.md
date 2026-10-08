@@ -564,7 +564,58 @@ Próximo passo: **B6 — Migrações de schema**.
 
 ### B6 — Migrações
 
-Introduzir mecanismo de migrações, baseline V0.2, evolução controlada, comportamento no arranque, backup e testes de migração. Alterações futuras de schema são novas revisões.
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA ADOÇÃO ALEMBIC E VALIDAÇÃO LOCAL DA BASE REAL**.
+
+Desenho aprovado em 2026-10-08:
+
+1. **Alembic passa a ser a autoridade única do schema persistente.**
+2. A baseline V0.2 é a revisão `0001_v02_baseline` e representa exatamente o schema existente: `instruments`, `watchlists` e `watchlist_items`.
+3. `Base.metadata.create_all()` deixa de ser o mecanismo operacional de criação/evolução da base.
+4. Base nova ou ficheiro SQLite vazio executa `alembic upgrade head`; cria schema + `alembic_version` e não necessita backup porque ainda não contém dados.
+5. Base V0.2 existente sem `alembic_version`: valida a estrutura funcional da baseline, cria backup obrigatório segundo D2 e só depois executa `alembic stamp 0001_v02_baseline`.
+6. Base já versionada e em `head`: não faz alterações nem cria novo backup.
+7. Base versionada atrás de `head`: valida que a revisão pertence ao caminho conhecido, cria backup, executa `alembic upgrade head`, valida `PRAGMA quick_check` e a revisão final.
+8. Revisão desconhecida, incompatível ou fora do caminho conhecido: a aplicação pára; não tenta downgrade nem reparação automática.
+9. Schema legacy incompatível é rejeitado antes de `stamp`; nenhuma marca Alembic é escrita.
+10. Backups de schema reutilizam a infraestrutura segura criada em B5/D2 e usam nomes `bolsanext_before_migration_<revision>_YYYYMMDD_HHMMSS.sqlite3`.
+11. Falha durante `stamp`/upgrade preserva a base e o backup. Restauro continua explícito, nunca automático.
+12. Downgrade automático no arranque é proibido.
+13. `market → exchange` não é implementado neste bloco. A baseline preserva `market`; uma alteração futura será uma revisão Alembic posterior real.
+
+Implementação na `dev`:
+
+- commit `e2f3cae706746c5247b09728a914d0c81e26a137` — `feat: introduce Alembic schema migrations`;
+- commit `ded32f44887d3c6b400ad9fbf3861d553e56d0b1` — `test: cover versioned schema upgrade orchestration`;
+- dependência `alembic` adicionada ao projeto;
+- migrations empacotadas em `src/bolsa/infrastructure/database/migrations/`;
+- baseline `0001_v02_baseline` criada;
+- `ensure_database_schema()` passa a governar criação, adoção e upgrades;
+- `initialize_database()/create_all()` removido do fluxo operacional;
+- `main()` valida/migra o schema antes de criar repositories;
+- erros de compatibilidade/revisão fazem o arranque terminar sem abrir a aplicação;
+- infraestrutura de backup de B5 passou a expor `create_validated_database_backup()` para reutilização;
+- testes antigos de persistência foram migrados para bases reais temporárias geridas por Alembic;
+- existe teste que impede o regresso de `create_all()` ao runtime;
+- existe teste de orquestração para base versionada atrás de head; como ainda só existe a baseline real, o teste simula a revisão seguinte e comprova backup + upgrade sem criar uma migration funcional fictícia.
+
+Validação automática:
+
+- GitHub Actions: **92 testes passaram em 1.99s**;
+- baseline anterior a B6: 83 testes;
+- os testes adicionais cobrem criação de base nova/vazia, adoção de legacy V0.2, preservação de dados, backup antes de stamp, base já em head, schema incompatível, revisão desconhecida, falha de stamp, ausência de `create_all()` no runtime e caminho backup+upgrade para uma base atrasada.
+
+Falta para fechar B6 como **CONCLUÍDO E VALIDADO**:
+
+- sincronizar o clone local e instalar a nova dependência Alembic;
+- confirmar 92 testes locais;
+- confirmar que a base real atual ainda não tem revisão Alembic;
+- arrancar a aplicação uma vez, permitindo validação + backup + stamp da baseline;
+- confirmar que Watchlist/estados permanecem intactos;
+- confirmar `alembic_version = 0001_v02_baseline`;
+- confirmar criação do backup `before_migration`;
+- fechar/reabrir e confirmar que uma base já em head não cria outro backup.
+
+Próximo passo depois da validação local: **B7 — Fonte única de versão**.
 
 ### B7 — Fonte única de versão
 
