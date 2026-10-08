@@ -342,3 +342,14 @@ Não criar flags busy independentes por botão/widget. A exclusão visual é glo
 A integridade real do agregado é garantida adicionalmente por `RLock` dentro de `WatchlistService`.
 
 Os imports de `bolsa.ui.watchlist` são lazy para que módulos baseados apenas em QtCore possam ser testados no CI headless sem carregar QtWidgets/libEGL.
+
+
+### Validação real B8.1
+
+Em 2026-10-08 foi confirmada localmente a coordenação global de operações:
+
+- durante refresh/carregamento, os controlos mutáveis ficam desativados;
+- o bloqueio é partilhado entre Watchlist e Universos;
+- no fim das operações, os controlos voltam a ficar disponíveis.
+
+B8.1 fica concluído e validado.
