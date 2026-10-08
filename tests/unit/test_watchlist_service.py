@@ -5,10 +5,11 @@ import pytest
 from bolsa.app.ports.errors import (
     CurrentPriceUnavailableError,
     InstrumentNotFoundError,
+    MarketDataUnavailableError,
 )
 from bolsa.app.services import MarketService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.domain.instruments import Instrument
+from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
 
 
@@ -23,14 +24,20 @@ class FakeProvider:
         return Instrument(
             ticker=instrument.ticker,
             name="Advanced Micro Devices, Inc.",
-            market="NASDAQ",
+            exchange="NASDAQ",
             currency="USD",
+            asset_type=AssetType.STOCK,
         )
 
 
 class MissingInstrumentProvider(FakeProvider):
     def get_instrument_details(self, instrument):
         raise InstrumentNotFoundError(instrument.ticker)
+
+
+class UnavailableMetadataProvider(FakeProvider):
+    def get_instrument_details(self, instrument):
+        raise MarketDataUnavailableError("offline")
 
 
 class MissingPriceProvider(FakeProvider):
@@ -80,7 +87,7 @@ def test_watchlist_service_enriches_manual_ticker() -> None:
 
     assert instrument.ticker == "AMD"
     assert instrument.name == "Advanced Micro Devices, Inc."
-    assert rows[0].market == "NASDAQ"
+    assert rows[0].exchange == "NASDAQ"
     assert rows[0].currency == "USD"
 
 
@@ -96,17 +103,95 @@ def test_invalid_manual_ticker_is_not_added() -> None:
     assert service.rows() == []
 
 
-def test_watchlist_service_refreshes_missing_metadata() -> None:
+def test_universe_instrument_prefers_yahoo_metadata() -> None:
     service = WatchlistService(
         Watchlist("Principal"),
         MarketService(FakeProvider()),
     )
-    service.add_ticker("AMD")
+
+    result = service.add_universe_instrument(
+        Instrument(
+            "AMD",
+            name="Nome provisório",
+            exchange="US",
+            currency="EUR",
+            asset_type=AssetType.OTHER,
+        )
+    )
+
+    rows = service.rows()
+    assert result.provisional is False
+    assert result.instrument.name == "Advanced Micro Devices, Inc."
+    assert result.instrument.exchange == "NASDAQ"
+    assert result.instrument.currency == "USD"
+    assert rows[0].exchange == "NASDAQ"
+    assert rows[0].currency == "USD"
+
+
+def test_universe_instrument_falls_back_to_safe_provisional_metadata() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(UnavailableMetadataProvider()),
+    )
+
+    result = service.add_universe_instrument(
+        Instrument(
+            "AMD",
+            name="Nome do universo",
+            exchange="US",
+            currency="EUR",
+            asset_type=AssetType.STOCK,
+        )
+    )
+
+    assert result.provisional is True
+    assert result.warning == "offline"
+    assert result.instrument.name == "Nome do universo"
+    assert result.instrument.exchange is None
+    assert result.instrument.currency is None
+    assert result.instrument.asset_type is AssetType.OTHER
+
+
+def test_universe_instrument_not_found_is_not_added() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(MissingInstrumentProvider()),
+    )
+
+    with pytest.raises(InstrumentNotFoundError):
+        service.add_universe_instrument(
+            Instrument("INVALID", name="Provisório", asset_type=AssetType.OTHER)
+        )
+
+    assert service.rows() == []
+
+
+def test_refresh_metadata_always_returns_to_primary_source() -> None:
+    class CountingProvider(FakeProvider):
+        def __init__(self):
+            self.calls = 0
+
+        def get_instrument_details(self, instrument):
+            self.calls += 1
+            return super().get_instrument_details(instrument)
+
+    provider = CountingProvider()
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(provider),
+    )
+    service.add_ticker(
+        "AMD",
+        name="Nome antigo",
+        exchange="US",
+        currency="EUR",
+    )
 
     rows = service.refresh_metadata()
 
+    assert provider.calls == 1
     assert rows[0].name == "Advanced Micro Devices, Inc."
-    assert rows[0].market == "NASDAQ"
+    assert rows[0].exchange == "NASDAQ"
     assert rows[0].currency == "USD"
     assert service.metadata_warnings == ()
 
@@ -176,7 +261,6 @@ def test_metadata_enrichment_is_persisted() -> None:
     assert repository.saved[-1][0][1] == "Advanced Micro Devices, Inc."
 
 
-
 def test_watchlist_service_serializes_concurrent_access() -> None:
     provider_started = Event()
     release_provider = Event()
@@ -192,7 +276,7 @@ def test_watchlist_service_serializes_concurrent_access() -> None:
             return Instrument(
                 ticker=instrument.ticker,
                 name="Apple Inc.",
-                market="NASDAQ",
+                exchange="NASDAQ",
                 currency="USD",
             )
 
