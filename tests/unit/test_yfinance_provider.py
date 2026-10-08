@@ -8,7 +8,7 @@ from bolsa.app.ports.errors import (
     MarketDataUnavailableError,
 )
 from bolsa.domain.instruments import AssetType, Instrument
-from bolsa.infrastructure.exchange_data.yfinance_provider import (
+from bolsa.infrastructure.market_data.yfinance_provider import (
     YFinanceMarketDataProvider,
 )
 
@@ -135,7 +135,7 @@ def test_get_instrument_details_maps_yahoo_metadata(monkeypatch) -> None:
             }
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -151,7 +151,7 @@ def test_get_instrument_details_maps_yahoo_metadata(monkeypatch) -> None:
 
 def test_get_instrument_details_normalises_gbp_subunit(monkeypatch) -> None:
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: _MetadataTicker("GBp"),
     )
 
@@ -167,7 +167,7 @@ def test_get_instrument_details_rejects_unknown_ticker(monkeypatch) -> None:
             return {}
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -183,7 +183,7 @@ def test_get_instrument_details_distinguishes_provider_failure(monkeypatch) -> N
             raise ConnectionError("offline")
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -199,7 +199,7 @@ def test_get_instrument_details_rejects_malformed_metadata(monkeypatch) -> None:
             return ["unexpected"]
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -214,7 +214,7 @@ def test_get_historical_data_wraps_provider_failure(monkeypatch) -> None:
         raise ConnectionError("offline")
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.download",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.download",
         fail_download,
     )
 
@@ -226,7 +226,7 @@ def test_get_historical_data_wraps_provider_failure(monkeypatch) -> None:
 
 def test_get_historical_data_rejects_malformed_response(monkeypatch) -> None:
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.download",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.download",
         lambda **_kwargs: ["unexpected"],
     )
 
@@ -250,11 +250,11 @@ def test_get_historical_data_scales_price_columns_but_not_volume(monkeypatch) ->
     )
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.download",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.download",
         lambda **_kwargs: raw,
     )
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: _MetadataTicker("GBp"),
     )
 
@@ -272,7 +272,7 @@ def test_get_historical_data_scales_price_columns_but_not_volume(monkeypatch) ->
 
 def test_get_current_price_uses_fast_info(monkeypatch) -> None:
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: _MetadataTicker("USD", price=123.45),
     )
 
@@ -283,7 +283,7 @@ def test_get_current_price_uses_fast_info(monkeypatch) -> None:
 
 def test_get_current_price_scales_gbp_subunit(monkeypatch) -> None:
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: _MetadataTicker("GBp", price=12345.0),
     )
 
@@ -305,7 +305,7 @@ def test_quote_convention_is_cached_per_ticker(monkeypatch) -> None:
             }
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -327,7 +327,7 @@ def test_get_current_price_uses_history_fallback(monkeypatch) -> None:
             return {"quoteType": "EQUITY", "currency": "USD"}
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -347,7 +347,7 @@ def test_get_current_price_distinguishes_no_quote(monkeypatch) -> None:
             return {"quoteType": "EQUITY", "currency": "USD"}
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -366,7 +366,7 @@ def test_get_current_price_distinguishes_unknown_ticker(monkeypatch) -> None:
             return {}
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -382,7 +382,7 @@ def test_get_current_price_distinguishes_provider_failure(monkeypatch) -> None:
             raise ConnectionError("offline")
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
@@ -398,7 +398,7 @@ def test_get_current_price_rejects_malformed_response(monkeypatch) -> None:
             return pd.DataFrame({"Open": [100.0]})
 
     monkeypatch.setattr(
-        "bolsa.infrastructure.exchange_data.yfinance_provider.yf.Ticker",
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
         lambda _ticker: FakeTicker(),
     )
 
