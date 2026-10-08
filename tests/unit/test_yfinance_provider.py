@@ -404,3 +404,28 @@ def test_get_current_price_rejects_malformed_response(monkeypatch) -> None:
 
     with pytest.raises(MarketDataFormatError, match="Close"):
         YFinanceMarketDataProvider().get_current_price(Instrument("AAPL"))
+
+
+
+def test_get_instrument_details_does_not_preserve_provisional_exchange(
+    monkeypatch,
+) -> None:
+    class FakeTicker:
+        def get_info(self):
+            return {
+                "longName": "Example Corp.",
+                "currency": "USD",
+                "quoteType": "EQUITY",
+            }
+
+    monkeypatch.setattr(
+        "bolsa.infrastructure.market_data.yfinance_provider.yf.Ticker",
+        lambda _ticker: FakeTicker(),
+    )
+
+    result = YFinanceMarketDataProvider().get_instrument_details(
+        Instrument("EXAMPLE", exchange="US")
+    )
+
+    assert result.exchange is None
+    assert result.currency == "USD"
