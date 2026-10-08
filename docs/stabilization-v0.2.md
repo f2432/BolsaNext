@@ -610,7 +610,7 @@ Próximo passo: **B7 — Fonte única de versão**.
 
 ### B7 — Fonte única de versão
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-08:
 
@@ -636,21 +636,14 @@ Implementação na `dev`:
 
 Validação automática:
 
-- GitHub Actions: **96 testes passaram em 3.16s**;
+- GitHub Actions: **97 testes passaram em 1.81s**;
 - baseline anterior a B7: 92 testes;
 - os 5 testes adicionais validam package version, metadata instalado e dinâmico do projeto, User-Agent e rótulo da UI;
 - o aviso já conhecido do GitHub Actions sobre Node.js 20 continua preservado para B9.
 
-Falta para fechar B7 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída pelo utilizador em 2026-10-08: versão canónica, metadata instalado, User-Agent e UI confirmados em `0.2.0`. B7 fica **CONCLUÍDO E VALIDADO**.
 
-- sincronizar o clone local;
-- reinstalar o projeto em modo editável para atualizar o metadata do pacote;
-- confirmar 96 testes locais;
-- confirmar `bolsa.__version__ == 0.2.0`;
-- confirmar que o metadata instalado do pacote também é `0.2.0`;
-- abrir a aplicação e confirmar `V0.2.0 — Market Data` na barra de estado.
-
-Próximo passo depois da validação local: **B8 — Hardening Watchlist/UI**.
+Próximo passo: **B8 — Hardening Watchlist/UI**.
 
 ### B8 — Hardening Watchlist/UI
 
