@@ -918,3 +918,28 @@ A suite inclui proteção contra reintrodução de `create_all()` no runtime e c
 ### Estado de validação B6
 
 B6 concluído e validado em 2026-10-08: CI e suite local com 92 testes; adoção real da baseline `0001_v02_baseline` com backup prévio; dados preservados; segundo arranque em head sem backup redundante. Alembic fica como autoridade operacional do schema.
+
+
+## Fonte única de versão
+
+Decisão e implementação B7 do ciclo de estabilização V0.2.
+
+A versão da aplicação tem uma única origem:
+
+```text
+src/bolsa/version.py
+    __version__ = "0.2.0"
+```
+
+A partir desta origem derivam:
+
+- `bolsa.__version__`;
+- metadata do pacote Python através de setuptools dynamic metadata;
+- User-Agent dos providers;
+- rótulo de versão da interface.
+
+A UI usa `version_label(stage)` para combinar a versão canónica com o nome funcional da fase, mantendo os dois conceitos separados.
+
+Não devem ser introduzidas novas strings literais de versão em módulos funcionais.
+
+A existência da versão `0.2.0` no código não autoriza a criação antecipada da tag Git `v0.2.0`. A tag continua reservada para B11, depois da integração final validada em `main`.
