@@ -466,7 +466,7 @@ Conclusão: a falha era do ambiente Windows/App Control sobre a extensão C opci
 
 ### B5 — Localização estável dos dados
 
-Estado: **IMPLEMENTADO, MIGRAÇÃO EXECUTADA E VALIDADA; AGUARDA VALIDAÇÃO FINAL DA APLICAÇÃO**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Desenho aprovado em 2026-10-08:
 
@@ -549,17 +549,18 @@ Validação local em Windows concluída em 2026-10-08 até ao ponto de migraçã
 
 Falta apenas validar o uso efetivo da nova base pela aplicação, confirmar a Watchlist/estados e fechar/reabrir para confirmar persistência.
 
-Falta para fechar B5 como **CONCLUÍDO E VALIDADO**:
+Validação funcional final confirmada pelo utilizador em 2026-10-08:
 
-- sincronizar o clone local;
-- executar primeiro apenas o dry-run da ferramenta e confirmar os caminhos reais;
-- só depois executar a migração explícita;
-- confirmar backup, nova base e preservação da base antiga;
-- arrancar a aplicação com a nova localização;
-- confirmar Watchlist/estados;
-- fechar e reabrir para confirmar persistência.
+- a aplicação arrancou sobre a nova base em `%LOCALAPPDATA%\\BolsaNext`;
+- a Watchlist e os estados existentes foram preservados;
+- uma alteração de estado foi gravada;
+- depois de fechar e reabrir a aplicação, a alteração permaneceu;
+- a base antiga no repositório continua preservada;
+- o backup da migração continua preservado.
 
-Próximo passo depois da validação local: **B6 — Migrações de schema**.
+B5 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo passo: **B6 — Migrações de schema**.
 
 ### B6 — Migrações
 
