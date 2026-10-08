@@ -254,6 +254,24 @@ GitHub Actions: **97 testes passaram em 1.81s**.
 
 Validação local concluída em 2026-10-08: versão canónica, metadata instalado, User-Agent e UI confirmados em `0.2.0`. **B7 está CONCLUÍDO E VALIDADO.** Próximo bloco: **B8 — Hardening Watchlist/UI**.
 
+### B8.1 — concorrência global
+
+Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL**.
+
+Implementado:
+
+- `WatchlistService` protegido por `RLock`;
+- coordenador global partilhado entre WatchlistWidget e UniverseWidget;
+- uma única operação assíncrona da área de cada vez;
+- alterações de estado, remoção, adição, refresh de preços/metadados e carregamento de universo coordenados;
+- libertação do busy no sinal `finished`, incluindo caminhos de erro;
+- teste real de concorrência entre duas threads;
+- imports lazy de `bolsa.ui.watchlist` para manter os testes do coordenador headless.
+
+GitHub Actions final: **101 testes passaram em 2.04s**. A primeira execução falhou apenas por import eager de QtWidgets/libEGL no runner headless e foi corrigida sem alterar o desenho funcional.
+
+Falta validação local da coordenação visual. Depois disso: **B8.2 — UniverseWidget e decisão D1**.
+
 ## V0.1 — Fundação concluída
 
 ### Repositório e documentação
