@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -103,7 +104,7 @@ def validate_sqlite_database(path: Path) -> None:
     uri = f"file:{path.resolve().as_posix()}?mode=ro"
 
     try:
-        with sqlite3.connect(uri, uri=True) as connection:
+        with closing(sqlite3.connect(uri, uri=True)) as connection:
             row = connection.execute("PRAGMA quick_check").fetchone()
     except sqlite3.DatabaseError as exc:
         raise DataLocationError(
@@ -128,14 +129,21 @@ def _sqlite_backup_atomic(source: Path, target: Path) -> None:
 
     try:
         source_uri = f"file:{source.resolve().as_posix()}?mode=ro"
-        with sqlite3.connect(source_uri, uri=True) as source_connection:
-            with sqlite3.connect(temp) as target_connection:
+        with closing(
+            sqlite3.connect(source_uri, uri=True)
+        ) as source_connection:
+            with closing(sqlite3.connect(temp)) as target_connection:
                 source_connection.backup(target_connection)
 
         validate_sqlite_database(temp)
         temp.replace(target)
     except Exception:
-        temp.unlink(missing_ok=True)
+        try:
+            temp.unlink(missing_ok=True)
+        except PermissionError:
+            # Se outro processo externo mantiver o ficheiro aberto, não
+            # mascarar o erro original com uma segunda exceção de cleanup.
+            pass
         raise
 
 
