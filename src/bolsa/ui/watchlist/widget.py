@@ -42,6 +42,7 @@ class WatchlistWidget(QWidget):
         self._coordinator = coordinator or WatchlistOperationCoordinator(self)
         self._operation_thread: FunctionThread | None = None
         self._external_status_text: str | None = None
+        self._last_price_warnings: tuple[str, ...] = ()
 
         layout = QVBoxLayout(self)
 
@@ -226,10 +227,15 @@ class WatchlistWidget(QWidget):
     def _price_refresh_complete(self, rows: list[WatchlistRow]) -> None:
         self._render_rows(rows)
         warnings = self._service.price_warnings
+        self._last_price_warnings = warnings
+        updated = [row.price_updated_at for row in rows if row.price_updated_at is not None]
+        time_label = max(updated).astimezone().strftime("%H:%M") if updated else None
 
         if warnings:
             self._status.setText(
-                f"Preços atualizados com {len(warnings)} aviso(s)."
+                f"Atualização concluída às {time_label}, com {len(warnings)} aviso(s). "
+                "Último preço conhecido mantido quando disponível."
+                if time_label else f"Atualização com {len(warnings)} aviso(s); sem preços disponíveis."
             )
             QMessageBox.warning(
                 self,
@@ -238,14 +244,22 @@ class WatchlistWidget(QWidget):
                 + "\n".join(warnings),
             )
         else:
-            self._status.setText("Preços atualizados.")
+            self._status.setText(
+                f"Preços atualizados às {time_label}." if time_label
+                else "Sem preços disponíveis."
+            )
 
     def _price_refresh_failed(self, message: str) -> None:
         self._status.setText("Erro ao atualizar preços.")
         QMessageBox.warning(self, "Watchlist", message)
 
     def _refresh_table(self) -> None:
-        self._render_rows(self._service.rows())
+        rows = self._service.rows()
+        self._render_rows(rows)
+        timestamps = [row.price_updated_at for row in rows if row.price_updated_at is not None]
+        if timestamps:
+            time_label = max(timestamps).astimezone().strftime("%H:%M")
+            self._status.setText(f"Preços em memória · última atualização às {time_label}.")
 
     def _render_rows(self, rows: list[WatchlistRow]) -> None:
         self._table.setRowCount(len(rows))
