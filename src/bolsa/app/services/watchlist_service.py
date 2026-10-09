@@ -190,10 +190,7 @@ class WatchlistService:
                             item.instrument
                         )
                         snapshot = PriceSnapshot(
-                            price=snapshot.price if snapshot is not None else None,
-                        price_updated_at=(
-                            snapshot.obtained_at if snapshot is not None else None
-                        ),
+                            price=price,
                             obtained_at=datetime.now(timezone.utc),
                         )
                         self._price_cache[ticker] = snapshot
@@ -207,7 +204,10 @@ class WatchlistService:
                         exchange=item.instrument.exchange,
                         currency=item.instrument.currency,
                         state=item.state,
-                        price=price,
+                        price=snapshot.price if snapshot is not None else None,
+                        price_updated_at=(
+                            snapshot.obtained_at if snapshot is not None else None
+                        ),
                     )
                 )
 
