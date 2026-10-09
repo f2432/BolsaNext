@@ -1066,3 +1066,18 @@ Caches anteriores são ignoradas e reconstruídas.
 `0002_market_to_exchange` renomeia a coluna sem apagar valores.
 
 A migration não tenta decidir semanticamente se valores antigos como `US` são válidos; essa correção é responsabilidade do refresh de metadados através da fonte principal.
+
+
+### Estado de validação B8.2
+
+B8.2 concluído e validado em 2026-10-09:
+
+- GitHub Actions: 107 testes passaram;
+- a base real foi atualizada para `0002_market_to_exchange` com backup prévio;
+- a Watchlist passou a usar/apresentar **Bolsa**;
+- Universos apresenta apenas Ticker/Nome;
+- adição por universo usa Yahoo como fonte principal de metadados;
+- `Atualizar dados` volta à fonte principal mesmo para campos já preenchidos;
+- persistência confirmada depois de fechar e reabrir.
+
+A decisão D1 fica assim implementada e validada no fluxo real.

@@ -274,7 +274,7 @@ Validação local concluída em 2026-10-08: os controlos mutáveis ficaram bloqu
 
 ### B8.2 — UniverseWidget e D1
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL E MIGRAÇÃO REAL DA BASE**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementado:
 
@@ -292,7 +292,7 @@ Implementado:
 
 GitHub Actions: **107 testes passaram em 2.61s**.
 
-Falta validação local da migration real e do fluxo Universe → Watchlist. Depois disso: **B8.3 — cache de preços da sessão**.
+Validação local concluída em 2026-10-09: migration `0002_market_to_exchange`, coluna **Bolsa**, tabela de Universos apenas Ticker/Nome, enriquecimento Yahoo, atualização de metadados e persistência foram confirmados. **B8.2 está CONCLUÍDO E VALIDADO.** Próximo sub-bloco: **B8.3 — cache de preços da sessão**.
 
 ## V0.1 — Fundação concluída
 

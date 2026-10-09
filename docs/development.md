@@ -377,3 +377,18 @@ Migration atual:
 ```
 
 No primeiro arranque com B8.2 sobre uma base em `0001_v02_baseline`, o runtime cria backup e executa automaticamente o upgrade para `0002_market_to_exchange`.
+
+
+### Validação real B8.2
+
+Em 2026-10-09 foram confirmados localmente:
+
+- upgrade da base para `0002_market_to_exchange`;
+- backup automático antes da migration;
+- coluna **Bolsa** na Watchlist;
+- Universos com apresentação apenas Ticker/Nome;
+- enriquecimento de metadados via Yahoo;
+- atualização explícita de metadados existentes;
+- persistência após reinício.
+
+B8.2 fica concluído e validado.

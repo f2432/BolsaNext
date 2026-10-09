@@ -702,7 +702,7 @@ Validação local concluída pelo utilizador em 2026-10-08:
 
 #### B8.2 — UniverseWidget e decisão D1
 
-Estado: **IMPLEMENTADO E VALIDADO NO CI; AGUARDA VALIDAÇÃO LOCAL E MIGRAÇÃO REAL DA BASE**.
+Estado: **CONCLUÍDO E VALIDADO**.
 
 Implementação alinhada com D1:
 
@@ -752,20 +752,23 @@ Validação automática:
 - testes confirmam que caches antigas são invalidadas;
 - testes confirmam prioridade Yahoo, fallback provisório seguro, rejeição de ticker inexistente e refresh de metadados já preenchidos.
 
-Falta para fechar B8.2 como **CONCLUÍDO E VALIDADO**:
+Validação local concluída pelo utilizador em 2026-10-09.
 
-- sincronizar a `dev`;
-- confirmar 107 testes locais;
-- arrancar a aplicação e permitir o upgrade real da base de `0001_v02_baseline` para `0002_market_to_exchange`;
-- confirmar criação automática do backup `before_migration_0002_market_to_exchange_...`;
-- confirmar revisão final `0002_market_to_exchange`;
-- confirmar que a Watchlist abre normalmente e a coluna aparece como **Bolsa**;
-- carregar um universo e confirmar que a tabela apresenta apenas Ticker/Nome;
-- adicionar um ativo do universo e confirmar que Yahoo preenche Bolsa/Moeda quando disponível;
-- carregar em **Atualizar dados** e confirmar que metadados antigos/imprecisos são atualizados;
-- fechar/reabrir e confirmar persistência.
+Resultados confirmados:
 
-Depois da validação local: **B8.3 — Cache de preços da sessão**.
+- suite local e fluxo funcional sem anomalias reportadas;
+- migration real concluída para `0002_market_to_exchange`;
+- backup prévio criado pelo mecanismo B6;
+- revisão final confirmada em `0002_market_to_exchange`;
+- Watchlist abriu normalmente com a coluna **Bolsa**;
+- Universos apresenta apenas Ticker/Nome;
+- adição de ativo por universo passou pelo Yahoo e preencheu Bolsa/Moeda quando disponíveis;
+- **Atualizar dados** corrigiu/atualizou metadados existentes;
+- persistência confirmada depois de fechar e reabrir a aplicação.
+
+B8.2 fica **CONCLUÍDO E VALIDADO**.
+
+Próximo sub-bloco: **B8.3 — Cache de preços da sessão**.
 
 #### B8.3 — Cache de preços da sessão
 
