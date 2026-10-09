@@ -396,3 +396,5 @@ B8.2 fica concluído e validado.
 ### Teste manual B8.3 (cache de preços de sessão)
 
 Na branch `dev`, executar `git pull --ff-only origin dev`, `python -m pytest -q` e `python -m bolsa.main`. Atualizar preços na Watchlist, mudar para Universos e voltar; os valores devem manter-se sem novo pedido de preços. Atualizar dados e confirmar que não apaga os preços. Remover e readicionar um ativo e confirmar preço inicialmente desconhecido. Encerrar e reabrir a aplicação: preços devem começar sem valor. Em erro individual do provider, deve permanecer o último preço conhecido acompanhado de aviso. O bloco só será marcado validado após confirmação do utilizador.
+
+Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes locais e funcionais correram como esperado. **B8.3 CONCLUÍDO E VALIDADO**. Próximo passo B8.4, ainda não implementado. A `main` e a tag `v0.2.0` mantêm-se intocadas.
