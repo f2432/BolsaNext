@@ -638,3 +638,7 @@ Regras:
 - quando um bloco estiver validado e o utilizador pedir passagem para `main`, a integração é feita por squash para produzir um único commit coerente;
 - depois da integração, o trabalho seguinte continua em `dev`;
 - commits intermédios de `dev` são considerados técnicos e não fazem parte do histórico final pretendido da `main`.
+
+### Estabilização V0.2, B8.3 (2026-10-09)
+
+**Implementado em `dev`, por validar localmente.** O `WatchlistService` mantém preços e respetivos instantes UTC apenas em memória durante a sessão. Refreshes posteriores da tabela/metadados conservam preços; erros individuais mantêm a última cotação válida com aviso; remover um ticker limpa a entrada da cache. A UI identifica a atualização e a memória da sessão. Não existe persistência de preços nem nova migração. Testes de regressão acrescentados. B8.3 permanece **PENDENTE DE VALIDAÇÃO**, B8.4/B8.5 ainda por iniciar; V0.3 continua bloqueada.
