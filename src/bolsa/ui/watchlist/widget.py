@@ -42,7 +42,6 @@ class WatchlistWidget(QWidget):
         self._coordinator = coordinator or WatchlistOperationCoordinator(self)
         self._operation_thread: FunctionThread | None = None
         self._external_status_text: str | None = None
-        self._last_price_warnings: tuple[str, ...] = ()
 
         layout = QVBoxLayout(self)
 
@@ -227,7 +226,6 @@ class WatchlistWidget(QWidget):
     def _price_refresh_complete(self, rows: list[WatchlistRow]) -> None:
         self._render_rows(rows)
         warnings = self._service.price_warnings
-        self._last_price_warnings = warnings
         updated = [row.price_updated_at for row in rows if row.price_updated_at is not None]
         time_label = max(updated).astimezone().strftime("%H:%M") if updated else None
 
