@@ -319,3 +319,119 @@ def test_watchlist_service_serializes_concurrent_access() -> None:
     assert errors == []
     assert remove_finished.is_set()
     assert service.rows() == []
+
+
+class MutablePriceProvider(FakeProvider):
+    def __init__(self):
+        self.calls = 0
+        self.price = 123.45
+        self.fail = False
+
+    def get_current_price(self, instrument):
+        self.calls += 1
+        if self.fail:
+            raise CurrentPriceUnavailableError(instrument.ticker)
+        return self.price
+
+
+def test_session_price_cache_survives_rows_without_provider_call() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("aapl")
+
+    initial = service.rows(refresh_prices=True)[0]
+    cached = service.rows()[0]
+
+    assert initial.price == 123.45
+    assert initial.price_updated_at is not None
+    assert initial.price_updated_at.utcoffset().total_seconds() == 0
+    assert cached.price == initial.price
+    assert cached.price_updated_at == initial.price_updated_at
+    assert provider.calls == 1
+
+
+def test_session_price_cache_is_replaced_on_success_and_kept_on_failure() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("AAPL")
+    first = service.rows(refresh_prices=True)[0]
+
+    provider.price = 0.0
+    second = service.rows(refresh_prices=True)[0]
+    assert second.price == 0.0
+    assert second.price_updated_at >= first.price_updated_at
+
+    provider.fail = True
+    failed = service.rows(refresh_prices=True)[0]
+    assert failed.price == 0.0
+    assert failed.price_updated_at == second.price_updated_at
+    assert len(service.price_warnings) == 1
+
+
+def test_metadata_refresh_preserves_session_price() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AMD")
+    initial = service.rows(refresh_prices=True)[0]
+
+    refreshed = service.refresh_metadata()[0]
+    assert refreshed.price == initial.price
+    assert refreshed.price_updated_at == initial.price_updated_at
+
+
+def test_session_price_cache_is_cleared_on_remove_and_readd() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("AAPL")
+    assert service.rows(refresh_prices=True)[0].price == 123.45
+    service.remove_ticker("aapl")
+    service.add_ticker("AAPL")
+    row = service.rows()[0]
+    assert row.price is None
+    assert row.price_updated_at is None
+
+
+def test_new_service_has_no_session_price_cache() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AAPL")
+    service.rows(refresh_prices=True)
+    fresh_service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    fresh_service.add_ticker("AAPL")
+    assert fresh_service.rows()[0].price is None
+    assert fresh_service.rows()[0].price_updated_at is None
+
+
+def test_price_refresh_does_not_write_repository() -> None:
+    repository = FakeRepository()
+    service = WatchlistService(
+        Watchlist("Principal"), MarketService(FakeProvider()), repository=repository,
+    )
+    service.add_ticker("AAPL")
+    count = len(repository.saved)
+    service.rows(refresh_prices=True)
+    service.rows()
+    assert len(repository.saved) == count
+
+
+def test_never_refreshed_ticker_has_no_price() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AAPL")
+    row = service.rows()[0]
+    assert row.price is None
+    assert row.price_updated_at is None
+
+
+def test_failed_remove_keeps_cached_price() -> None:
+    class FailingRepository(FakeRepository):
+        def save(self, watchlist):
+            raise RuntimeError("storage failed")
+
+    repository = FailingRepository()
+    service = WatchlistService(
+        Watchlist("Principal"), MarketService(FakeProvider()),
+    )
+    service.add_ticker("AAPL")
+    old = service.rows(refresh_prices=True)[0]
+    service._repository = repository
+    with pytest.raises(RuntimeError, match="storage failed"):
+        service.remove_ticker("AAPL")
+    assert service._price_cache["AAPL"].price == old.price
