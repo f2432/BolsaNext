@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from threading import RLock
 
 from bolsa.app.ports.errors import (
@@ -14,6 +15,12 @@ from bolsa.domain.watchlist import Watchlist, WatchlistState
 
 
 @dataclass(frozen=True, slots=True)
+class PriceSnapshot:
+    price: float
+    obtained_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class WatchlistRow:
     ticker: str
     name: str | None
@@ -21,6 +28,7 @@ class WatchlistRow:
     currency: str | None
     state: WatchlistState
     price: float | None
+    price_updated_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +49,7 @@ class WatchlistService:
         self._market_service = market_service
         self._repository = repository
         self._lock = RLock()
+        self._price_cache: dict[str, PriceSnapshot] = {}
         self._metadata_warnings: tuple[str, ...] = ()
         self._price_warnings: tuple[str, ...] = ()
 
@@ -155,8 +164,11 @@ class WatchlistService:
 
     def remove_ticker(self, ticker: str) -> None:
         with self._lock:
+            canonical_ticker = self._watchlist.get(ticker)
             self._watchlist.remove(ticker)
             self._persist()
+            if canonical_ticker is not None:
+                self._price_cache.pop(canonical_ticker.instrument.ticker, None)
 
     def set_state(self, ticker: str, state: WatchlistState) -> None:
         with self._lock:
@@ -169,13 +181,22 @@ class WatchlistService:
             rows: list[WatchlistRow] = []
 
             for item in self._watchlist.items:
-                price: float | None = None
+                ticker = item.instrument.ticker
+                snapshot = self._price_cache.get(ticker)
 
                 if refresh_prices:
                     try:
                         price = self._market_service.current_price(
                             item.instrument
                         )
+                        snapshot = PriceSnapshot(
+                            price=snapshot.price if snapshot is not None else None,
+                        price_updated_at=(
+                            snapshot.obtained_at if snapshot is not None else None
+                        ),
+                            obtained_at=datetime.now(timezone.utc),
+                        )
+                        self._price_cache[ticker] = snapshot
                     except MarketDataError as exc:
                         warnings.append(f"{item.instrument.ticker}: {exc}")
 
