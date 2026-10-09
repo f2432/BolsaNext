@@ -2217,3 +2217,10 @@ como ativar. Dá-me um switch para forçar, para os casos em que eu saiba o que
 estou a fazer. Confirma também que o script continua coerente com a alteração de
 localização de dados da sessão B5.
 ```
+### B8.3 — Cache de preços da sessão
+
+Estado: **IMPLEMENTADO EM `dev`, A AGUARDAR CI E VALIDAÇÃO LOCAL** (2026-10-09).
+
+Desenho validado pelo utilizador: cache efémera de `PriceSnapshot(price, obtained_at)` no `WatchlistService`, protegida pelo `RLock` existente. Timestamp UTC por preço obtido; `WatchlistRow.price_updated_at` expõe frescura. `rows()` reutiliza preços sem contactar Yahoo; `rows(refresh_prices=True)` atualiza cada entrada com sucesso, conserva preços e timestamps antigos em falha e mantém avisos. `refresh_metadata()` não apaga preços. Remoção bem-sucedida elimina a entrada; reintrodução e reinício começam sem preços. UI mostra hora da atualização/últimos preços em memória, sem nova coluna nem semáforos visuais. Sem alteração ao schema, Alembic, repository ou dependências. Testes de regressão adicionados em `tests/unit/test_watchlist_service.py`.
+
+Commits de implementação: `dd6a63e`, `3b713b2`, `08610f2`. A implementação **não** é considerada concluída e validada até confirmar CI e receber aprovação do teste local do utilizador. Próximo sub-bloco, só depois de validação: B8.4. A `main` e a tag `v0.2.0` permanecem intocadas.
