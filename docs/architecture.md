@@ -1081,3 +1081,7 @@ B8.2 concluído e validado em 2026-10-09:
 - persistência confirmada depois de fechar e reabrir.
 
 A decisão D1 fica assim implementada e validada no fluxo real.
+
+### Cache efémera de preços (B8.3, implementação em validação)
+
+O `WatchlistService` (Application) é dono de uma cache de sessão `dict[str, PriceSnapshot]` e mantém o respetivo acesso sob `RLock`. Um snapshot guarda preço `float` e instante UTC timezone-aware de obtenção. `WatchlistRow` expõe `price` e `price_updated_at` à UI. O Domain, a persistência e o provider de universos não conhecem esta cache. Falhas externas preservam o último snapshot e os avisos existentes. Preços não passam pelo repository nem pelo SQLite. A cache termina com a instância do serviço.
