@@ -241,3 +241,7 @@ O módulo deve poder evoluir sem depender de execução automática de ordens.
 ### Decisões A1 validadas (2026-10-11)
 
 Ações e ETFs long-only, incluindo quantidades fracionadas; ledger íntegro como origem da verdade; BUY/SELL; DIVIDEND manual com bruto/retenção/encargos/líquido; ADJUSTMENT manual auditável; correção por substituição rastreável e anulação lógica sem apagar originais. Sem derivados, margem, automatismos societários/fiscais, caixa nem ligação direta a brokers nesta fase. Modelos extensíveis para tipos futuros sem implementação prematura. Consultar `docs/architecture.md`, secção **Âmbito da V0.3 — Portfolio**, para contratos e questões a fechar no A2–A5, A7 e A8.
+
+### Progresso da especificação V0.3 (2026-10-11)
+
+**A1, A2 e A3 CONCLUÍDOS E VALIDADOS funcionalmente, sem implementação.** A3 fixa Decimal no domínio, TEXT decimal canónico na persistência SQLite, escalas de entrada 8/12 casas (FX), limite 18 algarismos inteiros, cálculo 50 algarismos significativos, ROUND_HALF_EVEN, fronteira explícita de dados de mercado float e preservação de montantes originais da corretora. A4 (câmbio), A5 (moeda base), A7 (importação/exportação) e A8 (reconciliação) continuam pendentes. A V0.2.0 publicada mantém-se como referência estável.
