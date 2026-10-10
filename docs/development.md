@@ -479,3 +479,7 @@ Validação B10 (2026-10-11): o utilizador confirmou expressamente a revisão do
 Na `dev`, executar `git pull --ff-only origin dev`, `python -m ruff check src tests` e `python -m pytest -q`; verificar jobs Linux/Windows. Em funcionamento normal, os universos devem carregar e reutilizar cache como antes. Os testes de regressão em `tests/unit/test_cached_universe_provider.py` simulam falhas na gravação e na substituição, exigindo preservação do JSON anterior e ausência de ficheiros temporários residuais. I1 só fica validado depois da confirmação do utilizador.
 
 Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou avançar. **I1 — ESCRITA ATÓMICA DA CACHE DE UNIVERSOS CONCLUÍDO E VALIDADO.** Próximo item I2: analisar a política de preservação dos instrumentos órfãos; primeiro apresentar o desenho, sem alterações funcionais antes da aprovação. I3–I5 e B11 continuam pendentes; `main` e tag `v0.2.0` intactas.
+
+### I2 — Regra de persistência de instrumentos
+
+Remover um ticker da Watchlist elimina apenas a associação em `watchlist_items`. A entidade em `instruments` permanece intencionalmente, mesmo sem associações, para possível reutilização e para evitar perdas com as futuras relações de Portfolio. Não realizar limpeza automática de órfãos. O teste de integração `test_watchlist_repository_persists_removal` verifica esta regra. Decisão I2 validada pelo utilizador em 2026-10-11, sem alteração funcional ou migração.
