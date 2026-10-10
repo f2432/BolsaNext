@@ -1232,3 +1232,28 @@ Os cálculos internos utilizam contexto Decimal de **50 algarismos significativo
 Montantes efetivamente confirmados pela XTB são preservados como factos de origem. Desvios entre estes e montantes matematicamente reconstruídos devem ser **sinalizados**, não substituídos silenciosamente. O efeito contabilístico dos desvios (incluindo eventuais conversões) fica reservado para **A4/A8**, sem revogar as fórmulas já aprovadas em A2.
 
 **Gate A3:** regras funcionais validadas; não implica criação de campos, migrações, dependências ou código. A4 define a convenção FX, taxa histórica/atual e critérios de valorização; A5 trata da moeda base por carteira.
+
+
+## A4 — Convenção FX (validado, 2026-10-11)
+
+**Especificação funcional aprovada pelo utilizador, sem implementação.** Para converter da moeda original da operação/cotação para a moeda base da carteira, `fx_rate` significa sempre **número de unidades da moeda base por uma unidade da moeda original**: `valor_base = valor_original * fx_rate`. Exemplo: 1000 USD, carteira EUR, `fx_rate = 0.86 EUR/USD` => 860 EUR. Com moedas iguais a taxa é exatamente `Decimal("1")`; não se pede cotação remota.
+
+Cada transação financeira guarda o **câmbio histórico efetivo que lhe foi atribuído**, imutável para fins de reconstrução. O câmbio atual é distinto, tem data/hora, proveniência e validade próprias, e serve para valorização corrente; nunca substitui o histórico. Sempre que a XTB forneça câmbio e montantes efetivos, conservam-se esses factos e compara-se com a taxa de referência sem substituir valores ou presumir que as diferenças são comissões, spreads ou erros. A política de reconciliação contabilística destas discrepâncias continua reservada para A8.
+
+### Contrato de fornecimento de taxas
+
+Definir futuramente um **port `FxRateProvider`**, com implementação inicial por infraestrutura yfinance/Market Data existente, mas sem dependência do Yahoo no domínio financeiro. Cada resposta normalizada identifica moeda original, moeda base, taxa positiva finita, instante/precisão temporal, proveniência, e estado de disponibilidade/validade. Símbolos como `EURUSD=X` podem representar USD por EUR, a direção inversa da conversão USD → EUR necessária na carteira EUR: o adaptador **inverte explicitamente** `1 / cotacao` com Decimal, validando e testando o sentido. O domínio recebe apenas a convenção normalizada; nunca infere a direção do ticker. Se a taxa de câmbio for zero, negativa, não finita ou indisponível, falha a conversão (exceto identidade monetária).
+
+### Valorização atual
+
+A valorização atual em moeda base integra a V0.3 quando existem todos os dados necessários: `valor_mercado_base = quantidade * cotacao_atual_moeda_instrumento * FX_atual(moeda_instrumento→moeda_base)`. O PnL não realizado na moeda base compara esta estimativa com o **custo remanescente histórico na moeda base**, nos termos dos cálculos A2/A3; a cotação atual não altera custo nem FX históricos. Exemplo de uma posição: 1 ação comprada a 100 USD com FX 0,90 EUR/USD custou 90 EUR; cotação atual 110 USD com FX 0,85 EUR/USD => 93,50 EUR, PnL não realizado +3,50 EUR sem taxas/comissões. Ganho de 10% em USD não equivale a ganho de 10% em EUR. A decomposição matemática do efeito-preço e efeito-câmbio exige regra adicional testada se vier a ser apresentada.
+
+### Atualidade e indisponibilidade
+
+Usar a última cotação da sessão de negociação válida conhecida para cada mercado/instrumento e a última sessão cambial pertinente; não declarar uma taxa desatualizada apenas devido ao fecho em fins de semana/feriados. Se faltar um calendário fiável, usar fallback **configurável de 72 horas corridas**, com sinalização explícita de dados eventualmente obsoletos. Mostrar data, fonte e antiguidade; uma cotação aceite não é necessariamente tempo real. Dados antigos podem ser apresentados como referência histórica, mas não como valorização atual válida. Esta política será aplicada a preço e FX.
+
+Se faltar preço atual, FX necessário ou outro dado indispensável, mostrar a posição afetada como indisponível e, quando possível, **subtotal conhecido claramente identificado**; nunca apresentar subtotal como total consolidado, nem PnL consolidado como completo. Não imputar taxas artificiais nem usar `1` para moedas diferentes. Erros no provider não modificam valores históricos persistidos. A valorização de mercado é estimativa, não montante garantido de venda.
+
+### Decisões relacionadas
+
+A5: autoridade de `Portfolio.base_currency`, com `AppConfig.default_base_currency` apenas como predefinição de criação; alteração de moeda numa carteira existente exige operação explícita e controlada, jamais implícita (decisões iniciais A5 já confirmadas, restantes efeitos por decidir). A7: import/export e metadados de origem. A8: divergências com XTB e reconciliação; sem classificação presumida. O A4 não adiciona código, migrações nem campos.
