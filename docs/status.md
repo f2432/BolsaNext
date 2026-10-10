@@ -752,3 +752,12 @@ O utilizador confirmou a especificação funcional **A2 — Regras contabilísti
 O utilizador aprovou integralmente a especificação funcional **A3 — Tipos numéricos e precisão**: `Decimal` no domínio; valores financeiros persistidos em SQLite como `TEXT` decimal canónico; 8 casas decimais de entrada para quantidade/preço/montantes, 12 para FX, 18 algarismos inteiros de limite; 50 algarismos significativos de cálculo; `ROUND_HALF_EVEN` por defeito sem arredondamento prematuro; custo médio derivado; fronteira explícita entre market data float e domínio Decimal; preservação dos montantes reais da XTB e sinalização de discrepâncias. Os detalhes estão em `docs/architecture.md` e os critérios de teste em `docs/development.md`.
 
 **Estado vigente:** A1, A2 e A3 concluídos e validados **como especificação funcional**, não como implementação. **A4 — Convenção de câmbio** é o próximo bloco para discussão e validação. Nenhuma alteração de código/schema, nem a `main` ou a tag `v0.2.0`, decorre deste registo.
+
+
+## V0.3 — A4 validado e decisões iniciais A5 (2026-10-11)
+
+**A4 — Convenção de câmbio CONCLUÍDA E VALIDADA como especificação, não implementação.** Convenção de FX como moeda base por unidade original, câmbio histórico imutável, atual separado, identidade 1, `FxRateProvider` desacoplado com implementação inicial yfinance e inversão normalizada/testada. Preservar câmbio/montantes originais XTB; valor atual em moeda base com cotações de mercado válidas, última sessão relevante e fallback configurável de 72 horas se faltar calendário; sem totais consolidados enganosos perante dados ausentes. Ver `docs/architecture.md` e `docs/development.md`.
+
+**A5 — EM DISCUSSÃO. Duas decisões iniciais aprovadas:** `Portfolio.base_currency` é a autoridade após criação e `AppConfig.default_base_currency` só define o valor inicial de novas carteiras. Alterar moeda de carteira existente exige **operação explícita e controlada**, nunca alteração silenciosa decorrente da configuração global. Efeitos sobre histórico/custos, requisitos de conversão, validade, backup e eventual imutabilidade da moeda **ainda não decididos**. Não declarar A5 validado neste momento.
+
+**Estado vigente:** A1–A4 concluídos e validados a nível de especificação; A5 em análise; A7/A8 posteriores. Nenhum código Portfolio, migração ou schema alterado, e `main`/`v0.2.0` intactas.
