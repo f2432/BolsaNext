@@ -47,6 +47,8 @@ Não usar accuracy isolada como prova de capacidade preditiva.
 Registar experiências e resultados fora da amostra.
 
 
+Para obter o estado vigente, consultar primeiro a síntese inicial de `docs/status.md` e o plano principal de `docs/stabilization-v0.2.md`; secções com validações ou pendências de fases antigas são históricas quando contradizem essa síntese. Não reescrever ou apagar essas secções sem rastreabilidade.
+
 ## Hierarquia canónica
 
 Usa estas fontes conforme o tipo de decisão:
