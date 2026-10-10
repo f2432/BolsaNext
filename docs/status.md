@@ -666,3 +666,7 @@ Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que 
 **B9.1 CONCLUÍDO E VALIDADO** após confirmação do utilizador de que os testes e cobertura correram como esperado. Métricas numéricas ainda não registadas por não terem sido fornecidas. **B9.2 IMPLEMENTADO EM `dev`, AGUARDA VALIDAÇÃO**: matriz Ubuntu/Python 3.12 e Windows/Python 3.14, PR para `main`/`dev`, relatórios de cobertura separados por ambiente. B9.3 a B9.5 permanecem pendentes.
 
 Validação B9.2 (2026-10-10): o utilizador confirmou a conclusão da verificação solicitada do CI Linux/Windows. **B9.2 CONCLUÍDO E VALIDADO**. Segue-se B9.3, auditoria e decisão das dependências, sem alterações ao `pyproject.toml` antes da aprovação do desenho. `main` e tag `v0.2.0` continuam inalteradas.
+
+### B9.3 — Dependências e versões (2026-10-10)
+
+**IMPLEMENTADO EM `dev`, PENDENTE DE VALIDAÇÃO.** Core reduzido a sete dependências diretas necessárias à V0.2, preservando explicitamente `lxml` para `pandas.read_html`. `numpy`, `scikit-learn`, `matplotlib` e `PyYAML` agrupadas em `analysis` opcional. Adicionados limites mínimos conservadores em `pyproject.toml` e registo das versões instaladas no CI. Não introduzidos limites máximos arbitrários nem lockfile. Validar jobs Linux/Windows e arranque local antes do fecho; B9.4 ainda por iniciar.
