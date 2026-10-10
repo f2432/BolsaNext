@@ -430,3 +430,7 @@ Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador.
 ## B9.4 — Auditoria de qualidade com Ruff
 
 Instalar dependências de desenvolvimento (`python -m pip install -e ".[dev]"`) e executar na branch `dev`: `python -m ruff check src tests`. Regras iniciais: `E4`, `E7`, `E9`, `F`; Python-alvo 3.12. A etapa `Ruff initial audit (non-blocking)` do GitHub Actions corre em Linux e Windows com `continue-on-error: true`, pelo que uma indicação amarela nessa etapa não prova sucesso de lint. Recolher e analisar as ocorrências antes de alterar código ou tornar a etapa obrigatória. Não executar `ruff format` nem `ruff check --fix` globalmente. **B9.4 ainda não está validado.**
+
+### B9.4 — Ruff obrigatório no CI
+
+Após a primeira auditoria foi removido o único import não utilizado (`F401`) identificado no teste de integração `test_schema_migrations.py`. O passo agora designado `Ruff lint` executa `python -m ruff check src tests` e **falha o job** caso existam violações; deixou de ter `continue-on-error`. Validar no GitHub Actions os jobs Linux e Windows, o passo Ruff e a suite pytest. Executar localmente `python -m ruff check src tests` e `python -m pytest -q`. A introdução do Ruff só será marcada CONCLUÍDA E VALIDADA após confirmação do utilizador.
