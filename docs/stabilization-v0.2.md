@@ -1,6 +1,11 @@
 # Estabilização final da V0.2 antes da V0.3
 
-Última atualização canónica: 2026-10-05.
+Última atualização canónica: 2026-10-10.
+
+
+## Situação vigente do gate (2026-10-10)
+
+S0, D1–D3 e B1–B9 foram concluídos e validados. **B10 encontra-se em revisão documental, pendente de validação.** Os itens I1–I5 e B11 permanecem obrigatórios. Toda a informação sobre estados intermediários mais abaixo, incluindo no Anexo A preservado, é histórica quando contradiga esta secção. A V0.3 continua bloqueada; a `main` e a tag `v0.2.0` não são alteradas neste B10.
 
 ## Finalidade
 
