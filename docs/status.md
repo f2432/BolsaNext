@@ -682,3 +682,7 @@ Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador.
 Confirmado pelo log CI fornecido pelo utilizador: uma ocorrência `F401`, import `BASELINE_REVISION` não utilizado em `tests/integration/test_schema_migrations.py`. Import removido e lint tornado obrigatório em Linux e Windows. **PENDENTE DE VALIDAÇÃO DO NOVO CI**; B9.5 ainda por iniciar. Avisos sobre versões Node.js das GitHub Actions registados separadamente.
 
 Validação B9.4 (2026-10-10): GitHub Actions execução #336, commit `bc61f9dd`, concluída com sucesso em Linux/Python 3.12 e Windows/Python 3.14; em ambos, `Ruff lint` e `Run tests with coverage` terminaram com `success`. O utilizador apresentou a execução bem-sucedida. **B9.4 CONCLUÍDO E VALIDADO**. B9.5, estratégia futura de testes, é o próximo sub-bloco, ainda por implementar. `main` e tag `v0.2.0` permanecem inalteradas.
+
+### B9.5 — Estratégia futura de testes (2026-10-10)
+
+**IMPLEMENTADO DOCUMENTALMENTE EM `dev`, POR VALIDAR PELO UTILIZADOR.** `docs/development.md` passa a explicitar a base de testes existente, políticas para domínio/cálculos, SQLite/Alembic, ports/providers, UI PySide6, concorrência, backtesting e IA temporal, critérios de regressão e gates para CI/fecho B11. Não foram criados testes, dependências ou funcionalidades. As métricas atuais da cobertura não foram inferidas da baseline histórica. B9 só fecha formalmente após validação deste sub-bloco.
