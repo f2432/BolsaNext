@@ -408,3 +408,5 @@ Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os
 ### Validação local do B8.5
 
 Executar na branch `dev`: `git pull --ff-only origin dev`, `python -m pytest -q`, `python -m bolsa.main`. Na Watchlist, confirmar que os estados existentes aparecem e podem ser alterados/persistidos como antes. A suite inclui testes headless de valores desconhecidos e `None`; uma simulação de estado desconhecido no combo apresenta `Desconhecido` até seleção explícita de estado válido. Nenhuma migration é esperada. O bloco B8.5 só fica validado após confirmação local do utilizador.
+
+Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
