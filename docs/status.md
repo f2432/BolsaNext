@@ -676,3 +676,7 @@ Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador.
 ### B9.4 — Introdução gradual do Ruff (2026-10-10)
 
 **EM AUDITORIA, por validar.** Ruff incluído só nas dependências `dev` com regras `E4`, `E7`, `E9`, `F`; GitHub Actions recolhe resultados Linux/Windows de modo não bloqueante. Não foi aplicada reformatação automática nem corrigidos problemas ainda não medidos. É necessário verificar o log da etapa Ruff, corrigir apenas problemas reais e repetir CI antes de tornar lint obrigatório.
+
+### B9.4 — Correção da ocorrência Ruff (2026-10-10)
+
+Confirmado pelo log CI fornecido pelo utilizador: uma ocorrência `F401`, import `BASELINE_REVISION` não utilizado em `tests/integration/test_schema_migrations.py`. Import removido e lint tornado obrigatório em Linux e Windows. **PENDENTE DE VALIDAÇÃO DO NOVO CI**; B9.5 ainda por iniciar. Avisos sobre versões Node.js das GitHub Actions registados separadamente.
