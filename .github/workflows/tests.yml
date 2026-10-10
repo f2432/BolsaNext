@@ -4,11 +4,21 @@ on:
   push:
     branches: ["main", "dev"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev"]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            artifact-suffix: linux-py312
+          - os: windows-latest
+            python-version: "3.14"
+            artifact-suffix: windows-py314
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -17,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
 
       - name: Install project
@@ -25,5 +35,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run tests
-        run: pytest -q
+      - name: Record installed dependency versions
+        run: python -m pip list --format=freeze
+
+      - name: Ruff lint
+        run: python -m ruff check src tests
+
+      - name: Run tests with coverage
+        run: |
+          python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.artifact-suffix }}
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: warn
+          retention-days: 14

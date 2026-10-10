@@ -1,17 +1,27 @@
-from __future__ import annotations
+"""Compatibilidade: os erros canónicos vivem em bolsa.app.ports.errors."""
 
+from bolsa.app.ports.errors import (
+    CurrentPriceUnavailableError,
+    ExternalDataError,
+    InstrumentNotFoundError,
+    MarketDataError,
+    MarketDataFormatError,
+    MarketDataUnavailableError,
+    UnsupportedUniverseError,
+    UniverseError,
+    UniverseFormatError,
+    UniverseSourceUnavailableError,
+)
 
-class MarketDataError(RuntimeError):
-    """Erro base para falhas previsíveis na infraestrutura de market data."""
-
-
-class InstrumentNotFoundError(MarketDataError):
-    def __init__(self, ticker: str) -> None:
-        self.ticker = ticker
-        super().__init__(
-            f"Não foi possível encontrar o ticker {ticker} no fornecedor de dados."
-        )
-
-
-class MarketDataUnavailableError(MarketDataError):
-    """O fornecedor de dados não respondeu ou não pôde ser consultado."""
+__all__ = [
+    "CurrentPriceUnavailableError",
+    "ExternalDataError",
+    "InstrumentNotFoundError",
+    "MarketDataError",
+    "MarketDataFormatError",
+    "MarketDataUnavailableError",
+    "UnsupportedUniverseError",
+    "UniverseError",
+    "UniverseFormatError",
+    "UniverseSourceUnavailableError",
+]

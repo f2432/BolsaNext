@@ -5,7 +5,7 @@ from enum import StrEnum
 import re
 
 
-_TICKER_PATTERN = re.compile(r"^[A-Z0-9.^=_-]+$")
+_TICKER_PATTERN = re.compile(r"(?=.*[A-Z0-9])\^?[A-Z0-9_]+(?:[.-][A-Z0-9_]+)*(?:=[A-Z])?")
 
 
 class AssetType(StrEnum):
@@ -19,7 +19,7 @@ class AssetType(StrEnum):
 class Instrument:
     ticker: str
     name: str | None = None
-    market: str | None = None
+    exchange: str | None = None
     currency: str | None = None
     asset_type: AssetType = AssetType.STOCK
 
@@ -42,8 +42,12 @@ class Instrument:
                 raise ValueError("A moeda deve usar um código ISO de 3 letras.")
             object.__setattr__(self, "currency", currency)
 
-        if self.market is not None:
-            object.__setattr__(self, "market", self.market.strip().upper() or None)
+        if self.exchange is not None:
+            object.__setattr__(
+                self,
+                "exchange",
+                self.exchange.strip().upper() or None,
+            )
 
         if self.name is not None:
             object.__setattr__(self, "name", self.name.strip() or None)

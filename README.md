@@ -8,7 +8,7 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
-A **V0.1 — Fundação** e a **V0.2 — Market Data** estão concluídas e validadas. O trabalho seguinte é a **V0.3 — Portfolio**. O estado canónico detalhado encontra-se em `docs/status.md`.
+A **V0.1 — Fundação** está concluída. A **V0.2 — Market Data** foi funcionalmente concluída e integrada, mas está agora num ciclo final de estabilização e saneamento antes da V0.3. A **V0.3 — Portfolio ainda não foi iniciada**. O estado canónico encontra-se em `docs/status.md` e o plano sequencial do ciclo atual em `docs/stabilization-v0.2.md`.
 
 A versão anterior provou vários conceitos, incluindo:
 
@@ -37,7 +37,9 @@ A nova versão não pretende copiar diretamente a implementação antiga. As fun
 7. O projeto deve preservar espaço para evolução futura de IA, ensembles, explicabilidade e planeamento.
 8. Dados pessoais, posições reais, credenciais, caches e modelos treinados não são versionados.
 
-## Tecnologias previstas
+## Tecnologias atuais e previstas
+
+Na V0.2, o núcleo utiliza PySide6, pandas, SQLAlchemy, Alembic, yfinance, platformdirs e lxml. NumPy, scikit-learn, matplotlib e PyYAML encontram-se no extra opcional `analysis`, previsto para evolução futura; pytest, pytest-cov e Ruff fazem parte do extra `dev`. A lista seguinte inclui tecnologias atuais e planeadas, não sendo todas necessárias ao arranque.
 
 - Python 3.12+
 - PySide6
@@ -109,7 +111,7 @@ pytest
 bolsanext
 ```
 
-O projeto possui integração contínua através de GitHub Actions. Os testes são executados automaticamente em pushes e pull requests para `main`.
+O projeto possui integração contínua através de GitHub Actions. Os testes, a cobertura e o Ruff são executados em Linux/Python 3.12 e Windows/Python 3.14 em pushes e pull requests para `main` e `dev`.
 
 
 ## Documentação canónica
@@ -118,6 +120,7 @@ Os ficheiros de referência do projeto são:
 
 - `README.md`: identidade, objetivo, princípios e entrada principal;
 - `docs/status.md`: estado efetivo atual, trabalho concluído e próximo trabalho;
+- `docs/stabilization-v0.2.md`: plano sequencial, decisões, rastreabilidade e preservação integral do ciclo atual de estabilização;
 - `docs/roadmap.md`: sequência de versões e funcionalidades previstas;
 - `docs/architecture.md`: arquitetura, limites entre camadas e modelo de dados previsto;
 - `docs/ai-roadmap.md`: plano específico de IA e Planeamento IA;
@@ -136,3 +139,7 @@ O desenvolvimento corrente é feito em `dev`. A branch `main` é reservada a est
 A passagem de `dev` para `main` só é feita após validação explícita e através de squash, para manter um único commit coerente por bloco funcional.
 
 O procedimento detalhado encontra-se em `docs/development.md` e `docs/status.md`.
+
+## Licença
+
+O código-fonte do BolsaNext é disponibilizado sob a **GNU General Public License, versão 3 (`GPL-3.0-only`)**. Consultar [LICENSE](LICENSE) para o texto integral. Esta designação corresponde à versão 3 apenas, não à opção "versão 3 ou posterior" (`GPL-3.0-or-later`).

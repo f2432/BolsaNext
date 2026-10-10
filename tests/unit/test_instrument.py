@@ -3,18 +3,18 @@ import pytest
 from bolsa.domain.instruments import AssetType, Instrument
 
 
-def test_instrument_normalises_ticker_currency_and_market() -> None:
+def test_instrument_normalises_ticker_currency_and_exchange() -> None:
     instrument = Instrument(
         ticker=" aapl ",
         name=" Apple Inc. ",
-        market=" nasdaq ",
+        exchange=" nasdaq ",
         currency=" usd ",
         asset_type=AssetType.STOCK,
     )
 
     assert instrument.ticker == "AAPL"
     assert instrument.name == "Apple Inc."
-    assert instrument.market == "NASDAQ"
+    assert instrument.exchange == "NASDAQ"
     assert instrument.currency == "USD"
 
 
@@ -41,3 +41,28 @@ def test_instrument_rejects_spaces_and_unsupported_characters() -> None:
 def test_instrument_rejects_invalid_currency() -> None:
     with pytest.raises(ValueError):
         Instrument(ticker="AAPL", currency="US")
+
+
+@pytest.mark.parametrize(
+    "ticker",
+    [
+        "AAPL", "BRK-B", "ASML.AS", "^GSPC", "EURUSD=X",
+        "BTC-USD", "CL=F", "ABC_DEF", "RDS-A",
+    ],
+)
+def test_instrument_accepts_realistic_ticker_structures(ticker: str) -> None:
+    assert Instrument(ticker.lower()).ticker == ticker
+
+
+@pytest.mark.parametrize(
+    "ticker",
+    [
+        "...", "^^^^", "-", "_", "=", "^", "ABC..DE",
+        "ABC--DE", ".AAPL", "AAPL.", "-AAPL", "AAPL-",
+        "AAPL^^", "AA^BB", "AAPL==X", "AAPL=", "=X",
+        "AAPL=XZ", "AAPL.-B", "AAPL_.",
+    ],
+)
+def test_instrument_rejects_malformed_ticker_structure(ticker: str) -> None:
+    with pytest.raises(ValueError, match="caracteres"):
+        Instrument(ticker)

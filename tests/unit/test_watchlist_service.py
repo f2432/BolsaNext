@@ -1,10 +1,16 @@
+from threading import Event, Thread
+
 import pytest
 
+from bolsa.app.ports.errors import (
+    CurrentPriceUnavailableError,
+    InstrumentNotFoundError,
+    MarketDataUnavailableError,
+)
 from bolsa.app.services import MarketService
 from bolsa.app.services.watchlist_service import WatchlistService
-from bolsa.domain.instruments import Instrument
+from bolsa.domain.instruments import AssetType, Instrument
 from bolsa.domain.watchlist import Watchlist, WatchlistState
-from bolsa.infrastructure.market_data import InstrumentNotFoundError
 
 
 class FakeProvider:
@@ -18,14 +24,25 @@ class FakeProvider:
         return Instrument(
             ticker=instrument.ticker,
             name="Advanced Micro Devices, Inc.",
-            market="NASDAQ",
+            exchange="NASDAQ",
             currency="USD",
+            asset_type=AssetType.STOCK,
         )
 
 
 class MissingInstrumentProvider(FakeProvider):
     def get_instrument_details(self, instrument):
         raise InstrumentNotFoundError(instrument.ticker)
+
+
+class UnavailableMetadataProvider(FakeProvider):
+    def get_instrument_details(self, instrument):
+        raise MarketDataUnavailableError("offline")
+
+
+class MissingPriceProvider(FakeProvider):
+    def get_current_price(self, instrument):
+        raise CurrentPriceUnavailableError(instrument.ticker)
 
 
 def test_watchlist_service_can_refresh_prices() -> None:
@@ -40,6 +57,23 @@ def test_watchlist_service_can_refresh_prices() -> None:
     assert len(rows) == 1
     assert rows[0].ticker == "AAPL"
     assert rows[0].price == 123.45
+    assert service.price_warnings == ()
+
+
+def test_watchlist_service_keeps_rows_when_one_price_fails() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(MissingPriceProvider()),
+    )
+    service.add_ticker("aapl")
+
+    rows = service.rows(refresh_prices=True)
+
+    assert len(rows) == 1
+    assert rows[0].ticker == "AAPL"
+    assert rows[0].price is None
+    assert len(service.price_warnings) == 1
+    assert "cotação atual" in service.price_warnings[0]
 
 
 def test_watchlist_service_enriches_manual_ticker() -> None:
@@ -53,7 +87,7 @@ def test_watchlist_service_enriches_manual_ticker() -> None:
 
     assert instrument.ticker == "AMD"
     assert instrument.name == "Advanced Micro Devices, Inc."
-    assert rows[0].market == "NASDAQ"
+    assert rows[0].exchange == "NASDAQ"
     assert rows[0].currency == "USD"
 
 
@@ -69,17 +103,95 @@ def test_invalid_manual_ticker_is_not_added() -> None:
     assert service.rows() == []
 
 
-def test_watchlist_service_refreshes_missing_metadata() -> None:
+def test_universe_instrument_prefers_yahoo_metadata() -> None:
     service = WatchlistService(
         Watchlist("Principal"),
         MarketService(FakeProvider()),
     )
-    service.add_ticker("AMD")
+
+    result = service.add_universe_instrument(
+        Instrument(
+            "AMD",
+            name="Nome provisório",
+            exchange="US",
+            currency="EUR",
+            asset_type=AssetType.OTHER,
+        )
+    )
+
+    rows = service.rows()
+    assert result.provisional is False
+    assert result.instrument.name == "Advanced Micro Devices, Inc."
+    assert result.instrument.exchange == "NASDAQ"
+    assert result.instrument.currency == "USD"
+    assert rows[0].exchange == "NASDAQ"
+    assert rows[0].currency == "USD"
+
+
+def test_universe_instrument_falls_back_to_safe_provisional_metadata() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(UnavailableMetadataProvider()),
+    )
+
+    result = service.add_universe_instrument(
+        Instrument(
+            "AMD",
+            name="Nome do universo",
+            exchange="US",
+            currency="EUR",
+            asset_type=AssetType.STOCK,
+        )
+    )
+
+    assert result.provisional is True
+    assert result.warning == "offline"
+    assert result.instrument.name == "Nome do universo"
+    assert result.instrument.exchange is None
+    assert result.instrument.currency is None
+    assert result.instrument.asset_type is AssetType.OTHER
+
+
+def test_universe_instrument_not_found_is_not_added() -> None:
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(MissingInstrumentProvider()),
+    )
+
+    with pytest.raises(InstrumentNotFoundError):
+        service.add_universe_instrument(
+            Instrument("INVALID", name="Provisório", asset_type=AssetType.OTHER)
+        )
+
+    assert service.rows() == []
+
+
+def test_refresh_metadata_always_returns_to_primary_source() -> None:
+    class CountingProvider(FakeProvider):
+        def __init__(self):
+            self.calls = 0
+
+        def get_instrument_details(self, instrument):
+            self.calls += 1
+            return super().get_instrument_details(instrument)
+
+    provider = CountingProvider()
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(provider),
+    )
+    service.add_ticker(
+        "AMD",
+        name="Nome antigo",
+        exchange="US",
+        currency="EUR",
+    )
 
     rows = service.refresh_metadata()
 
+    assert provider.calls == 1
     assert rows[0].name == "Advanced Micro Devices, Inc."
-    assert rows[0].market == "NASDAQ"
+    assert rows[0].exchange == "NASDAQ"
     assert rows[0].currency == "USD"
     assert service.metadata_warnings == ()
 
@@ -147,3 +259,179 @@ def test_metadata_enrichment_is_persisted() -> None:
     service.add_ticker_enriched("AMD")
 
     assert repository.saved[-1][0][1] == "Advanced Micro Devices, Inc."
+
+
+def test_watchlist_service_serializes_concurrent_access() -> None:
+    provider_started = Event()
+    release_provider = Event()
+    remove_attempted = Event()
+    remove_finished = Event()
+    errors: list[BaseException] = []
+
+    class BlockingProvider(FakeProvider):
+        def get_instrument_details(self, instrument):
+            provider_started.set()
+            if not release_provider.wait(timeout=2):
+                raise TimeoutError("provider test timeout")
+            return Instrument(
+                ticker=instrument.ticker,
+                name="Apple Inc.",
+                exchange="NASDAQ",
+                currency="USD",
+            )
+
+    service = WatchlistService(
+        Watchlist("Principal"),
+        MarketService(BlockingProvider()),
+    )
+    service.add_ticker("AAPL")
+
+    def refresh_metadata() -> None:
+        try:
+            service.refresh_metadata()
+        except BaseException as exc:
+            errors.append(exc)
+
+    def remove_ticker() -> None:
+        try:
+            remove_attempted.set()
+            service.remove_ticker("AAPL")
+            remove_finished.set()
+        except BaseException as exc:
+            errors.append(exc)
+
+    refresh_thread = Thread(target=refresh_metadata)
+    remove_thread = Thread(target=remove_ticker)
+
+    refresh_thread.start()
+    assert provider_started.wait(timeout=1)
+
+    remove_thread.start()
+    assert remove_attempted.wait(timeout=1)
+    assert not remove_finished.wait(timeout=0.1)
+
+    release_provider.set()
+    refresh_thread.join(timeout=2)
+    remove_thread.join(timeout=2)
+
+    assert not refresh_thread.is_alive()
+    assert not remove_thread.is_alive()
+    assert errors == []
+    assert remove_finished.is_set()
+    assert service.rows() == []
+
+
+class MutablePriceProvider(FakeProvider):
+    def __init__(self):
+        self.calls = 0
+        self.price = 123.45
+        self.fail = False
+
+    def get_current_price(self, instrument):
+        self.calls += 1
+        if self.fail:
+            raise CurrentPriceUnavailableError(instrument.ticker)
+        return self.price
+
+
+def test_session_price_cache_survives_rows_without_provider_call() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("aapl")
+
+    initial = service.rows(refresh_prices=True)[0]
+    cached = service.rows()[0]
+
+    assert initial.price == 123.45
+    assert initial.price_updated_at is not None
+    assert initial.price_updated_at.utcoffset().total_seconds() == 0
+    assert cached.price == initial.price
+    assert cached.price_updated_at == initial.price_updated_at
+    assert provider.calls == 1
+
+
+def test_session_price_cache_is_replaced_on_success_and_kept_on_failure() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("AAPL")
+    first = service.rows(refresh_prices=True)[0]
+
+    provider.price = 0.0
+    second = service.rows(refresh_prices=True)[0]
+    assert second.price == 0.0
+    assert second.price_updated_at >= first.price_updated_at
+
+    provider.fail = True
+    failed = service.rows(refresh_prices=True)[0]
+    assert failed.price == 0.0
+    assert failed.price_updated_at == second.price_updated_at
+    assert len(service.price_warnings) == 1
+
+
+def test_metadata_refresh_preserves_session_price() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AMD")
+    initial = service.rows(refresh_prices=True)[0]
+
+    refreshed = service.refresh_metadata()[0]
+    assert refreshed.price == initial.price
+    assert refreshed.price_updated_at == initial.price_updated_at
+
+
+def test_session_price_cache_is_cleared_on_remove_and_readd() -> None:
+    provider = MutablePriceProvider()
+    service = WatchlistService(Watchlist("Principal"), MarketService(provider))
+    service.add_ticker("AAPL")
+    assert service.rows(refresh_prices=True)[0].price == 123.45
+    service.remove_ticker("aapl")
+    service.add_ticker("AAPL")
+    row = service.rows()[0]
+    assert row.price is None
+    assert row.price_updated_at is None
+
+
+def test_new_service_has_no_session_price_cache() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AAPL")
+    service.rows(refresh_prices=True)
+    fresh_service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    fresh_service.add_ticker("AAPL")
+    assert fresh_service.rows()[0].price is None
+    assert fresh_service.rows()[0].price_updated_at is None
+
+
+def test_price_refresh_does_not_write_repository() -> None:
+    repository = FakeRepository()
+    service = WatchlistService(
+        Watchlist("Principal"), MarketService(FakeProvider()), repository=repository,
+    )
+    service.add_ticker("AAPL")
+    count = len(repository.saved)
+    service.rows(refresh_prices=True)
+    service.rows()
+    assert len(repository.saved) == count
+
+
+def test_never_refreshed_ticker_has_no_price() -> None:
+    service = WatchlistService(Watchlist("Principal"), MarketService(FakeProvider()))
+    service.add_ticker("AAPL")
+    row = service.rows()[0]
+    assert row.price is None
+    assert row.price_updated_at is None
+
+
+def test_failed_remove_keeps_cached_price() -> None:
+    class FailingRepository(FakeRepository):
+        def save(self, watchlist):
+            raise RuntimeError("storage failed")
+
+    repository = FailingRepository()
+    service = WatchlistService(
+        Watchlist("Principal"), MarketService(FakeProvider()),
+    )
+    service.add_ticker("AAPL")
+    old = service.rows(refresh_prices=True)[0]
+    service._repository = repository
+    with pytest.raises(RuntimeError, match="storage failed"):
+        service.remove_ticker("AAPL")
+    assert service._price_cache["AAPL"].price == old.price

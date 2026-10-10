@@ -36,7 +36,7 @@ class SqlAlchemyWatchlistRepository:
                     instrument=Instrument(
                         ticker=item.instrument.ticker,
                         name=item.instrument.name,
-                        market=item.instrument.market,
+                        exchange=item.instrument.exchange,
                         currency=item.instrument.currency,
                         asset_type=AssetType(item.instrument.asset_type),
                     ),
@@ -76,20 +76,17 @@ class SqlAlchemyWatchlistRepository:
                         instrument_model = InstrumentModel(
                             ticker=domain_item.instrument.ticker,
                             name=domain_item.instrument.name,
-                            market=domain_item.instrument.market,
+                            exchange=domain_item.instrument.exchange,
                             currency=domain_item.instrument.currency,
                             asset_type=domain_item.instrument.asset_type.value,
                         )
                         session.add(instrument_model)
                         session.flush()
                     else:
-                        # Enrich existing metadata when newer information is available.
                         if domain_item.instrument.name:
                             instrument_model.name = domain_item.instrument.name
-                        if domain_item.instrument.market:
-                            instrument_model.market = domain_item.instrument.market
-                        if domain_item.instrument.currency:
-                            instrument_model.currency = domain_item.instrument.currency
+                        instrument_model.exchange = domain_item.instrument.exchange
+                        instrument_model.currency = domain_item.instrument.currency
                         instrument_model.asset_type = domain_item.instrument.asset_type.value
 
                     desired_instrument_ids.add(instrument_model.id)

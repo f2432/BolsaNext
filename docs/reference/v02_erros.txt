@@ -1,0 +1,526 @@
+
+Projeto: BolsaNext (f2432/BolsaNext). Trabalhamos na branch dev. Fala comigo
+em português de Portugal.
+
+Antes de tocares em código, lê, por esta ordem: README.md, AGENTS.md,
+docs/status.md, docs/architecture.md, docs/roadmap.md, docs/development.md,
+docs/ai-roadmap.md, docs/legacy.md. Essas fontes são canónicas e a hierarquia
+está definida no AGENTS.md. Depois corre `pytest -q` para confirmares o estado
+de partida: devem passar 39 testes.
+ A ideia é tratarmos cada ponto de forma explícita, validarmos aqui as decisões e só depois alterarmos código e canónicos. Não considero estes pontos novas funcionalidades da V0.3; são saneamento técnico e definição de regras para não construirmos o Portfolio sobre decisões ambíguas.
+Vamos fazer um bloco de correções antes de iniciar a V0.3. Não comeces a V0.3,
+não acrescentes funcionalidades novas, não refactorizes o que não está nesta
+lista.
+1. Retirar os dados persistentes da pasta do repositório e definir uma localização estável para os dados da aplicação. Neste momento a configuração usa Path("data"), o que significa que a localização da base de dados depende da diretoria de trabalho a partir da qual a aplicação é executada. Isto funciona enquanto o BolsaNext é sempre iniciado dentro da pasta clonada do GitHub, mas deixa de ser seguro quando houver atalhos, instalação do comando bolsanext, execução a partir de outro diretório ou futura distribuição da aplicação. Antes de começarmos a guardar transações reais, deve existir uma diretoria própria da aplicação por utilizador. Em Windows, a solução natural é uma pasta sob %LOCALAPPDATA%\BolsaNext, ou outra localização equivalente definida de forma explícita. A base SQLite deve passar a residir nessa área. Cache, logs, exports e backups devem ter subdiretórios próprios e não estar misturados com o repositório Git. O repositório deve conter apenas código, documentação e eventualmente data/.gitkeep se ainda houver razão para manter a pasta. Esta alteração deve prever a existência da atual data/bolsanext.sqlite3: durante a transição não devemos simplesmente ignorar a base antiga. Devemos decidir se é feita uma migração automática, uma cópia controlada ou se, enquanto ainda só contém Watchlist, fazemos uma transição explícita uma única vez. Depois desta alteração, executar o programa a partir de qualquer diretório deve abrir sempre a mesma base de dados do utilizador.
+2. Introduzir um verdadeiro sistema de migrações da base de dados antes de o schema começar a crescer. O projeto usa atualmente Base.metadata.create_all(engine). Isto é suficiente para criar uma base vazia, mas não é suficiente para evoluir uma base existente. A V0.3 vai introduzir pelo menos portfolios e transactions, e versões futuras vão inevitavelmente acrescentar colunas, constraints, índices e novas entidades. O roadmap não deve deixar migrações apenas para V1.0. Deve ser introduzido agora um mecanismo de migração, sendo Alembic a escolha mais natural por já usarmos SQLAlchemy. A base existente da V0.2 deve passar a corresponder a uma revisão inicial conhecida. A partir daí, qualquer alteração estrutural deve ser representada por uma migração versionada. A aplicação deve conseguir distinguir uma base vazia de uma base antiga e elevá-la até à revisão atual sem apagar dados. Devem existir testes de migração, pelo menos para os caminhos que realmente venham a ser utilizados. create_all() poderá continuar útil nos testes ou bootstrap inicial, mas não deve ser o mecanismo oficial de evolução do schema. Antes de considerar este ponto fechado, deve estar documentado como criar uma nova migração, como aplicá-la e como verificar qual é a revisão atual da base.
+3. Definir explicitamente a configuração e integridade do SQLite. A existência de ForeignKey(..., ondelete="CASCADE") nos modelos não é suficiente se o SQLite não tiver PRAGMA foreign_keys = ON ativo em todas as ligações. Isto deve ser configurado no momento de criação da engine, preferencialmente através de eventos do SQLAlchemy, para que todas as sessões respeitem integridade referencial. Na V0.3, uma Transaction não pode sobreviver sem o Portfolio e o Instrument a que pertence, salvo decisão muito específica em contrário. Também deve ser avaliado um busy_timeout, porque já existem operações de rede em background e no futuro poderão existir operações que coincidam temporalmente com escrita na base. Não é necessário introduzir complexidade prematura, mas convém avaliar WAL quando começarem a existir leituras e escritas concorrentes. A política deve ficar documentada: foreign keys obrigatórias, transações atómicas e rollback em falha. Devem existir testes que verifiquem realmente a integridade do SQLite, e não apenas a existência das tabelas.
+4. Definir completamente as regras contabilísticas do Portfolio antes de implementar Transaction e Position. Não deve existir código financeiro cujo comportamento seja decidido implicitamente durante a programação. Precisamos de documentar como uma compra, venda parcial, nova compra, encerramento de posição e nova entrada são calculados. A primeira versão deverá usar custo médio ponderado, salvo decisão em contrário. Por exemplo, uma compra de 10 unidades a 100 EUR com comissão de 5 EUR deve produzir custo total de 1005 EUR e custo unitário efetivo de 100,50 EUR. Uma segunda compra de 10 unidades a 120 EUR com comissão de 5 EUR eleva o custo total acumulado para 2210 EUR e o custo médio das 20 unidades para 110,50 EUR. Numa venda parcial deve ficar claro como é calculado o custo correspondente às unidades vendidas, o produto líquido da venda e o PnL realizado. A comissão de compra deve aumentar o custo da posição; a comissão de venda deve reduzir o valor recebido. Devemos decidir que quantity é sempre positiva e que type=BUY/SELL determina o sentido da transação, evitando quantidades negativas misturadas com tipos. Inicialmente não deve ser possível vender mais unidades do que as existentes, ou seja, sem short selling. Quando uma posição chega a zero, o custo médio anterior deixa de influenciar uma compra futura. Todas estas regras devem ser convertidas em testes numéricos com resultados exatos antes de qualquer interface gráfica.
+5. Adotar Decimal e tipos SQL Numeric para valores financeiros persistentes. Não devemos utilizar float como representação canónica de dinheiro, quantidade financeira, comissão, câmbio ou PnL no domínio do Portfolio. Os dados de mercado e cálculos estatísticos podem continuar em float e em pandas/NumPy, porque é aí que esses tipos fazem sentido. Mas o ledger financeiro deve usar Decimal. Devemos definir a precisão necessária para price, quantity, commission, fx_rate e valores monetários. Quantidades devem suportar ações fracionadas mesmo que inicialmente não as utilizemos. Os campos SQL correspondentes devem usar Numeric(precision, scale) adequado em vez de Float. Também deve ser definida uma política de arredondamento: em que pontos arredondamos, quantas casas decimais são apresentadas e quantas são preservadas internamente. O objetivo é garantir que operações repetidas não acumulam erros binários e que um valor gravado, carregado e recalculado mantém consistência. Os testes do domínio devem comparar Decimal diretamente, não recorrer a tolerâncias típicas de float quando estamos a validar dinheiro.
+6. Definir uma convenção única e inequívoca para câmbio e valuation em moeda base. O modelo previsto já contém Transaction.currency, Transaction.fx_rate e Portfolio.base_currency, mas ainda não está definido o significado matemático de fx_rate. Devemos estabelecer uma regra simples e usar sempre essa regra. A recomendação é: 1 unidade da moeda da transação = fx_rate unidades da moeda base. Assim, numa carteira EUR, se uma compra tiver valor de 1000 USD e fx_rate=0.86, o custo em moeda base é 860 EUR. Esta convenção deve estar documentada junto do domínio e testada. Depois temos de separar claramente o câmbio histórico da transação do câmbio atual usado para valuation. Uma ação americana comprada com determinada taxa USD/EUR pode hoje valer mais ou menos em USD e o USD pode também ter variado face ao EUR. O PnL em moeda base resulta dos dois efeitos. A V0.3 deve conseguir determinar o valor atual em moeda base ou declarar explicitamente que ainda não o consegue. Se suportarmos carteiras multimoeda desde o início, o MarketDataProvider terá de conseguir fornecer cotações FX ou existir um provider específico para câmbio. Símbolos Yahoo como EURUSD=X podem ser usados como infraestrutura inicial, mas a inversão da cotação deve ser tratada de forma explícita. Nunca devemos inferir a direção do câmbio apenas pelo nome da variável.
+7. Eliminar a ambiguidade entre AppConfig.base_currency e Portfolio.base_currency. Neste momento AppConfig tem base_currency="EUR" e a arquitetura prevê que cada Portfolio tenha também base_currency. Quando existir um Portfolio persistido, só uma destas duas coisas pode ser a origem da verdade. A solução recomendada é alterar semanticamente a configuração para default_base_currency: serve apenas como valor inicial ao criar uma nova carteira. Depois de criada, Portfolio.base_currency passa a ser a autoridade. Alterar a configuração global não deve silenciosamente alterar carteiras existentes. Se no futuro existirem duas carteiras, uma EUR e outra USD, ambas devem coexistir. Este princípio deve ficar refletido no domínio, persistência, UI e documentação. A moeda base de um Portfolio não deve ser alterável sem uma operação explícita e sem considerar as implicações nos dados existentes.
+8. Corrigir a direção das dependências arquiteturais antes de acrescentar PortfolioService e novos repositories. A documentação diz corretamente que UI, Application, Domain e Infrastructure devem permanecer separadas, mas existem atualmente dependências da Application diretamente para Infrastructure. MarketService importa MarketDataProvider da infrastructure, UniverseService importa UniverseProvider da infrastructure e WatchlistService importa MarketDataError da infrastructure. Isto funciona, mas inverte parcialmente a arquitetura que pretendemos. O padrão usado no próprio WatchlistRepository, definido como Protocol na aplicação e implementado pela infraestrutura, é mais adequado. Antes da V0.3 deve ser decidido um local para os ports/interfaces da aplicação, por exemplo app/ports/market_data.py, app/ports/universe.py e app/ports/repositories.py. A aplicação conhece esses contratos; a Infrastructure fornece implementações YFinanceMarketDataProvider, WikipediaUniverseProvider, SqlAlchemyWatchlistRepository, etc. Os erros que façam parte do contrato também devem estar num nível que a Application possa conhecer sem depender do adapter concreto. Isto é particularmente importante antes de criar PortfolioRepository e TransactionRepository, porque queremos evitar repetir padrões inconsistentes. A refatoração deve preservar comportamento e testes existentes.
+9. Definir o significado exato de Instrument.market e corrigir a mistura atual de conceitos. Atualmente market pode conter US, NASDAQ, AMSTERDAM, PARIS, etc. Isso mistura região, bolsa e praça de cotação. Enquanto é apenas informação visual não causa grandes problemas, mas na fase de Portfolio, Analysis e Research estes valores podem ser usados para filtros, exposição por mercado ou regras específicas de negociação. Devemos decidir se market significa bolsa/exchange/listing venue, por exemplo NASDAQ, NYSE, XPAR, XAMS, ou se significa região geográfica, por exemplo US, EU. Se precisarmos dos dois conceitos, devem ser dois campos distintos. O provider de universos não deve inventar um significado diferente do provider Yahoo. Também deve ser revisto o comportamento de refresh_metadata: atualmente não atualiza um instrumento se nome, mercado e moeda já estiverem preenchidos, mesmo que market="US" seja um valor pouco preciso trazido do universo. Devemos definir prioridade e proveniência dos metadados. Um objetivo possível é considerar Yahoo como fonte principal dos metadados de instrumento e os universos apenas como fonte de constituintes. Se forem mantidos metadados de múltiplas origens, convém documentar qual vence.
+10. Tornar o tratamento de erros de preço compatível com utilização em Portfolio. Na V0.2, get_current_price() devolve None para praticamente qualquer problema e a Watchlist mostra preço indisponível. Para uma Watchlist isto é suficiente. Para uma carteira, não é. Precisamos distinguir pelo menos “não existe uma cotação válida neste momento” de “o fornecedor está indisponível/erro de rede” e, idealmente, “ticker não reconhecido”. Um Portfolio não deve apresentar um valor total aparentemente válido se uma das posições não pôde ser avaliada. A aplicação deverá conseguir dizer que determinado PnL ou total está parcial ou indisponível por falta de dados. Isto não implica transformar a UI num painel de erros. Podemos continuar a tratar falhas de forma discreta, mas o domínio/aplicação têm de saber por que não existe preço. O contrato de Market Data deve ter comportamento coerente entre histórico, metadados e preço atual. Se forem criados tipos de resultado ou exceções específicas, estes devem ser testados. Não devem existir exceções genéricas de yfinance a escapar até à UI.
+11. Alinhar a versão lógica do produto com a versão do pacote e criar uma única fonte de verdade. A documentação declara V0.2 concluída, mas pyproject.toml e src/bolsa/__init__.py ainda indicam 0.1.0, o User-Agent continua a apresentar BolsaNext/0.1 e a barra de estado usa texto manual V0.2 — Market Data. Esta duplicação deve desaparecer. Devemos decidir que a versão concluída corresponde a 0.2.0. A versão do pacote deve ser definida num único local e os restantes componentes devem lê-la desse local ou do metadata do package. O User-Agent deve usar a versão real. A interface também deve poder mostrar a versão real sem string duplicada. Depois do saneamento da V0.2 deve existir uma tag Git v0.2.0, apontando para o commit estável que queremos conservar como referência. Uma release GitHub pode ser criada se fizer sentido, mas a tag é o mais importante. A partir daí, V0.3 trabalha sobre uma versão de desenvolvimento superior ou simplesmente mantém a versão anterior até ao próximo fecho, desde que exista uma política clara. Nunca devemos ter três números de versão independentes.
+12. Corrigir todas as incongruências documentais e fazer dos canónicos uma fonte novamente rigorosa. Antes de iniciar V0.3, devemos rever README.md, docs/status.md, docs/roadmap.md, docs/architecture.md, docs/development.md, docs/ai-roadmap.md, docs/legacy.md e AGENTS.md. Existem pequenas frases que já não representam o estado atual. O roadmap ainda diz que a V0.2 está pronta para integração na main, quando essa integração já aconteceu. A documentação de CI refere em alguns locais apenas pushes para main, embora o workflow também execute em dev. A docstring do provider Wikipedia ainda refere apenas S&P 500 e NASDAQ 100, apesar de já suportar Euronext 100. O docs/status.md deve passar a indicar claramente que V0.2 foi fechada, integrada e validada. Não devemos transformar os documentos numa cópia uns dos outros: status continua a responder “onde estamos”, roadmap responde “para onde vamos”, architecture responde “como construímos”, development responde “como trabalhamos”. Depois da limpeza, um agente que leia apenas os canónicos deve conseguir compreender o estado real sem depender do histórico do chat.
+13. Definir uma política de versões das dependências e melhorar a reprodutibilidade do ambiente. O pyproject.toml atualmente declara dependências sem versões mínimas/máximas relevantes: PySide6, pandas, numpy, SQLAlchemy, yfinance, etc. Isto significa que uma instalação feita daqui a alguns meses pode utilizar versões diferentes das que foram testadas e apresentar comportamentos diferentes, sobretudo em yfinance, pandas, SQLAlchemy ou PySide6. Não é necessário congelar permanentemente todas as dependências num conjunto imutável, mas devemos ter uma forma de reproduzir um ambiente validado. Pode ser um ficheiro de constraints, lockfile adequado ao workflow escolhido ou ranges no pyproject.toml acompanhados por uma lista de versões testadas. Devemos decidir como atualizar dependências: idealmente numa alteração própria, correr testes e só depois integrar. Também deve existir compatibilidade explícita com Python 3.12 e eventualmente versões posteriores apenas quando forem realmente testadas. A frase “instalação reproduzível” não deve ficar adiada até V1.0; a partir do momento em que teremos dados financeiros reais, precisamos de poder reconstruir o ambiente que os manipula.
+14. Reforçar gradualmente a estratégia de testes antes de a lógica financeira crescer. O estado atual, com cerca de 39 testes, é bom para V0.2, mas a V0.3 exige mais rigor. Devemos manter a maioria dos testes de Market Data isolados da Internet; testes CI dependentes de Yahoo ou Wikipedia seriam instáveis e não devem tornar-se requisito de cada commit. No entanto, o CI deveria começar a medir cobertura com pytest-cov, pelo menos para nos dar visibilidade, sem impor inicialmente uma percentagem artificialmente elevada. Deve ser avaliado um job Windows em GitHub Actions, porque Windows é a plataforma real de utilização e PySide6/QSettings/path handling podem comportar-se de forma diferente. Os testes SQLite devem incluir pelo menos alguns casos com ficheiro temporário real, não exclusivamente :memory:, sobretudo depois das migrações. Para Portfolio, cada regra financeira deve ter vários testes numéricos: uma compra, várias compras, venda parcial, encerramento, nova entrada, comissões, múltiplas moedas, arredondamento, tentativa de venda superior à posição e persistência/reload. Os testes de domínio não devem depender da UI nem da Internet. O objetivo é que uma alteração futura em PnL ou custo médio que produza regressão seja imediatamente detetada.
+15. Tratar backup, exportação, importação e prevenção de duplicados como parte importante da V0.3. Quando o programa começar a guardar transações reais, a base deixa de ser descartável. Antes de operações destrutivas ou migrações de schema deve existir uma política de backup. Não é necessário construir já um sistema complexo de backup automático, mas precisamos pelo menos de garantir cópia segura da base antes de migrações/importações relevantes e uma forma documentada de restaurar. O export inicial deve ser um formato canónico próprio do BolsaNext, suficientemente completo para reconstruir uma carteira. O import deve validar dados antes de os gravar e executar tudo numa transação de base de dados: ou entra tudo, ou não entra nada. Um problema particularmente importante é a duplicação. Importar o mesmo ficheiro duas vezes não deve criar duas cópias das mesmas compras. O modelo deve por isso considerar campos como source, external_id ou um fingerprint determinístico da transação. Não precisamos ainda de importadores específicos para bancos ou brokers. Primeiro definimos um formato BolsaNext sólido. A partir dele podemos futuramente criar adaptadores para Degiro, IBKR, bancos, CSV externos, etc. A importação deve gerar um relatório do que foi inserido, ignorado ou rejeitado.
+16. Definir explicitamente o âmbito da primeira implementação do Portfolio e o que fica fora da V0.3. A V0.3 não deve tentar transformar o BolsaNext imediatamente num sistema contabilístico completo. Devemos escrever nos canónicos que a primeira implementação é orientada a investimentos long-only simples, inicialmente ações e ETFs. Deve suportar BUY, SELL, quantidade, preço, comissão, moeda, câmbio, custo médio, posição, PnL realizado e PnL não realizado. Deve ser possível consultar o ledger completo de transações e recalcular a posição do zero a qualquer momento. Devemos deixar explicitamente fora desta versão, salvo decisão posterior: short selling, margin, opções, futuros, CFDs, impostos, lotes fiscais, dividendos automáticos, splits automáticos, fusões, spin-offs, juros, depósitos/levantamentos de caixa, corporate actions complexas, integração direta com brokers e execução de ordens. Isto não significa desenhar uma arquitetura que impeça essas extensões. TransactionType pode ser estruturado para crescer e o modelo pode prever que no futuro apareçam DIVIDEND, FEE, SPLIT, CASH_IN, CASH_OUT, etc. Mas não implementamos agora funcionalidade cujo comportamento ainda não precisamos. O critério de fecho da V0.3 deve ser um Portfolio simples, matematicamente correto, persistente, recuperável, testado e capaz de representar fielmente compras e vendas reais sem inventar mecanismos financeiros desnecessários.
+
+Bloco 1 — Moedas em subunidade (crítico, financeiro)
+Tarefa 1: corrigir o tratamento de moedas em subunidade.
+
+Problema confirmado. Em src/bolsa/domain/instruments/instrument.py, o
+__post_init__ valida a moeda com `len(currency) == 3 and currency.isalpha()` e
+faz `.upper()`. O Yahoo Finance devolve códigos de subunidade onde a última
+letra minúscula é significativa:
+
+- GBp = pence esterlinos, 1/100 de GBP. Devolvido para praticamente todas as
+  ações cotadas em Londres.
+- ZAc = cêntimos de rand sul-africano, 1/100 de ZAR.
+- ILA = agorot israelitas, 1/100 de ILS.
+
+Hoje `GBp` é convertido para `GBP`. São moedas diferentes com um fator de 100
+entre elas. Verifica tu mesmo antes de alterar, com:
+
+    Instrument(ticker="TEST", currency="GBp").currency
+
+Deve devolver 'GBP', que é o bug.
+
+Neste momento o impacto é só um rótulo errado na watchlist, porque ainda não
+se calcula nada. Na V0.3 passa a ser uma posição de Londres a valer cem vezes
+mais do que vale, e a origem do erro fica invisível. Por isso é corrigido
+agora, antes de existir qualquer cálculo de PnL.
+
+O que quero:
+
+1. Uma tabela explícita de moedas de subunidade na camada de domínio, com a
+   moeda principal e o fator de conversão. Começa com GBp->GBP (100),
+   ZAc->ZAR (100), ILA->ILS (100). A tabela tem de ser facilmente extensível e
+   a comparação do código recebido tem de ser sensível a maiúsculas e
+   minúsculas, porque é aí que está a informação.
+
+2. O Instrument passa a guardar sempre a moeda principal normalizada. Não quero
+   GBp guardado na base de dados nem apresentado na UI.
+
+3. O instrumento tem de preservar a informação de que os preços vindos do
+   fornecedor para esse ticker estão em subunidade, porque essa informação é
+   necessária para dividir os preços. Propõe-me onde é que isso deve viver:
+   um campo novo no Instrument, ou uma responsabilidade do adapter de market
+   data que devolve preços já na moeda principal. Argumenta as duas opções
+   contra a regra de camadas do docs/architecture.md e espera que eu escolha
+   antes de implementar.
+
+4. Depois de eu escolher, os preços devolvidos por get_current_price e as
+   colunas de preço de get_historical_data (Open, High, Low, Close, Adj Close,
+   mas NÃO Volume) passam a ser convertidos para a moeda principal. O volume
+   nunca é dividido.
+
+5. Testes obrigatórios:
+   - normalização de GBp, ZAc e ILA para a moeda principal;
+   - que EUR, USD e outros códigos normais não são afetados;
+   - que um código inválido continua a ser rejeitado como hoje;
+   - conversão de preço atual a partir de um fornecedor falso que devolve GBp;
+   - conversão das colunas de preço do histórico, com verificação explícita de
+     que o Volume não foi alterado;
+   - round-trip de persistência: um instrumento em GBp guardado e recarregado
+     da base de dados mantém a moeda principal.
+
+6. Problema relacionado, no mesmo bloco. Em
+   src/bolsa/infrastructure/market_data/wikipedia_universe_provider.py, o
+   método _currency_for_ticker tem um mapa de sufixos onde falta ".L"
+   (Londres) e onde ".DE" está presente mas é XETRA, não Euronext. Corrige o
+   mapa: acrescenta ".L" com a moeda correta face à decisão do ponto 3, e
+   revê se ".DE" deve continuar na lista de um provider de Euronext. Acrescenta
+   teste para cada sufixo do mapa.
+
+7. Atualiza docs/architecture.md com uma secção curta sobre política de moedas,
+   explicando a normalização de subunidades e dizendo explicitamente que a
+   moeda guardada é sempre a principal.
+Bloco 2 — Validação sintática de tickers
+Tarefa 2: tornar a validação de tickers honesta.
+
+Problema. O regex em src/bolsa/domain/instruments/instrument.py é
+`^[A-Z0-9.^=_-]+$`. Confirma que aceita, sem reclamar: "...", "^^^^", "-", e
+32 hífenes seguidos. Aceita mesmo.
+
+O docs/status.md descreve isto, no fecho técnico da V0.2, como "validação
+sintática de tickers". O que existe é um filtro de caracteres. Ou o código
+cumpre o que o documento promete, ou o documento passa a dizer a verdade. Quero
+a primeira opção.
+
+O que quero:
+
+1. O ticker tem de conter pelo menos um carácter alfanumérico. Um ticker feito
+   só de símbolos é rejeitado.
+2. O ticker não pode começar nem acabar com separador (ponto, hífen,
+   underscore). O circunflexo inicial continua válido porque identifica índices
+   no Yahoo.
+3. Não pode haver separadores repetidos consecutivamente.
+4. Tudo isto sem partir nenhum dos formatos que o projeto já suporta e que
+   estão documentados: ^GSPC, BRK-B, EURUSD=X, ASML.AS. Confirma também
+   BRK.B antes da normalização, 005930.KS, RDS-A, BTC-USD e GC=F.
+
+5. Mantém o limite de 32 caracteres e a rejeição de espaços e de vazio.
+
+6. Testes: parametriza uma lista de tickers válidos e uma lista de inválidos,
+   cobrindo todos os casos acima. Quero ver o teste a falhar com o regex antigo
+   antes de o corrigires, para confirmar que o teste está a testar alguma coisa.
+
+7. Se depois disto a descrição no docs/status.md ainda não corresponder ao que
+   o código faz, ajusta a descrição.
+Bloco 3 — Concorrência na Watchlist
+Tarefa 3: eliminar a mutação concorrente da watchlist.
+
+Problema. Em src/bolsa/ui/watchlist/widget.py existem três operações que correm
+em FunctionThread: _add_ticker (add_ticker_enriched), _start_metadata_refresh
+(refresh_metadata) e _start_price_refresh (rows(refresh_prices=True)). Todas
+tocam no mesmo objeto de domínio Watchlist e todas podem escrever na mesma base
+SQLite através de _persist().
+
+O que está errado:
+
+- _start_price_refresh desativa apenas o botão "Atualizar preços". Os botões
+  "Remover" de cada linha, o combo de estado e o botão "Atualizar dados"
+  continuam ativos. Remover um ticker durante uma atualização de preços muta
+  self._watchlist.items enquanto a thread de trabalho o está a percorrer dentro
+  de rows().
+- _add_ticker desativa só a caixa de texto e o botão Adicionar.
+- _start_metadata_refresh desativa só o próprio botão.
+- Logo, duas operações de rede podem correr ao mesmo tempo sobre o mesmo
+  agregado e ambas chamam _persist().
+
+Confirmei que a escrita SQLite a partir de outra thread funciona, porque o
+SQLAlchemy trata disso. Não rebenta hoje. O padrão é que está errado e vai
+morder assim que houver mais operações em background.
+
+O que quero:
+
+1. Um mecanismo único de "operação em curso" no widget, não três flags
+   independentes. Enquanto qualquer operação de rede estiver a decorrer, toda a
+   interação que muta a watchlist fica desativada: adicionar, remover, mudar
+   estado, atualizar dados e atualizar preços. Inclui os widgets dentro das
+   células da tabela, que hoje escapam.
+
+2. O mesmo bloqueio tem de abranger o UniverseWidget, porque o botão
+   "Adicionar selecionado à Watchlist" escreve no mesmo agregado a partir de
+   outro separador. Propõe-me como ligar os dois sem meter lógica de domínio na
+   UI, e espera pela minha validação do desenho antes de implementar.
+
+3. O estado visual tem de ser claro: o utilizador deve perceber que a aplicação
+   está ocupada, e nenhum botão pode ficar permanentemente desativado se a
+   thread falhar. Garante que o reestabelecimento acontece no sinal finished,
+   incluindo no caminho de erro.
+
+4. Avalia se WatchlistService deve ganhar um lock próprio em vez de depender da
+   disciplina da UI. A minha inclinação é que sim, porque a regra do
+   docs/architecture.md diz que a UI não implementa regras, e "não corromper o
+   agregado" é uma regra. Dá-me a tua opinião fundamentada antes de decidir.
+
+5. Testes: quero pelo menos um teste que exercite acessos concorrentes ao
+   WatchlistService a partir de duas threads e confirme que o estado final é
+   coerente e que não há exceções. Se implementares o lock no serviço, o teste
+   é direto. Se ficar só na UI, diz-me como pretendes testar.
+Bloco 4 — Preços perdidos ao mudar de separador
+Tarefa 4: parar de perder os preços na navegação.
+
+Problema. Em src/bolsa/ui/main_window/window.py, o sinal currentChanged do
+QTabWidget interno chama watchlist_widget.refresh() sempre que o utilizador
+volta ao separador da watchlist. Esse refresh chama rows() sem refresh_prices,
+o que devolve price=None para todas as linhas, e a coluna "Preço atual" volta a
+"—". O mesmo acontece pelo instrument_added vindo do UniverseWidget.
+
+Resultado prático: atualizas preços, vais aos Universos, voltas, perdeste-os.
+
+O docs/status.md justifica, e bem, que o preço não é persistido por ser dado
+transitório de mercado. Essa decisão mantém-se e não quero contrariá-la na base
+de dados. O que quero é que o último preço obtido sobreviva em memória durante
+a sessão.
+
+O que quero:
+
+1. Os últimos preços conhecidos ficam em memória, com o instante em que foram
+   obtidos. Decide comigo onde: no widget, ou no WatchlistService como cache de
+   sessão. Se for no serviço, não pode ser persistido nem escrito na base.
+
+2. Ao reconstruir a tabela sem atualizar preços, as linhas mostram o último
+   preço conhecido em vez de "—". Um ticker nunca atualizado continua a mostrar
+   "—".
+
+3. O utilizador tem de conseguir distinguir um preço fresco de um preço
+   antigo. Propõe uma forma discreta, por exemplo a hora da última atualização
+   na barra de estado do widget. Não inventes indicadores visuais complicados.
+
+4. Um ticker removido não deixa o preço na cache. Um ticker adicionado entra
+   sem preço.
+
+5. Testes para a cache: guarda, lê, remoção limpa a entrada, e confirmação
+   explícita de que nada disto chega à base de dados. Reutiliza o teste de
+   persistência existente em tests/integration para confirmar que o schema não
+   mudou.
+Bloco 5 — O UniverseWidget reconstrói instrumentos a partir de texto
+Tarefa 5: parar de reconstruir objetos de domínio a partir da UI.
+
+Problema. Em src/bolsa/ui/watchlist/universe_widget.py, o método _add_selected
+lê self._table.item(row, 0).text(), item(row,1), item(row,2) e item(row,3) e
+passa essas strings para watchlist_service.add_ticker(). O objeto Instrument
+que já existe em memória, validado, com asset_type correto, é deitado fora e
+reconstruído a partir de texto que passou por uma tabela.
+
+Duas consequências reais:
+
+- O asset_type perde-se. Tudo o que entra por universo fica com o valor por
+  omissão.
+- O mesmo ticker fica com metadados diferentes conforme o caminho de entrada.
+  Por universo, vem da Wikipedia com moeda adivinhada por sufixo. À mão, vem do
+  Yahoo. Duas verdades para o mesmo ativo na mesma base de dados.
+
+Isto viola a regra do docs/architecture.md que diz que a UI não implementa
+regras financeiras e não constrói domínio.
+
+O que quero:
+
+1. O UniverseWidget guarda os objetos Instrument do universo carregado e passa
+   o objeto, não texto. A tabela passa a ser só apresentação.
+
+2. O WatchlistService ganha uma forma de aceitar um Instrument já construído,
+   distinta de add_ticker(ticker, name=..., market=...). Mantém a validação de
+   duplicados.
+
+3. Decide comigo o que fazer com a divergência de metadados entre Wikipedia e
+   Yahoo. Opções que vejo: enriquecer sempre com Yahoo ao adicionar, ficando
+   mais lento e exigindo thread; aceitar os dados do universo e marcar o
+   instrumento como "metadados por confirmar" para o botão Atualizar dados os
+   completar depois; ou tratar a fonte Wikipedia como autoridade apenas para a
+   composição do índice e nunca para moeda. Argumenta e espera pela minha
+   decisão.
+
+4. Enquanto isso não estiver decidido, não quero que a adição por universo
+   escreva uma moeda que possa estar errada por adivinhação de sufixo. Diz-me
+   como pretendes garantir isso.
+
+5. Nota ligada ao Bloco 1: a moeda adivinhada por sufixo para Londres entra
+   exatamente aqui. As duas correções têm de ser coerentes uma com a outra.
+
+6. Testes: adicionar por universo preserva ticker, nome, mercado, moeda e
+   asset_type; adicionar duplicado por universo continua a ser rejeitado; e o
+   round-trip na base mantém o asset_type.
+Bloco 6 — Caminho da base de dados relativo ao diretório de trabalho
+Tarefa 6: tornar a localização dos dados independente do diretório de trabalho.
+
+Problema. Em src/bolsa/config.py, AppConfig tem data_dir = Path("data"), que é
+relativo. O load_config() faz mkdir desse caminho. O projeto declara um script
+de consola em pyproject.toml ([project.scripts] bolsanext = "bolsa.main:main"),
+e o docs/development.md documenta `bolsanext` como forma normal de arrancar.
+
+Se o utilizador correr `bolsanext` a partir de qualquer pasta que não a raiz do
+repositório, é criada uma pasta data/ nova nesse sítio e uma base de dados
+vazia. A watchlist parece ter desaparecido. Só não dá problema hoje porque o
+run.ps1 corre sempre da raiz.
+
+Há um segundo problema no mesmo ficheiro: load_config() cria diretórios como
+efeito secundário de carregar configuração. Carregar configuração não devia
+escrever no disco.
+
+O que quero:
+
+1. Uma decisão explícita sobre onde vivem os dados da aplicação, que me
+   apresentas antes de implementar. As opções que vejo: pasta de dados do
+   utilizador do sistema operativo, estilo AppData no Windows; uma variável de
+   ambiente que sobrepõe; ou manter relativo mas resolvido face à raiz do
+   projeto. Diz-me prós e contras de cada uma, incluindo o efeito nos testes e
+   o efeito em ter várias cópias do repositório.
+
+2. Qualquer que seja a decisão, tem de existir uma forma de a sobrepor por
+   configuração ou variável de ambiente, para os testes e para eu poder ter uma
+   base separada quando estiver a experimentar.
+
+3. Separar a criação de diretórios do carregamento de configuração. Uma função
+   que lê, outra que prepara o ambiente, chamada explicitamente no arranque.
+
+4. Se a decisão mudar a localização da base face ao que existe hoje, tens de me
+   dizer em texto, claramente, que a minha base local atual fica para trás e o
+   que tenho de fazer para a mover. Não movas nada automaticamente.
+
+5. Atualiza docs/development.md e docs/architecture.md com a nova localização e
+   a forma de a sobrepor.
+
+6. Testes: caminho resolvido corretamente, sobreposição a funcionar, e
+   confirmação de que carregar configuração não cria diretórios.
+Bloco 7 — Erros do provider de universos fora da taxonomia
+Tarefa 7: alinhar os erros de universos com a política de erros do projeto.
+
+Problema. O docs/architecture.md tem uma secção "Política de erros de Market
+Data" que define MarketDataError, InstrumentNotFoundError e
+MarketDataUnavailableError, e diz que a UI não interpreta exceções internas do
+fornecedor.
+
+Mas em wikipedia_universe_provider.py, o método _read_tables levanta um
+RuntimeError genérico quando o download falha. E se a página mudar de formato,
+o _find_constituents_table levanta ValueError, e o _table_to_instruments
+levanta ValueError. Nada disto está na taxonomia. A UI acaba a mostrar
+str(exc) ao utilizador através do sinal failed do FunctionThread.
+
+O que quero:
+
+1. Uma família de erros própria para universos, coerente com a de market data,
+   distinguindo pelo menos: o universo pedido não é suportado; a fonte não pôde
+   ser contactada (rede, timeout, HTTP); a fonte respondeu mas o conteúdo não é
+   interpretável (tabela não encontrada, colunas mudaram, zero instrumentos
+   válidos).
+
+2. Decide comigo se essa família deve herdar de MarketDataError ou ser uma
+   hierarquia paralela. Universos não são exatamente market data. Argumenta.
+
+3. O provider traduz tudo o que apanha para esses erros. Nenhuma exceção da
+   urllib ou do pandas sai do provider.
+
+4. A UI passa a produzir mensagens diferentes conforme o tipo: falha de rede é
+   acionável pelo utilizador, formato mudado é um problema do projeto e deve
+   dizê-lo, para eu perceber que tenho de ir ver a fonte.
+
+5. O CachedUniverseProvider tem de continuar a servir cache válida quando a
+   fonte falha? Hoje não o faz: se a cache expirou, vai à fonte e, se a fonte
+   falhar, o erro propaga e o utilizador fica sem nada, mesmo tendo uma cache de
+   25 horas no disco. Propõe-me uma política de fallback degradado, com aviso
+   explícito de que os dados são antigos, e espera pela minha decisão.
+
+6. Testes para cada tipo de erro, com a fonte simulada. Sem rede nos testes.
+
+7. Atualiza a secção de política de erros do docs/architecture.md para cobrir
+   universos.
+Bloco 8 — Robustez da cache e detalhes menores
+Tarefa 8: um conjunto de correções pequenas. Um commit por item.
+
+8.1 Escrita atómica da cache de universos.
+Em cached_universe_provider.py, _save_cache faz path.write_text() diretamente.
+Um crash ou falta de espaço a meio deixa um JSON truncado. A leitura trata o
+caso e volta à fonte, por isso não é grave, mas a escrita deve ser atómica:
+ficheiro temporário no mesmo diretório e substituição atómica. Garante que
+funciona em Windows, onde a substituição tem regras diferentes de POSIX. Teste
+que confirme que uma escrita interrompida não destrói a cache anterior.
+
+8.2 Combo de estado com índice -1.
+Em watchlist/widget.py, _render_rows faz
+state_combo.setCurrentIndex(state_combo.findData(row.state.value)). Se o valor
+não for encontrado, findData devolve -1 e a célula fica em branco sem qualquer
+aviso. Trata explicitamente esse caso: ou garantes que é impossível por
+construção, ou registas aviso no log e assumes um estado por omissão visível.
+Diz-me qual escolhes.
+
+8.3 Instrumentos órfãos.
+Em watchlist_repository.py, quando se remove o último WatchlistItem que
+referenciava um InstrumentModel, o instrumento fica na tabela para sempre. Hoje
+é inofensivo e até pode ser desejável, porque na V0.3 as transações vão
+referenciar instrumentos que já não estão na watchlist. Não quero que apagues
+nada. Quero que documentes esta decisão no docs/architecture.md como
+intencional, para não ser corrigida por engano mais tarde.
+
+8.4 .gitignore demasiado largo.
+A regra `*.pdf` é global e vai bloquear documentação legítima que eu queira
+versionar. A intenção era bloquear extratos. Restringe a regra ao que
+interessa, mantendo a proteção de extratos, e explica no próprio ficheiro, em
+comentário, porque é que a regra existe.
+
+8.5 LICENSE.
+O repositório é público e não tem licença. Sem licença, por omissão, ninguém
+tem direitos sobre o código, o que é uma posição válida mas deve ser
+deliberada. Diz-me as opções razoáveis para um projeto pessoal público e espera
+que eu escolha. Não adiciones ficheiro nenhum sem a minha escolha.
+
+8.6 run.ps1 e ambiente virtual.
+O docs/development.md manda criar um venv. O run.ps1 não verifica que está
+ativo e corre `python -m pip install -e ".[dev]"` no interpretador que estiver
+à mão, o que pode instalar o projeto no Python global do sistema. Acrescenta
+verificação: se não houver ambiente virtual ativo, o script avisa claramente e
+pára, com instrução de como ativar. Dá-me opção de forçar com um switch, para
+casos em que eu saiba o que estou a fazer.
+Bloco 9 — Documentação e coerência canónica
+Tarefa 9: pôr os documentos canónicos de acordo com a realidade.
+
+O AGENTS.md define uma hierarquia canónica precisamente para evitar duplicação
+e contradição. A regra já está quebrada em quatro sítios. Corrige todos e, no
+fim, propõe uma forma de impedir que volte a acontecer.
+
+9.1 Triggers do CI.
+O ficheiro .github/workflows/tests.yml corre em pushes para main e dev, e em
+pull requests para main. Mas:
+- docs/development.md diz que corre em pushes para main e PRs para main;
+- README.md diz o mesmo.
+Só o docs/status.md tem a informação correta, no fecho técnico da V0.2.
+
+O docs/development.md é, segundo a tua própria hierarquia, a fonte canónica
+para CI e execução. Portanto a fonte canónica está errada e a fonte de estado é
+que está certa. Corrige o development.md para refletir o workflow real, e faz o
+README apenas apontar para ele em vez de repetir o facto.
+
+9.2 Versão do pacote.
+pyproject.toml diz version = "0.1.0". O projeto está a fechar a V0.2 e o
+pyproject é canónico para empacotamento. Propõe-me uma política: a versão do
+pacote acompanha a versão do roadmap, ou são coisas independentes e o roadmap
+usa outra nomenclatura. Depois de eu decidir, aplica e documenta a regra no
+docs/development.md para não voltar a divergir.
+
+9.3 Ambiguidade no status.md.
+O documento abre com "Versão de trabalho atual: V0.2" e três linhas abaixo diz
+que a V0.2 está concluída e que o próximo objetivo é iniciar a V0.3. Um
+documento cujo propósito é dizer onde estou não pode ser ambíguo sobre onde
+estou. Reescreve o cabeçalho para ter, sem ambiguidade: última versão concluída
+e validada, versão em curso, e próximo objetivo.
+
+9.4 Honestidade sobre a validação.
+"CONCLUÍDA E VALIDADA" aparece em maiúsculas no status.md e no roadmap.md. Essa
+validação foi manual, numa sessão em Windows. O CI corre apenas em Ubuntu. A
+camada de UI, que são cerca de 300 linhas e é o código mais arriscado do
+projeto por combinar threads com Qt, tem 0% de cobertura. Confirma tu mesmo com
+`pytest --cov=bolsa --cov-report=term-missing`.
+
+Não quero fingir uma certeza que os testes não sustentam. Reescreve as duas
+afirmações para distinguir o que foi validado automaticamente do que foi
+validado manualmente, com data e plataforma. Mantém a afirmação de que a versão
+está pronta, mas assente em factos verificáveis.
+
+9.5 Prevenção.
+Depois de corrigires os quatro pontos, propõe-me um mecanismo para impedir a
+divergência futura. Pode ser uma regra no AGENTS.md ("cada facto vive num
+documento, os outros ligam"), pode ser um teste ou um passo de CI que verifique
+coerência entre documentos, pode ser uma checklist. Dá-me as opções com o custo
+de cada uma e espera que eu escolha. Não implementes sem a minha escolha.
+Bloco 10 — CI e dependências
+Tarefa 10: tornar a validação automática mais próxima da realidade de uso.
+
+10.1 Matriz de sistemas operativos.
+Eu desenvolvo e valido em Windows. O CI corre só em ubuntu-latest. Toda a
+validação da V0.2 assenta em sessões manuais em Windows, e nada automático
+cobre essa plataforma. Acrescenta windows-latest à matriz. É gratuito em
+repositórios públicos. Confirma que os testes passam lá, em especial os de
+preferências de tabela, que tocam em QSettings, e os de caminhos de ficheiros.
+Se algum falhar em Windows, isso é um achado, não um problema do CI: para,
+mostra-me, e corrigimos.
+
+10.2 Testes em PRs para dev.
+O workflow corre em pushes para main e dev, mas pull requests só para main.
+Quando eu fizer a passagem por squash, o único sítio onde a validação acontece
+é um push direto. Acrescenta pull_request para dev.
+
+10.3 Dependências não fixadas.
+O pyproject.toml não tem uma única restrição de versão. O yfinance é a
+dependência mais instável deste ecossistema e parte APIs com regularidade. Sem
+limites inferiores nem superiores, qualquer manhã eu posso abrir o projeto e
+não saber se parti eu, se foi o upstream, ou se é diferença entre a minha
+máquina e o CI.
+
+O docs/roadmap.md adia "instalação reproduzível" para a V1.0, o que é tarde
+demais para a dependência mais frágil do projeto.
+
+Propõe-me uma política concreta: limites inferiores mínimos em tudo, limite
+superior pelo menos no yfinance e no PySide6, e eventualmente um ficheiro de
+constraints separado para o CI reproduzir exatamente o mesmo conjunto.
+Argumenta o equilíbrio entre travar versões e ficar preso a bibliotecas
+desatualizadas. Espera pela minha decisão antes de editar o pyproject.
+
+10.4 Dependências pesadas que ainda não são usadas.
+O projeto instala scikit-learn e matplotlib, que não são usados por uma única
+linha de código na V0.2, e PySide6, que é usado. Isto torna o CI mais lento e
+aumenta a superfície de rutura sem benefício. Propõe mover scikit-learn e
+matplotlib para extras opcionais até à V0.4 e V0.8 os precisarem de facto.
+Confirma primeiro, com grep, que não são mesmo usados em lado nenhum, e
+mostra-me a evidência antes de mexer.
+
+10.5 Qualidade estática.
+Não há linter nem formatador no CI. Propõe-me ruff, com configuração mínima e
+sem regras agressivas, a correr como passo separado do pytest para eu
+distinguir falha de estilo de falha de teste. Diz-me quantos problemas ele
+encontra no código atual antes de eu decidir se o adoto.
+Bloco 11 — Fecho do bloco e passagem a main
+Tarefa 11: fecho.
+
+Depois de todos os blocos anteriores estarem validados por mim:
+
+1. Corre a suite completa com cobertura e mostra-me o antes e o depois:
+   partimos de 39 testes e 55% de cobertura global.
+
+2. Revê o docs/status.md e acrescenta uma secção que descreva este bloco de
+   correções: o que foi corrigido, o que foi decidido e porquê, e o que ficou
+   deliberadamente por fazer. As decisões que eu tomei durante estes blocos
+   (moeda, localização de dados, fallback de cache, metadados de universo,
+   licença, política de versões, política de dependências) têm de ficar
+   registadas como decisões vigentes, não como notas soltas.
+
+3. Mostra-me o diff completo contra o estado inicial da dev, organizado por
+   bloco, e o resumo dos commits.
+
+4. Espera pela minha validação final.
+
+5. Só depois de eu dizer explicitamente que valido, e nunca antes, fazes a
+   passagem para main por squash, como está definido no AGENTS.md e no
+   docs/development.md. Lembra-te que a dev já está 23 commits à frente da main
+   com a V0.2 por integrar, por isso a passagem inclui a V0.2 e este bloco de
+   correções. Diz-me se achas que devem ser dois squashes separados, um por
+   bloco funcional, em vez de um só. A minha inclinação é dois, para a main
+   ficar com um commit "V0.2 Market Data" e outro "Correções pré-V0.3", mas
+   quero a tua opinião.
+
+6. Não fazes push para main sem eu autorizar, e confirmas comigo a mensagem de
+   cada commit de squash antes de o criares.

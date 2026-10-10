@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from bolsa.domain.universes import Universe
-from bolsa.infrastructure.market_data.universe_provider import UniverseProvider
+from bolsa.app.ports.universe import UniverseLoadResult, UniverseProvider
 
 
 class UniverseService:
@@ -11,5 +10,5 @@ class UniverseService:
     def available(self) -> tuple[str, ...]:
         return self._provider.supported_universes()
 
-    def load(self, code: str) -> Universe:
+    def load(self, code: str) -> UniverseLoadResult:
         return self._provider.get_universe(code)

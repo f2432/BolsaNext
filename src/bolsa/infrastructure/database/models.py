@@ -12,7 +12,7 @@ class InstrumentModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    market: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    exchange: Mapped[str | None] = mapped_column(String(64), nullable=True)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     asset_type: Mapped[str] = mapped_column(String(32), default="stock")
 

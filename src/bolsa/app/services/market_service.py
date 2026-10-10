@@ -4,8 +4,8 @@ from datetime import date
 
 import pandas as pd
 
+from bolsa.app.ports.market_data import MarketDataProvider
 from bolsa.domain.instruments import Instrument
-from bolsa.infrastructure.market_data.provider import MarketDataProvider
 
 
 class MarketService:
@@ -32,7 +32,7 @@ class MarketService:
             end=end,
         )
 
-    def current_price(self, instrument: Instrument) -> float | None:
+    def current_price(self, instrument: Instrument) -> float:
         return self._provider.get_current_price(instrument)
 
     def instrument_details(self, instrument: Instrument) -> Instrument:

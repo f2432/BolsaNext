@@ -1,9 +1,50 @@
 from .base import Base
-from .session import create_database_engine, create_session_factory, initialize_database
+from .data_location import (
+    DataLocationError,
+    DataLocationMigrationPlan,
+    DataLocationMigrationResult,
+    LegacyDatabaseMigrationRequiredError,
+    build_data_location_migration_plan,
+    create_validated_database_backup,
+    ensure_database_location_ready,
+    execute_data_location_migration,
+    legacy_database_path,
+    validate_sqlite_database,
+)
+from .schema_migrations import (
+    BASELINE_REVISION,
+    SchemaCompatibilityError,
+    SchemaMigrationError,
+    SchemaMigrationResult,
+    SchemaMigrationStatus,
+    SchemaRevisionError,
+    ensure_database_schema,
+    get_database_revision,
+    get_schema_head_revision,
+)
+from .session import create_database_engine, create_session_factory
 
 __all__ = [
+    "BASELINE_REVISION",
     "Base",
+    "DataLocationError",
+    "DataLocationMigrationPlan",
+    "DataLocationMigrationResult",
+    "LegacyDatabaseMigrationRequiredError",
+    "SchemaCompatibilityError",
+    "SchemaMigrationError",
+    "SchemaMigrationResult",
+    "SchemaMigrationStatus",
+    "SchemaRevisionError",
+    "build_data_location_migration_plan",
     "create_database_engine",
     "create_session_factory",
-    "initialize_database",
+    "create_validated_database_backup",
+    "ensure_database_location_ready",
+    "ensure_database_schema",
+    "execute_data_location_migration",
+    "get_database_revision",
+    "get_schema_head_revision",
+    "legacy_database_path",
+    "validate_sqlite_database",
 ]
