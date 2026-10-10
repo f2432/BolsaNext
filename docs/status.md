@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Última atualização canónica: 2026-10-10.
+Última atualização canónica: 2026-10-11.
 
 Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o destino; este ficheiro define o ponto em que o projeto se encontra agora.
 
@@ -733,3 +733,9 @@ B11, auditoria de fecho (2026-10-11): relatório verificável em `docs/b11-final
 B11, medição final recebida do utilizador (2026-10-11): **161 testes aprovados em 6,46 s e 61% de cobertura** (1754 statements, 679 miss) no Windows; baseline S0 **39 testes e 55%**. Evolução **+122 testes e +6 pontos percentuais**. Distribuição de cobertura não uniforme, sobretudo UI e pontos de entrada, documentada como limitação; ver `docs/b11-final-audit.md`. Falta confirmar o último CI após os commits documentais e obter validação explícita do utilizador antes de qualquer integração na `main` e criação de `v0.2.0`. **B11 em pré-fecho, não integrado.**
 
 B11, validação final do utilizador (2026-10-11): o utilizador confirmou expressamente a aceitação do relatório B11, **161 testes aprovados e 61% de cobertura** (+122 testes e +6 pontos percentuais face a S0), incluindo as lacunas de UI documentadas para evolução futura. **B11 — AUDITORIA E VALIDAÇÃO DO UTILIZADOR CONCLUÍDAS; INTEGRAÇÃO/PUBLICAÇÃO PENDENTES DE AUTORIZAÇÃO SEPARADA.** Na última consulta, o CI #400 relativo ao commit anterior à validação ainda estava em curso; verificar novamente o CI do estado final antes de integrar. Não efetuar squash/merge em `main` nem criar tag `v0.2.0` sem pedido explícito. V0.3 mantém-se por iniciar.
+
+## Estado vigente após publicação da V0.2.0 e validação A1 (2026-10-11)
+
+A versão **V0.2.0 está publicada**: PR #1 integrado por squash na `main`, commit `a26852232c93cdd593fe179b4393fb2abb171d26`, tag anotada `v0.2.0` verificada a apontar para esse commit. S0, D1–D3, B1–B11 e I1–I5 concluídos e validados. Registos anteriores relativos a B11 pendente ou tag inexistente são históricos, não estado atual.
+
+**V0.3 Portfolio: especificação A1 CONCLUÍDA E VALIDADA pelo utilizador**, documentada em `docs/architecture.md`. Ações/ETFs long-only, BUY/SELL, dividendos manuais com bruto/retenção/encargos/líquido, ajustes manuais auditáveis, correção por substituição rastreável, anulação lógica com histórico preservado. Ledger como origem da verdade; várias carteiras com moeda base própria. A2–A5, A7 e A8 por decidir/validar. **Não houve implementação de Portfolio, alteração de schema ou alteração da `main` ou tag** durante o A1. Próximo passo proposto: especificação contabilística **A2** em conversa, com exemplos numéricos e decisões explícitas antes de alterar a documentação.
