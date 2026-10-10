@@ -660,3 +660,7 @@ Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que 
 ### B9.1 — Cobertura dos testes no GitHub Actions (2026-10-10)
 
 **Implementado em `dev`, por validar.** Workflow Linux/Python 3.12 mede cobertura com `pytest-cov` e produz relatório no log, `coverage.xml` e `htmlcov/` arquivados no GitHub Actions. Sem limiar obrigatório. Cobertura e número de testes efetivos devem ser recolhidos do novo run; não foram inventados. Próximo passo após validação: B9.2.
+
+### Progresso B9 (2026-10-10)
+
+**B9.1 CONCLUÍDO E VALIDADO** após confirmação do utilizador de que os testes e cobertura correram como esperado. Métricas numéricas ainda não registadas por não terem sido fornecidas. **B9.2 IMPLEMENTADO EM `dev`, AGUARDA VALIDAÇÃO**: matriz Ubuntu/Python 3.12 e Windows/Python 3.14, PR para `main`/`dev`, relatórios de cobertura separados por ambiente. B9.3 a B9.5 permanecem pendentes.
