@@ -1097,3 +1097,5 @@ Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os
 ### Estado desconhecido na interface (B8.5)
 
 O conjunto de `WatchlistState` do Domain não muda. A UI trata valores sem correspondência como apresentação temporária `Desconhecido` (`None`), sem corrigir automaticamente a persistência. A inicialização do `QComboBox` bloqueia sinais. O callback só envia ao serviço valores reconhecidos; a função pura `bolsa.ui.watchlist.state_selection.recognised_state()` viabiliza testes sem Qt. Nenhum estado `UNKNOWN` é adicionado ao domínio.
+
+Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
