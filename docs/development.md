@@ -120,12 +120,9 @@ Antes de integrar alterações:
 
 ## GitHub Actions
 
-O workflow `.github/workflows/tests.yml` executa os testes automaticamente em:
+O workflow `.github/workflows/tests.yml` executa os testes, a cobertura e o Ruff obrigatórios em Linux/Python 3.12 e Windows/Python 3.14, em pushes e pull requests destinados a `main` ou `dev`. Os artefactos de cobertura são separados por plataforma. Este parágrafo descreve a configuração vigente; os registos posteriores de B9.1/B9.2 documentam a evolução histórica.
 
-- pushes para `main`;
-- pull requests para `main`.
-
-O CI usa Python 3.12 e instala o projeto através de:
+O CI instala o projeto através de:
 
 ```bash
 pip install -e ".[dev]"
@@ -413,7 +410,7 @@ Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que 
 
 ## B9.1 — Relatórios de cobertura no CI
 
-O workflow `.github/workflows/tests.yml`, na branch `dev`, mede cobertura dos testes com `python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov`. No separador Actions do GitHub, abrir a execução de `tests` para o commit mais recente da `dev`, consultar o passo `Run tests with coverage` e descarregar, em `Artifacts`, `coverage-python-3.12-ubuntu`. O artefacto contém `coverage.xml` e `htmlcov/index.html` (abrir localmente). Conservação: 14 dias. Não existe `fail-under`; cobertura inferior a 55% é observação a analisar, não bloqueio automático. Para reprodução local, usar o mesmo comando. Este registo é de implementação, ainda pendente de validação do utilizador.
+O workflow `.github/workflows/tests.yml`, na branch `dev`, mede cobertura dos testes com `python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov`. No separador Actions do GitHub, abrir a execução de `tests` para o commit mais recente da `dev`, consultar o passo `Run tests with coverage` e descarregar, em `Artifacts`, `coverage-python-3.12-ubuntu`. Historicamente, o artefacto B9.1 continha `coverage.xml` e `htmlcov/index.html`. Desde B9.2 os artefactos correntes são `coverage-linux-py312` e `coverage-windows-py314` (abrir `htmlcov/index.html` localmente). Conservação: 14 dias. Não existe `fail-under`; cobertura inferior a 55% é observação a analisar, não bloqueio automático. Para reprodução local, usar o mesmo comando. Este registo é de implementação, ainda pendente de validação do utilizador.
 
 ## B9.2 — Testes de CI em Linux e Windows
 
