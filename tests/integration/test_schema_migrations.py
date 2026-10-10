@@ -10,7 +10,6 @@ from sqlalchemy import inspect
 
 from bolsa.config import AppConfig, prepare_environment
 from bolsa.infrastructure.database import (
-    BASELINE_REVISION,
     SchemaCompatibilityError,
     SchemaMigrationStatus,
     SchemaRevisionError,
