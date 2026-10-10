@@ -713,3 +713,7 @@ Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou
 ### I3 — Regra de PDFs no .gitignore (2026-10-11)
 
 **IMPLEMENTADO CONFORME DESENHO APROVADO; AGUARDA VALIDAÇÃO DO RESULTADO.** Removida exclusivamente a regra global `*.pdf` de `.gitignore`, permitindo acrescentar PDFs técnicos legítimos, nomeadamente em `docs/`. Mantidas as regras para `statements/`, `extracts/`, `extratos/`, ficheiros de transações/posições e restantes dados pessoais. A remoção de uma exclusão não autoriza versionar documentos sensíveis: rever sempre os ficheiros antes de `git add`. I4 (LICENSE) necessita de decisão explícita antes de implementação.
+
+### I4 — Licença do projeto (2026-10-11)
+
+O utilizador escolheu **GPL-3.0**. Criado na branch `dev` o ficheiro `LICENSE` com o texto oficial da GNU General Public License versão 3, usando o identificador SPDX `GPL-3.0-only` (sem autorização automática para versões posteriores). O `README.md` identifica a licença. **IMPLEMENTADO, PENDENTE DE CONFIRMAÇÃO FINAL DO UTILIZADOR**. Nenhuma alteração de código ou dependências. I3 permanece implementado mas ainda sem confirmação final expressa; I5 e B11 pendentes.
