@@ -1117,3 +1117,44 @@ A cache local JSON v2 dos universos é escrita primeiro para um temporário no m
 ### Política vigente de instrumentos sem associação (I2, 2026-10-11)
 
 **I2 CONCLUÍDO E VALIDADO POR DECISÃO EXPLÍCITA DO UTILIZADOR.** Um `InstrumentModel` sem `WatchlistItemModel` não é considerado erro de integridade nem deve ser apagado automaticamente. A remoção de um ticker da Watchlist elimina exclusivamente a associação correspondente em `watchlist_items`; a linha em `instruments` permanece disponível para reutilização. Esta separação evita a eliminação acidental de um instrumento que no futuro possa estar associado a transações, posições ou investigação. Não existe rotina de limpeza automática de órfãos. Qualquer proposta futura de eliminação definitiva terá de verificar todas as referências existentes, definir a semântica de retenção e obter decisão explícita antes da implementação. O teste `test_watchlist_repository_persists_removal` confirma a preservação. Sem alteração ao schema ou ao repository no I2.
+
+## Âmbito da V0.3 — Portfolio (A1 validado, 2026-10-11)
+
+**Decisão funcional aprovada pelo utilizador. Apenas especificação; sem implementação, migrações ou alteração à V0.2 publicada.** O A1 encerra o âmbito, não as fórmulas e contratos financeiros detalhados, que dependem de A2–A5, A7 e A8.
+
+### Objetivo e âmbito
+
+Portfolio pessoal simples para posições **long-only** em **ações e ETFs**, incluindo ações fracionadas, com várias carteiras, identificação própria e moeda base específica por carteira. Instrumentos são entidades reutilizáveis entre carteiras. Operações iniciais acordadas:
+
+- **BUY** e **SELL**: compras e vendas reais, com quantidade positiva, preço, comissões, moeda, câmbio histórico, instante e notas; nunca permitir vendas acima da quantidade disponível.
+- **DIVIDEND**: lançamento **manual** por carteira e instrumento, com valor **bruto**, **retenção na fonte**, **outros encargos**, **valor líquido recebido**, moeda, data e notas. Convenção de controlo: `líquido = bruto - retenção - encargos`. Não calcular automaticamente retenções/impostos nem obter dividendos automaticamente; não alterar a quantidade detida. O rendimento deve ser apresentado em separado do PnL de negociação, sem dupla contagem.
+- **ADJUSTMENT**: ajuste **manual e auditável** de quantidade e/ou custo contabilístico, com motivo obrigatório, carteira, instrumento, data efetiva e rastreabilidade. Não lançar compras/vendas fictícias e não gerar PnL realizado automaticamente. As regras por causa de ajuste e efeitos matemáticos exatos ficam para A2.
+
+O conjunto de tipos deve ser extensível, podendo acomodar futuramente `FEE`, `SPLIT`, `CASH_IN`, `CASH_OUT` e outros, **sem os implementar** nesta versão. O eventual detalhe técnico dos campos aplicáveis a cada tipo pertence ao desenho de domínio posterior, e não pressupõe quantidade/preço em DIVIDEND.
+
+### Fonte de verdade e auditabilidade
+
+O **ledger completo de transações e respetivo histórico** é a única fonte de verdade financeira. Posições, custo médio, PnL realizado/não realizado, dividendos e resultados agregados derivam de um recálculo reproduzível do histórico financeiramente válido, e nunca substituem o histórico por totais incrementais persistidos.
+
+**Correção**: conservar a operação original identificada como substituída e criar uma nova versão válida associada à anterior. **Anulação**: invalidar logicamente a operação mantendo o registo e o rasto da decisão. Corrigir/anular são ações auditáveis sobre o histórico, **não tipos financeiros de transação**; operações substituídas/anuladas não contam nos cálculos, mas continuam disponíveis para auditoria. A estrutura de versionamento, a cadeia de substituições e a política exata de imutabilidade serão fixadas antes da implementação. Um ADJUSTMENT representa alteração económica real da posição e não serve para corrigir erros de introdução.
+
+### Resultados e utilização
+
+Por carteira/instrumento, consultar ledger, quantidade, custo acumulado, custo médio ponderado, cotação de mercado quando disponível, valorização, PnL realizado e não realizado, dividendos e resultado composto identificado por parcelas. A comissão de compra aumenta o custo e a de venda diminui o encaixe líquido, sujeitos às fórmulas A2. O custo médio é inicialmente o método de acompanhamento e de PnL realizado, **não o método fiscal obrigatório**; o ledger completo preserva a possibilidade de introduzir FIFO fiscal futuramente.
+
+A valorização e os totais em moeda base **não devem ser apresentados como válidos sem os câmbios requeridos**, que serão definidos no A4. A persistência e recuperação serão feitas em SQLite/SQLAlchemy, observando migrações e backups anteriores à operação conforme política D2/A7.1. O formato canónico, importação atómica, duplicados e relatórios ficam para A7.
+
+### Fora do âmbito
+
+Sem short selling, margem, CFDs, opções, futuros, execução de ordens, ligação direta a brokers, impostos fiscais e lotes fiscais, automatização de dividendos ou corporate actions, juros, saldos de caixa ou depósitos/levantamentos. Reconciliação com broker e política pessoal de investimento continuam sujeitos à decisão A8; a exclusão de integração direta não impede projetar formatos canónicos próprios e reconciliação posterior.
+
+### Decisões adiadas (não implícitas)
+
+- **A2**: fórmulas de compras, reforços, vendas, encerramento e comissões; eventos de ajuste; datas execução/liquidação, fuso, desempate; mecanismos concretos de correção/anulação.
+- **A3**: `Decimal`, precisão, escala, arredondamento e quantidades fracionadas.
+- **A4**: direção e fontes de câmbio, taxa histórica versus atual e critérios para valorização em moeda base.
+- **A5**: propriedade da moeda base após criação de Portfolio e transformação de `AppConfig.base_currency` em valor por defeito.
+- **A7**: formato de exportação, importação atómica, idempotência/duplicados e relatório.
+- **A8**: reconciliação com extratos XTB, tolerâncias e política pessoal de investimento. Não preencher limites financeiros do utilizador.
+
+**Critério de aceitação da V0.3:** um Portfolio simples, matematicamente correto, persistente, recuperável, testado, capaz de representar compras/vendas reais sem mecanismos financeiros desnecessários.
