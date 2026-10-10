@@ -78,7 +78,7 @@ A integração funcional da V0.2 em `main` já aconteceu. O trabalho atual é um
 
 ## Gate obrigatório entre V0.2 e V0.3 — Estabilização final
 
-**Estado: EM CURSO.** B1–B9 concluídos e validados; B10 em revisão documental, com I1–I5 e B11 ainda por fechar.
+**Estado: EM CURSO.** S0, D1–D3, B1–B10 e I1–I5 concluídos e validados; **B11 em auditoria final**, ainda sem autorização de integração em `main` ou criação da tag `v0.2.0`.
 
 Este gate não é uma nova versão funcional. Serve para estabilizar a V0.2 e preparar a base técnica sem iniciar Portfolio.
 
