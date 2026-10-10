@@ -1091,3 +1091,5 @@ Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes l
 ### Validação sintática de tickers (B8.4, em validação)
 
 `Instrument` normaliza e valida exclusivamente a sintaxe do símbolo, sem consulta de rede. Uma expressão regular aceita segmentos alfanuméricos com underscore, separados opcionalmente por ponto/hífen, prefixo `^` para índices e sufixo Yahoo `=` seguido de uma letra. Pelo menos um carácter alfanumérico é obrigatório. A existência e disponibilidade dos dados permanecem responsabilidade do provider de Market Data e dos erros tipados de Application. Não se introduz validação financeira específica de mercados no Domain.
+
+Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os testes e que o resultado foi correto. **B8.4 CONCLUÍDO E VALIDADO**. Mantêm-se os testes de regressão, a distinção entre sintaxe e existência real no provider e as decisões anteriores. Próximo sub-bloco: B8.5, ainda por implementar. `main` e tag `v0.2.0` não alteradas.
