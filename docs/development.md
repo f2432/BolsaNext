@@ -404,3 +404,7 @@ Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes l
 Na branch `dev`, executar `git pull --ff-only origin dev`, `python -m pytest -q` e `python -m bolsa.main`. Confirmar que símbolos conhecidos continuam aceites (`AAPL`, `^GSPC`, `ASML.AS`, `EURUSD=X` e `BRK-B`), e que entradas com pontuação isolada ou separadores inválidos são rejeitadas antes de consulta Yahoo. Confirmar que adicionar e atualizar instrumentos existentes mantém comportamento habitual. Só fechar o bloco depois de confirmação do utilizador.
 
 Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os testes e que o resultado foi correto. **B8.4 CONCLUÍDO E VALIDADO**. Mantêm-se os testes de regressão, a distinção entre sintaxe e existência real no provider e as decisões anteriores. Próximo sub-bloco: B8.5, ainda por implementar. `main` e tag `v0.2.0` não alteradas.
+
+### Validação local do B8.5
+
+Executar na branch `dev`: `git pull --ff-only origin dev`, `python -m pytest -q`, `python -m bolsa.main`. Na Watchlist, confirmar que os estados existentes aparecem e podem ser alterados/persistidos como antes. A suite inclui testes headless de valores desconhecidos e `None`; uma simulação de estado desconhecido no combo apresenta `Desconhecido` até seleção explícita de estado válido. Nenhuma migration é esperada. O bloco B8.5 só fica validado após confirmação local do utilizador.
