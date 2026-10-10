@@ -650,3 +650,7 @@ Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes l
 **Implementado em `dev`, a aguardar validação local.** O domínio `Instrument` rejeita símbolos constituídos apenas por pontuação e estruturas manifestamente malformadas sem rejeitar os formatos Yahoo já previstos (`^GSPC`, `BRK-B`, `ASML.AS`, `EURUSD=X`). Acrescentados testes de regressão parametrizados. Nenhum provider ou schema alterado. O bloco permanece pendente de validação e B8.5 ainda não foi iniciado.
 
 Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os testes e que o resultado foi correto. **B8.4 CONCLUÍDO E VALIDADO**. Mantêm-se os testes de regressão, a distinção entre sintaxe e existência real no provider e as decisões anteriores. Próximo sub-bloco: B8.5, ainda por implementar. `main` e tag `v0.2.0` não alteradas.
+
+### B8.5 — Estado desconhecido defensivo (2026-10-10)
+
+**Implementado em `dev`, pendente de validação local.** Combobox do estado apresenta `Desconhecido` quando recebe valor sem correspondência, sem escolher outro estado automaticamente. Inicialização bloqueia sinais, e a conversão defensiva evita persistir valores inválidos. Regressões headless adicionadas. Sem alteração de schema ou domínio. B8 aguarda fecho local de B8.5.
