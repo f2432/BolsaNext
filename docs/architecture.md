@@ -1158,3 +1158,53 @@ Sem short selling, margem, CFDs, opções, futuros, execução de ordens, ligaç
 - **A8**: reconciliação com extratos XTB, tolerâncias e política pessoal de investimento. Não preencher limites financeiros do utilizador.
 
 **Critério de aceitação da V0.3:** um Portfolio simples, matematicamente correto, persistente, recuperável, testado, capaz de representar compras/vendas reais sem mecanismos financeiros desnecessários.
+
+
+## A2 — Regras contabilísticas (validado, 2026-10-11)
+
+**A2 aprovado pelo utilizador; especificação apenas, sem implementação.** O ledger é a origem única da verdade: nunca substituir, agregar ou reescrever operações originais para guardar uma posição. A reconstrução do estado financeiro percorre, pela ordem aprovada, apenas as versões eficazes das operações. Cada correção/anulação conserva o histórico auditável; ajustes são eventos económicos, distintos da retificação de erros.
+
+### Compras, vendas e custo médio móvel
+
+Para BUY, quantidade `q > 0`, preço unitário `p` e comissão `f`, o custo de entrada é `q*p + f`. Na posição anterior de quantidade `Q` e custo acumulado `C`, após compra: `Q' = Q + q`, `C' = C + q*p + f`, `custo_médio' = C'/Q'`.
+
+Para SELL, `0 < q <= Q`, `custo_atribuído = q*(C/Q)`, `encaixe_líquido = q*p - f` e `PnL_realizado = encaixe_líquido - custo_atribuído`. Remanescente: `Q' = Q-q` e `C' = C-custo_atribuído`; a venda parcial não altera o custo médio anterior. Na venda total, `Q'=0` e `C'=0` exatamente: qualquer entrada posterior reinicia o custo médio, sem eliminar o PnL histórico.
+
+Exemplo exato, mesma moeda, sem câmbio: BUY 10 a 100 EUR com comissão 5 EUR => custo 1005 EUR e média 100,50; BUY 10 a 120 EUR com comissão 5 EUR => custo 2210 EUR, Q=20, média 110,50; SELL 8 a 130 EUR com comissão 4 EUR => encaixe líquido 1036 EUR, custo atribuído 884 EUR, **PnL realizado +152 EUR**, Q=12, C=1326 EUR, média 110,50 EUR.
+
+Não permitir quantidade negativa, BUY/SELL com quantidade zero, nem short selling. Vendas superiores à quantidade disponível originam erro de domínio identificável e não alteram o ledger. Custo médio de acompanhamento e método inicial de PnL realizado não substituem o futuro apuramento fiscal, que poderá exigir FIFO. **As fórmulas acima pressupõem valores expressos numa moeda comum**; os passos para transações em outras moedas ficam para A4. Escalas e arredondamentos ficam para A3.
+
+### Datas e ordenação
+
+Guardar a data/hora de **execução** como referência de ordenação e, quando disponível, a data de **liquidação** opcional. Instantes conhecidos têm representação canónica UTC e apresentação em fuso local. Não inventar instantes/fusos quando a fonte fornece apenas uma data ou precisão parcial; preservar a precisão conhecida.
+
+Ordenar primeiro pelo instante de execução disponível; para instantes coincidentes, aplicar a sequência real conhecida da corretora. Quando esta não existir, usar desempate estável e persistente, com alerta quando a ambiguidade puder alterar os cálculos. A ordem de inserção/importação não é automaticamente prova da ordem de execução. Nunca presumir BUY antes de SELL, nem depender da ordem arbitrária de resultados SQLite. O contrato exato para dados só com data será detalhado no desenho do domínio sem contrariar estes princípios.
+
+### Dividendos e ajustes
+
+DIVIDEND manual por carteira/instrumento: **líquido = bruto - retenção - outros encargos**, na moeda da operação, com todos os componentes individualizados e validados. O dividendo não modifica quantidade nem custo médio, e rendimento líquido não se confunde com PnL realizado nas vendas, nem pode ser somado duas vezes. Câmbio associado ao evento financeiro conforme A4. Exemplo: bruto 50 EUR, retenção 7,50 EUR e encargos 1 EUR => líquido 41,50 EUR.
+
+ADJUSTMENT manual, justificado, tipificado, datado e auditável. Para split 2:1, quantidade duplica, custo acumulado mantém-se e custo médio unitário divide-se por dois, sem criar PnL realizado. Exemplo: 10 ações/C=1000 EUR => 20 ações/C=1000 EUR/média=50 EUR. Outros ajustes de quantidade e/ou custo **não partilham fórmula genérica**; só são aceites quando a categoria e a regra de cálculo estiverem explicitamente aprovadas e testadas.
+
+### Correção, anulação e atomicidade
+
+A correção não reescreve a operação original: liga-a a uma nova versão eficaz; a anulação retira a eficácia sem eliminar o original. Antes de confirmar correção, anulação ou ajuste que afete o histórico, reconstruir e validar **toda a sequência relevante**. Se alguma venda posterior exceder o saldo ou ocorrer outro invariante violado, rejeitar a operação inteira de forma **atómica**, manter inalterado o ledger previamente válido e emitir erro de domínio que identifica a operação e a causa. Exemplo: BUY 10, SELL 8; tentar corrigir a BUY para 5 é rejeitado, sem alterar o histórico eficaz.
+
+Exemplo de recálculo, sem comissões: BUY 10 a 100, BUY 10 a 120, SELL 5 a 130 => custo médio 110 e PnL realizado 100; retificar a primeira BUY para 10 a 110 => custo médio 115 e PnL realizado 75, Q remanescente 15 e custo remanescente 1725. Recalcular, não ajustar PnL manualmente.
+
+### Invariantes aprovados
+
+- **INV-01**: ledger como única origem da verdade.
+- **INV-02**: quantidade long-only nunca negativa.
+- **INV-03**: BUY e SELL com quantidade estritamente positiva.
+- **INV-04**: proibição de SELL acima do disponível no instante da operação.
+- **INV-05**: após encerramento, quantidade e custo acumulado exatamente zero.
+- **INV-06**: custo médio integralmente recalculado do histórico eficaz, sem depender de posição agregada persistida.
+- **INV-07**: venda parcial não altera o custo médio unitário remanescente.
+- **INV-08**: split simples altera quantidade e conserva custo total, sem PnL realizado.
+- **INV-09**: dividendo não altera quantidade ou média nem se confunde com PnL de vendas.
+- **INV-10**: versões anuladas/substituídas auditáveis mas sem efeito financeiro.
+- **INV-11**: reconstrução determinística com mesmos eventos e mesma ordem.
+- **INV-12**: totais que dependem de valores/câmbios indisponíveis não são apresentados como válidos (detalhar em A4).
+
+**Fronteiras pendentes:** A3 fixa Decimal, precisão, persistência e arredondamento; A4 resolve câmbio histórico/atual e moeda base; A5 define autoridade da moeda da carteira; A7 importação/exportação; A8 reconciliação XTB. Nenhum valor implícito deve antecipar estas decisões.
