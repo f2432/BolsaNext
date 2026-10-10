@@ -654,3 +654,5 @@ Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os
 ### B8.5 — Estado desconhecido defensivo (2026-10-10)
 
 **Implementado em `dev`, pendente de validação local.** Combobox do estado apresenta `Desconhecido` quando recebe valor sem correspondência, sem escolher outro estado automaticamente. Inicialização bloqueia sinais, e a conversão defensiva evita persistir valores inválidos. Regressões headless adicionadas. Sem alteração de schema ou domínio. B8 aguarda fecho local de B8.5.
+
+Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
