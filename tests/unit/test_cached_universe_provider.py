@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import json
+import os
 
 import pytest
 
@@ -166,3 +167,54 @@ def test_old_cache_format_is_ignored_and_rebuilt(tmp_path) -> None:
     assert result.status is UniverseLoadStatus.LIVE
     assert result.universe.instruments[0].exchange is None
     assert result.universe.instruments[0].currency is None
+
+
+def test_atomic_save_replaces_cache_without_temporary_files(tmp_path) -> None:
+    source = FakeUniverseProvider()
+    provider = CachedUniverseProvider(source, tmp_path)
+    provider.get_universe("sp500")
+    cache_path = tmp_path / "sp500.json"
+
+    provider._save_cache(source.get_universe("sp500").universe)
+
+    assert json.loads(cache_path.read_text(encoding="utf-8"))["format_version"] == 2
+    assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_atomic_save_preserves_previous_cache_when_replace_fails(tmp_path, monkeypatch) -> None:
+    source = FakeUniverseProvider()
+    provider = CachedUniverseProvider(source, tmp_path)
+    provider.get_universe("sp500")
+    cache_path = tmp_path / "sp500.json"
+    original = cache_path.read_bytes()
+
+    def fail_replace(_src, _dst):
+        raise OSError("simulated replace failure")
+
+    monkeypatch.setattr(os, "replace", fail_replace)
+    with pytest.raises(OSError, match="simulated replace failure"):
+        provider._save_cache(source.get_universe("sp500").universe)
+
+    assert cache_path.read_bytes() == original
+    assert list(tmp_path.iterdir()) == [cache_path]
+    assert provider._load_cache("sp500") is not None
+
+
+def test_atomic_save_preserves_previous_cache_when_write_fails(tmp_path, monkeypatch) -> None:
+    source = FakeUniverseProvider()
+    provider = CachedUniverseProvider(source, tmp_path)
+    provider.get_universe("sp500")
+    cache_path = tmp_path / "sp500.json"
+    original = cache_path.read_bytes()
+
+    import bolsa.infrastructure.market_data.cached_universe_provider as module
+
+    def fail_dump(*_args, **_kwargs):
+        raise OSError("simulated serialization failure")
+
+    monkeypatch.setattr(module.json, "dumps", fail_dump)
+    with pytest.raises(OSError, match="simulated serialization failure"):
+        provider._save_cache(source.get_universe("sp500").universe)
+
+    assert cache_path.read_bytes() == original
+    assert list(tmp_path.iterdir()) == [cache_path]
