@@ -472,3 +472,5 @@ O conjunto atual `pytest`, `pytest-cov` e `ruff` é suficiente para este ciclo. 
 ### Situações pendentes e fronteiras
 
 O B9.5 documenta a estratégia, mas **não** declara cobertura completa de UI, cargas de rede, sistemas operativos ou dados de produção. A avaliação das advertências GitHub Actions relativas a Node.js 20 e à mudança de `ubuntu-latest` permanece uma ação de manutenção/fecho a acompanhar, sem a confundir com validação de código Python. A revisão global de coerência dos documentos cabe ao B10, e a medição final com valores efetivos cabe ao B11.
+
+Validação B9.5 e fecho B9 (2026-10-10): o utilizador aprovou expressamente a estratégia documental de testes. **B9.5 CONCLUÍDO E VALIDADO** e **B9 (B9.1–B9.5) CONCLUÍDO E VALIDADO**. Próximo bloco: B10, auditoria de coerência canónica; primeiro analisar e propor correções sem alterar documentos antes da validação do desenho. Os itens avulsos I1–I5 e o fecho B11 continuam obrigatórios. A `main` e a tag `v0.2.0` permanecem intocadas.
