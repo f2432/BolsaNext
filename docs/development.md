@@ -493,3 +493,7 @@ A regra global `*.pdf` foi removida do `.gitignore` para permitir documentação
 ### I5 — Coerência entre run.ps1 e Python local (2026-10-11)
 
 Depois da aprovação do desenho, o script passou a preferir o executável da `.venv` local, sem a criar nem exigir. Mantém o fallback para `python` do PATH e a proteção da branch `dev`; usa um só interpretador em todos os comandos Python. O Ruff foi acrescentado à fase de testes, com paragem em caso de erro. `-SkipTests` ignora tanto Ruff como pytest, sem alterar as restantes opções. **Implementado, pendente de validação funcional no Windows pelo utilizador.**
+
+### Arranque direto no Windows com run.cmd (I5)
+
+A forma recomendada de iniciar o projeto no Windows é ` .\run.cmd ` (sem os espaços delimitadores aqui explicativos); pode também ser aberto por duplo clique no Explorador. O `run.cmd` na raiz chama `run.ps1` por `powershell.exe -NoProfile -ExecutionPolicy Bypass -File`, encaminhando os argumentos, por exemplo `.\run.cmd -SkipTests`. A exceção à Execution Policy limita-se ao processo PowerShell filho e não altera definições persistentes; políticas de execução impostas pela organização podem prevalecer. Não executar ficheiros `.cmd` ou `.ps1` não confiáveis. A implementação dos passos continua centralizada em `run.ps1` e o ambiente `.venv` permanece opcional. Esta adaptação foi solicitada pelo utilizador para execução imediata em ambientes Windows diversos. **Pendente de teste funcional pelo utilizador.**
