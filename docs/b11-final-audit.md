@@ -62,3 +62,16 @@ Se existir `.venv` local, preferir `.venv\Scripts\python.exe` como interpretador
 6. apenas depois da integração confirmada e aprovada, pedir/obter autorização para criar a tag `v0.2.0`.
 
 **B11 não foi marcado como CONCLUÍDO E VALIDADO.** Não foi modificada `main`, não foi criada a tag nem iniciada V0.3.
+
+## 7. Medição final recolhida no Windows (2026-10-11)
+
+O utilizador apresentou a saída real de `python -m pytest -q --cov=bolsa --cov-report=term-missing`, sobre a versão de desenvolvimento em Windows:
+
+- **161 testes aprovados em 6,46 segundos**;
+- **61% de cobertura global** (1 754 statements, 679 miss);
+- baseline S0: **39 testes e 55%**;
+- evolução: **+122 testes e +6 pontos percentuais**.
+
+A distribuição da cobertura continua desigual: os módulos de entrada e UI PySide6 apresentados no relatório têm 0% em vários casos; scripts Alembic `0001` e `0002` têm 0% por instrumentação da execução, apesar de `schema_migrations.py` apresentar 91%. A cache de universos apresenta 93%, provider Wikipedia 87%, provider yfinance 82% e repository da watchlist 90%. Isto constitui dívida de testes futura e não demonstra, isoladamente, erro funcional. O B9.5 define a estratégia para a endereçar; não ampliar agora o âmbito da V0.2 apenas para aumentar cobertura.
+
+A medição final exigida pelo B11 fica **recolhida e comparada**. Antes da integração final, confirmar o último CI no commit final e obter aprovação explícita do utilizador. `main` e `v0.2.0` permanecem intocadas. **B11 aguarda validação final/autorização separada, sem integração automática.**
