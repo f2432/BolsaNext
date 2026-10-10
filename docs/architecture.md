@@ -1087,3 +1087,7 @@ A decisão D1 fica assim implementada e validada no fluxo real.
 O `WatchlistService` (Application) é dono de uma cache de sessão `dict[str, PriceSnapshot]` e mantém o respetivo acesso sob `RLock`. Um snapshot guarda preço `float` e instante UTC timezone-aware de obtenção. `WatchlistRow` expõe `price` e `price_updated_at` à UI. O Domain, a persistência e o provider de universos não conhecem esta cache. Falhas externas preservam o último snapshot e os avisos existentes. Preços não passam pelo repository nem pelo SQLite. A cache termina com a instância do serviço.
 
 Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes locais e funcionais correram como esperado. **B8.3 CONCLUÍDO E VALIDADO**. Próximo passo B8.4, ainda não implementado. A `main` e a tag `v0.2.0` mantêm-se intocadas.
+
+### Validação sintática de tickers (B8.4, em validação)
+
+`Instrument` normaliza e valida exclusivamente a sintaxe do símbolo, sem consulta de rede. Uma expressão regular aceita segmentos alfanuméricos com underscore, separados opcionalmente por ponto/hífen, prefixo `^` para índices e sufixo Yahoo `=` seguido de uma letra. Pelo menos um carácter alfanumérico é obrigatório. A existência e disponibilidade dos dados permanecem responsabilidade do provider de Market Data e dos erros tipados de Application. Não se introduz validação financeira específica de mercados no Domain.
