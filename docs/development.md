@@ -548,3 +548,9 @@ Contrato de testes a implementar posteriormente, **nenhum teste criado neste blo
 - Validação de `FxRateProvider` via mocks, adaptador inicial yfinance e fronteira float→Decimal sem contaminar os cálculos financeiros.
 
 A5 definirá as operações permitidas sobre moeda base da carteira; A8 definirá reconciliação e o efeito contabilístico das discrepâncias.
+
+### V0.3 — Testes obrigatórios do A5: moeda base (validado, 2026-10-11)
+
+**Plano de testes, sem implementação.** Ao criar Portfolio, a moeda selecionada é preenchida inicialmente com `AppConfig.default_base_currency`, mas pode ser alterada antes da criação; a moeda guardada é a única autoridade. Testar criação de EUR e USD em simultâneo; reiniciar aplicação e recuperar moedas exatamente; mudar a predefinição global para GBP sem alterar carteiras existentes; tentar alterar `Portfolio.base_currency` já persistida, incluindo carteira vazia, e exigir erro de domínio/ausência de mutação.
+
+Validar códigos ISO 4217 normalizados e suporte extensível; distinguir código válido de disponibilidade de cotação FX (A4). Cobrir migração/compatibilidade de `AppConfig.base_currency` para `default_base_currency`: conservar valor antigo válido; usar EUR só na ausência; não criar/alterar carteiras; não manter duas configurações concorrentes; valor antigo inválido deve produzir erro identificável, não fallback silencioso. Testar isolamento entre carteiras com moedas distintas e conversões FX segundo `Portfolio.base_currency`. O desenho das alterações de schema/configuração será revisto antes de qualquer código.
