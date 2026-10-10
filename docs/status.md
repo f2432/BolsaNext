@@ -705,3 +705,7 @@ Validação B10 (2026-10-11): o utilizador confirmou expressamente a revisão do
 **Implementado na `dev`, por validar.** Cache JSON de universos passa a ser substituída atomicamente por `os.replace` após escrita em ficheiro temporário no mesmo diretório e fecho do handle. Em falha, o original é conservado e o temporário limpo. Testes de regressão acrescentados. I2–I5 e B11 continuam obrigatórios. Sem alteração funcional à UI, schema ou metadados.
 
 Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou avançar. **I1 — ESCRITA ATÓMICA DA CACHE DE UNIVERSOS CONCLUÍDO E VALIDADO.** Próximo item I2: analisar a política de preservação dos instrumentos órfãos; primeiro apresentar o desenho, sem alterações funcionais antes da aprovação. I3–I5 e B11 continuam pendentes; `main` e tag `v0.2.0` intactas.
+
+### I2 — Preservação de instrumentos órfãos (2026-10-11)
+
+**CONCLUÍDO E VALIDADO.** O utilizador aprovou a política de preservar na tabela `instruments` os ativos removidos da Watchlist; apenas a associação em `watchlist_items` é eliminada. O comportamento já estava implementado e protegido por `tests/integration/test_watchlist_repository.py::test_watchlist_repository_persists_removal`. O I2 formaliza a decisão sem alterar código, testes, dados ou migrações. Não se adiciona limpeza automática. I1 e I2 concluídos; I3–I5 e B11 pendentes. `main` e tag `v0.2.0` intocadas.
