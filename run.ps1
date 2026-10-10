@@ -63,10 +63,19 @@ if (-not $SkipPull) {
     Write-Host "[1/4] git pull ignorado." -ForegroundColor DarkGray
 }
 
+$venvPython = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+$pythonExecutable = "python"
+if (Test-Path -LiteralPath $venvPython -PathType Leaf) {
+    $pythonExecutable = $venvPython
+    Write-Host "Python: ambiente virtual .venv ($pythonExecutable)" -ForegroundColor Cyan
+} else {
+    Write-Host "Python: comando python do PATH (sem .venv local)" -ForegroundColor Cyan
+}
+
 if (-not $SkipInstall) {
     Write-Host ""
     Write-Host "[2/4] A instalar/atualizar dependencias..." -ForegroundColor Yellow
-    python -m pip install -e ".[dev]"
+    & $pythonExecutable -m pip install -e ".[dev]"
     Stop-On-ExitCode "instalacao das dependencias"
 } else {
     Write-Host ""
@@ -75,8 +84,11 @@ if (-not $SkipInstall) {
 
 if (-not $SkipTests) {
     Write-Host ""
-    Write-Host "[3/4] A executar testes..." -ForegroundColor Yellow
-    python -m pytest -q
+    Write-Host "[3/4] A executar Ruff e testes..." -ForegroundColor Yellow
+    & $pythonExecutable -m ruff check src tests
+    Stop-On-ExitCode "Ruff"
+
+    & $pythonExecutable -m pytest -q
     Stop-On-ExitCode "testes"
 } else {
     Write-Host ""
@@ -86,5 +98,5 @@ if (-not $SkipTests) {
 Write-Host ""
 Write-Host "[4/4] A iniciar BolsaNext..." -ForegroundColor Green
 Write-Host "Branch em teste: $DevelopmentBranch" -ForegroundColor Cyan
-python -m bolsa.main
+& $pythonExecutable -m bolsa.main
 Stop-On-ExitCode "arranque do BolsaNext"
