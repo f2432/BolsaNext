@@ -1099,3 +1099,7 @@ Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os
 O conjunto de `WatchlistState` do Domain não muda. A UI trata valores sem correspondência como apresentação temporária `Desconhecido` (`None`), sem corrigir automaticamente a persistência. A inicialização do `QComboBox` bloqueia sinais. O callback só envia ao serviço valores reconhecidos; a função pura `bolsa.ui.watchlist.state_selection.recognised_state()` viabiliza testes sem Qt. Nenhum estado `UNKNOWN` é adicionado ao domínio.
 
 Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
+
+### Matriz de compatibilidade do CI (B9.2, pendente de validação)
+
+A suite automática preserva o runtime de referência Linux/Python 3.12 e acrescenta Windows/Python 3.14 com execução independente (`fail-fast: false`). São apenas ambientes de testes, sem alterar a arquitetura de aplicação ou impor alterações à plataforma de dados. O caso particular de Windows App Control do computador local não é uma característica exigida do runner de CI.
