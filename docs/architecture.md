@@ -1208,3 +1208,27 @@ Exemplo de recálculo, sem comissões: BUY 10 a 100, BUY 10 a 120, SELL 5 a 130 
 - **INV-12**: totais que dependem de valores/câmbios indisponíveis não são apresentados como válidos (detalhar em A4).
 
 **Fronteiras pendentes:** A3 fixa Decimal, precisão, persistência e arredondamento; A4 resolve câmbio histórico/atual e moeda base; A5 define autoridade da moeda da carteira; A7 importação/exportação; A8 reconciliação XTB. Nenhum valor implícito deve antecipar estas decisões.
+
+## A3 — Tipos financeiros e precisão (validado, 2026-10-11)
+
+**Especificação aprovada; sem implementação.** O domínio financeiro usa exclusivamente `decimal.Decimal` para quantidades, preços de execução, comissões, retenções, dividendos, montantes, taxas de câmbio, custos e PnL. Os dados de mercado estatísticos continuam em `float`/pandas/NumPy. A fronteira Market Data → Portfolio deve validar valores finitos e converter explicitamente, preferencialmente `Decimal(str(valor_float))` quando a fonte só disponibiliza float; esta conversão **não restitui** precisão já perdida. Entradas decimais textuais de utilizador e extratos são convertidas diretamente para Decimal, sem float intermédio. A exportação para float destina-se somente a visualizações/estatística, nunca à persistência financeira.
+
+### Escalas e limites aprovados
+
+- Quantidade, preço unitário, comissão, retenção, encargos e montantes monetários de entrada: no máximo **8 casas decimais**.
+- Taxa de câmbio: no máximo **12 casas decimais**.
+- Magnitude dos valores de entrada: no máximo **18 algarismos na parte inteira**, com validação explícita de sinal e intervalo por campo. BUY/SELL e câmbio estritamente positivos; comissões/retenções/encargos não negativos; valores NaN e infinitos proibidos.
+- O custo médio é sempre **derivado**, não um valor financeiro de referência persistido nem limitado artificialmente a 8 casas; o custo acumulado e o ledger preservam os dados necessários ao recálculo.
+- A escala máxima não exige preencher zeros até essa escala; excedê-la nunca desencadeia truncagem/arredondamento silenciosos. Um valor do broker confirmado deve ser conservado tal como recebido no registo de origem e eventuais discrepâncias identificadas.
+
+### Persistência SQLite e fronteira de domínio
+
+Persistir valores financeiros em **TEXT decimal canónico no SQLite**, com mapeamento explícito através de adaptador/tipo SQLAlchemy que devolve Decimal no domínio. Nunca converter os campos financeiros para SQLite REAL nem assumir exatidão decimal nativa de Numeric em SQLite; não usar casts/aritmética textual SQL como substitutos do motor financeiro. Garantir ida e volta com igualdade numérica exata; zeros finais podem ser normalizados na forma canónica, mas o texto original da corretora pode ser conservado separadamente para auditoria.
+
+### Precisão e arredondamentos
+
+Os cálculos internos utilizam contexto Decimal de **50 algarismos significativos**, com **ROUND_HALF_EVEN por defeito** nas quantizações explicitamente definidas, não depois de cada operação. Nunca reutilizar valores arredondados apenas para apresentação como entrada de cálculos. Divisões periódicas, custos médios derivados e resíduos requerem testes; no encerramento total da posição, o custo remanescente deve tornar-se exatamente zero segundo o A2. A apresentação respeita as casas usuais de cada moeda e o detalhe necessário para preços/câmbio, sem modificar dados guardados.
+
+Montantes efetivamente confirmados pela XTB são preservados como factos de origem. Desvios entre estes e montantes matematicamente reconstruídos devem ser **sinalizados**, não substituídos silenciosamente. O efeito contabilístico dos desvios (incluindo eventuais conversões) fica reservado para **A4/A8**, sem revogar as fórmulas já aprovadas em A2.
+
+**Gate A3:** regras funcionais validadas; não implica criação de campos, migrações, dependências ou código. A4 define a convenção FX, taxa histórica/atual e critérios de valorização; A5 trata da moeda base por carteira.
