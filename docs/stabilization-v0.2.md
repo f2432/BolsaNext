@@ -2234,3 +2234,11 @@ O desenho foi aprovado antes da implementação. O padrão de `Instrument` foi a
 Foram adicionados testes parametrizados em `tests/unit/test_instrument.py`, preservando os testes anteriores. Revisão estrutural dos novos casos realizada; suite Python completa e CI ainda não confirmados. Não assinalar CONCLUÍDO E VALIDADO até confirmação local do utilizador. Próximo passo depois da validação: B8.5. A `main` e tag `v0.2.0` continuam intocadas.
 
 Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os testes e que o resultado foi correto. **B8.4 CONCLUÍDO E VALIDADO**. Mantêm-se os testes de regressão, a distinção entre sintaxe e existência real no provider e as decisões anteriores. Próximo sub-bloco: B8.5, ainda por implementar. `main` e tag `v0.2.0` não alteradas.
+
+### B8.5 — Estado desconhecido defensivo (registo de implementação)
+
+Estado: **IMPLEMENTADO EM `dev`, PENDENTE DE VALIDAÇÃO LOCAL** (2026-10-10).
+
+Desenho aprovado pelo utilizador. `WatchlistWidget` deixa de passar `findData() == -1` diretamente a `setCurrentIndex`: caso o estado não seja reconhecido, acrescenta e seleciona uma opção temporária `Desconhecido` com valor `None`. O combo é inicializado com sinais bloqueados. `_change_state()` ignora estados ausentes ou inválidos e continua a respeitar o coordenador global busy. Uma escolha explícita de estado válido continua a persistir normalmente. A validação defensiva do callback reside na UI e a função de conversão foi isolada em `ui/watchlist/state_selection.py`, sem dependências Qt, para regressões headless. Nenhuma alteração ao domínio persistente, repository, schema, Alembic ou dependências.
+
+Commits principais `a16bff7`, `af6c024`, `178d304`, `43cd06a`. Testes unitários do reconhecimento de estados acrescentados; a suite completa, CI e teste local aguardam confirmação. B8 só fecha depois da validação local explícita. Próximo bloco depois disso: B9. `main` e tag `v0.2.0` permanecem intactas.
