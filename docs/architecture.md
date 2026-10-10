@@ -1109,3 +1109,7 @@ A suite automática preserva o runtime de referência Linux/Python 3.12 e acresc
 O conjunto mínimo declarado para executar V0.2 é PySide6, pandas, SQLAlchemy, alembic, yfinance, platformdirs e lxml. A análise de universos baseada em Wikipedia usa `pandas.read_html` e mantém lxml como dependência explícita. Bibliotecas previstas para análise/IA futura são organizadas no extra opcional `analysis` e não são importadas pelo fluxo principal da V0.2. A arquitetura e os modelos de dados não se alteram nesta sessão. Estado B9.3: implementação sujeita a confirmação dos testes Linux/Windows e execução local.
 
 Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador. **B9.3 CONCLUÍDO E VALIDADO**. Próximo bloco B9.4 (Ruff), ainda não implementado. `main` e a tag `v0.2.0` permanecem intactas.
+
+### Escrita atómica da cache de universos (I1)
+
+A cache local JSON v2 dos universos é escrita primeiro para um temporário no mesmo diretório e apenas substitui a versão anterior após fecho e sucesso da gravação, via `os.replace()`. Falhas anteriores à substituição conservam a cache válida existente; resíduos temporários são removidos em `finally`. Este mecanismo não altera TTL/fallback, não usa SQLite e não garante persistência física após corte de energia. I1 pendente de validação local e CI.
