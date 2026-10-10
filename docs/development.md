@@ -533,3 +533,18 @@ Cobrir igualmente versões substituídas/anuladas sem impacto nos cálculos, pre
 **Apenas especificação, sem código novo.** Testar: `Decimal` direto a partir de texto decimal (sem passar por float); rejeição de NaN/infinito e de valores que excedam 18 algarismos inteiros; escalas até 8 casas para quantidade/preço/comissão/retenção/montante e 12 casas para FX, com erro explícito por excesso em vez de truncagem; validação de sinais por campo; arredondamento `ROUND_HALF_EVEN` nos pontos explicitamente definidos; cálculo interno a 50 algarismos significativos; quantidades fracionadas; dízimas e custo médio derivado; venda total sem resíduo; resultados determinísticos após repetição do cálculo.
 
 Testar ainda o round-trip `Decimal → SQLite TEXT canónico → Decimal` sem diferença numérica, incluindo representações com zeros finais; rejeitar passagem acidental por SQLite REAL/float; manter o texto original do extrato quando necessário para auditoria. Para market data float, testar validação e conversão explícita (`Decimal(str(value))`) sem alegar recuperação de precisão original. A reprodução de um valor monetário confirmado da XTB deve preservá-lo e sinalizar divergências face ao cálculo, **sem resolver a política de prevalência contabilística antes de A4/A8**. Não calcular PnL fiscal nesta fase.
+
+
+### V0.3 — Testes obrigatórios do A4 FX (validado, 2026-10-11)
+
+Contrato de testes a implementar posteriormente, **nenhum teste criado neste bloco**:
+- USD → EUR, `1000 * Decimal("0.86") == 860`, convencionando explicitamente EUR por USD; moeda idêntica dá taxa exatamente 1 sem provider.
+- Inversão de `EURUSD=X` e de qualquer par cuja orientação não coincida com a conversão: `1 / cotacao` em Decimal com precisão A3; direção registada; inversão testada; sem conversão enganadora.
+- Rejeitar FX zero, negativo, infinito, NaN e ausente; nunca fabricar taxa 1 entre moedas diferentes.
+- Transação com FX histórico imutável perante atualização diária do provider; preservação da taxa e do montante efetivo XTB, e aviso de diferença face à taxa de referência sem substituir nem classificar a diferença.
+- Cálculo de `Q * preco_atual * FX_atual` e PnL não realizado contra custo remanescente histórico na moeda base; cenário 100 USD com FX 0,90 na entrada vs 110 USD com FX 0,85 no presente => 90 EUR, 93,50 EUR e +3,50 EUR.
+- Última sessão válida e fallback de 72 horas corridas sem calendário fiável, incluindo mercados fechados, feriados e ausência de timestamps confiáveis; testar estado e proveniência.
+- Preço/FX em falta ou desatualizado: sinalizar posição; subtotal conhecido identificado, sem total/PnL consolidado falsamente completos; histórico imutável após indisponibilidade.
+- Validação de `FxRateProvider` via mocks, adaptador inicial yfinance e fronteira float→Decimal sem contaminar os cálculos financeiros.
+
+A5 definirá as operações permitidas sobre moeda base da carteira; A8 definirá reconciliação e o efeito contabilístico das discrepâncias.
