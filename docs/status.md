@@ -703,3 +703,5 @@ Validação B10 (2026-10-11): o utilizador confirmou expressamente a revisão do
 ### Item I1 — Cache de universos (2026-10-11)
 
 **Implementado na `dev`, por validar.** Cache JSON de universos passa a ser substituída atomicamente por `os.replace` após escrita em ficheiro temporário no mesmo diretório e fecho do handle. Em falha, o original é conservado e o temporário limpo. Testes de regressão acrescentados. I2–I5 e B11 continuam obrigatórios. Sem alteração funcional à UI, schema ou metadados.
+
+Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou avançar. **I1 — ESCRITA ATÓMICA DA CACHE DE UNIVERSOS CONCLUÍDO E VALIDADO.** Próximo item I2: analisar a política de preservação dos instrumentos órfãos; primeiro apresentar o desenho, sem alterações funcionais antes da aprovação. I3–I5 e B11 continuam pendentes; `main` e tag `v0.2.0` intactas.
