@@ -709,3 +709,7 @@ Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou
 ### I2 — Preservação de instrumentos órfãos (2026-10-11)
 
 **CONCLUÍDO E VALIDADO.** O utilizador aprovou a política de preservar na tabela `instruments` os ativos removidos da Watchlist; apenas a associação em `watchlist_items` é eliminada. O comportamento já estava implementado e protegido por `tests/integration/test_watchlist_repository.py::test_watchlist_repository_persists_removal`. O I2 formaliza a decisão sem alterar código, testes, dados ou migrações. Não se adiciona limpeza automática. I1 e I2 concluídos; I3–I5 e B11 pendentes. `main` e tag `v0.2.0` intocadas.
+
+### I3 — Regra de PDFs no .gitignore (2026-10-11)
+
+**IMPLEMENTADO CONFORME DESENHO APROVADO; AGUARDA VALIDAÇÃO DO RESULTADO.** Removida exclusivamente a regra global `*.pdf` de `.gitignore`, permitindo acrescentar PDFs técnicos legítimos, nomeadamente em `docs/`. Mantidas as regras para `statements/`, `extracts/`, `extratos/`, ficheiros de transações/posições e restantes dados pessoais. A remoção de uma exclusão não autoriza versionar documentos sensíveis: rever sempre os ficheiros antes de `git add`. I4 (LICENSE) necessita de decisão explícita antes de implementação.
