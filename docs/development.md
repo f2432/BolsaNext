@@ -139,12 +139,14 @@ Execução normal:
 .\run.ps1
 ```
 
+O script usa prioritariamente o interpretador `.venv\\Scripts\\python.exe` quando existe na raiz do projeto; caso contrário, usa o comando `python` disponível no PATH. Não cria nem exige um venv. Mostra no terminal o interpretador escolhido e usa-o consistentemente para instalação, Ruff, testes e arranque.
+
 O script executa, por esta ordem:
 
-1. `git pull --ff-only`;
-2. `python -m pip install -e ".[dev]"`;
-3. `python -m pytest -q`;
-4. `python -m bolsa.main`.
+1. confirma a branch `dev` e executa `git pull --ff-only` (salvo `-SkipPull`);
+2. instala as dependências de desenvolvimento com `-m pip install -e ".[dev]"` (salvo `-SkipInstall`);
+3. executa `-m ruff check src tests` e `-m pytest -q` (ambos omitidos por `-SkipTests`);
+4. inicia `-m bolsa.main`.
 
 Se algum passo falhar, o script pára e não executa os seguintes.
 
@@ -487,3 +489,7 @@ Remover um ticker da Watchlist elimina apenas a associação em `watchlist_items
 ### I3 — Inclusão responsável de PDFs
 
 A regra global `*.pdf` foi removida do `.gitignore` para permitir documentação técnica legítima em PDF. Continuam ignoradas pastas `statements/`, `extracts/`, `extratos/` e os padrões financeiros privados já existentes. Antes de adicionar PDFs, confirmar que não contêm informação pessoal, credenciais ou posições reais. Decisão de desenho aprovada em 2026-10-11; implementação à espera de validação final.
+
+### I5 — Coerência entre run.ps1 e Python local (2026-10-11)
+
+Depois da aprovação do desenho, o script passou a preferir o executável da `.venv` local, sem a criar nem exigir. Mantém o fallback para `python` do PATH e a proteção da branch `dev`; usa um só interpretador em todos os comandos Python. O Ruff foi acrescentado à fase de testes, com paragem em caso de erro. `-SkipTests` ignora tanto Ruff como pytest, sem alterar as restantes opções. **Implementado, pendente de validação funcional no Windows pelo utilizador.**
