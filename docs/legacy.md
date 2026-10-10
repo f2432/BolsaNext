@@ -1,5 +1,7 @@
 # Projeto anterior — inventário
 
+Este inventário é exclusivamente **histórico**: tecnologias e funcionalidades abaixo pertencem ao projeto anterior `Bolsa`, não à execução atual do BolsaNext V0.2.
+
 ## Repositório
 
 Projeto anterior: `f2432/Bolsa`.
