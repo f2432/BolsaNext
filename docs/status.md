@@ -7,7 +7,7 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 ## Leitura rápida: estado vigente (2026-10-10)
 
-A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3 e B1–B9 estão concluídos e validados; **B10 está em implementação documental e aguarda validação**; I1–I5 e B11 ainda são obrigatórios. A V0.3 não começou. A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
+A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3, B1–B10 e I1–I5 estão concluídos e validados; **B11 está em auditoria final, ainda por validar e integrar**. Consultar `docs/b11-final-audit.md` para as evidências verificadas e as métricas ainda pendentes. A V0.3 não começou. A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
 
 ## Estado global
 
@@ -727,3 +727,5 @@ Validação expressa I3 e I4 (2026-10-11): o utilizador confirmou concordância 
 I5, complemento de arranque Windows (2026-10-11): criado `run.cmd` na raiz da `dev`, que chama `run.ps1` via PowerShell com `-NoProfile -ExecutionPolicy Bypass -File` no processo filho e encaminha argumentos. Não altera a política persistente do Windows, mas essa sessão usa Bypass e políticas organizacionais podem impedir a execução. `run.ps1` mantém o fluxo, venv opcional e Ruff. **I5 continua por validar localmente.**
 
 Validação I5 (2026-10-11): o utilizador confirmou que `run.cmd` executou corretamente no Windows. **I5 CONCLUÍDO E VALIDADO**; o arranque via `run.cmd`, seleção opcional da `.venv` e sequência Ruff/pytest/aplicação foram aceites no teste funcional. **I1–I5 CONCLUÍDOS E VALIDADOS.** Abre-se B11 para revisão final de suite, cobertura, CI, diff desde S0, documentação, pendências e autorização final. Não integrar na `main`, nem criar `v0.2.0`, sem autorização explícita posterior.
+
+B11, auditoria de fecho (2026-10-11): relatório verificável em `docs/b11-final-audit.md`. Comparação `main...dev`: 291 commits à frente, zero atrás na consulta anterior aos commits deste relatório; CI #390 Linux 3.12 e Windows 3.14, Ruff e pytest aprovados. Baseline S0: 39 testes e 55%; **contagem e cobertura atuais ainda por recolher**. A auditoria está documentada, **B11 ainda não está CONCLUÍDO E VALIDADO**; a `main` e `v0.2.0` permanecem intactas.
