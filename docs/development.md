@@ -503,3 +503,27 @@ Validação I5 (2026-10-11): o utilizador confirmou que `run.cmd` executou corre
 ### V0.3 Portfolio — critérios de testes definidos no A1 (2026-10-11)
 
 A1 aprovado e apenas documental. Antes da interface gráfica de Portfolio, escrever testes de domínio com resultados numéricos exatos para compras, reforços, vendas parciais/totais, comissões, dividendos (bruto - retenção - outros encargos = líquido), ajustes auditáveis, correção/substituição, anulação sem eliminação do registo e recálculo integral do ledger válido. Incluir persistência/recuperação e ausência de efeitos de versões anuladas ou substituídas. Detalhar os valores e fórmulas no A2; precisão e arredondamento no A3; conversões FX no A4. Não criar código nem testes prematuros antes destas decisões.
+
+
+### V0.3 — Testes obrigatórios acordados no A2 (2026-10-11)
+
+Especificação de testes, **não execução nem implementação**. As asserções financeiras compararão `Decimal` com valores exatos segundo as regras a fixar no A3, sem tolerâncias de float para dinheiro.
+
+| Caso | Resultado esperado |
+|---|---|
+| BUY 10 × 100 EUR, comissão 5 EUR | Custo 1005 EUR; média 100,50 EUR |
+| Reforço BUY 10 × 120 EUR, comissão 5 EUR | Q=20; C=2210 EUR; média=110,50 EUR |
+| SELL 8 × 130 EUR, comissão 4 EUR, após as duas BUY | PnL realizado +152 EUR; Q=12; C=1326 EUR; média=110,50 EUR |
+| Venda completa da posição | Q=0 e C=0 exatos; compra posterior cria nova média |
+| SELL com q > Q | Erro de domínio; zero alteração persistida |
+| DIVIDEND bruto 50, retenção 7,50, encargos 1 EUR | Líquido=41,50 EUR; sem modificar Q/média |
+| Split 2:1 de Q=10 e C=1000 EUR | Q=20, C=1000 EUR, média=50 EUR, sem PnL realizado |
+| BUY 10 × 100, BUY 10 × 120, SELL 5 × 130, sem comissões | Média 110; PnL realizado 100 |
+| Corrigir primeira BUY para 10 × 110 no exemplo anterior | Média 115; PnL realizado 75; Q=15 e C=1725 |
+| BUY 10, SELL 8, tentar corrigir BUY para 5 | Rejeição atómica; histórico eficaz inalterado |
+| Anulação que torna venda posterior impossível | Rejeição atómica e preservação de histórico |
+| Transações com instante coincidente | Resultado determinístico por sequência conhecida ou desempate persistente; aviso quando ambíguo |
+| Reconstrução após reiniciar a aplicação | Resultados numéricos idênticos aos reconstruídos antes |
+| Ausência de câmbio indispensável | Não produzir total em moeda base aparentemente válido |
+
+Cobrir igualmente versões substituídas/anuladas sem impacto nos cálculos, preservação de auditoria, validação integral em alterações retroativas, quantidades fracionadas e proteção transacional SQLite. O cenário de splits complexos só fica autorizado após definição e teste de categorias específicas. A3/A4 fixarão casos adicionais de precisão e de FX. Testes numéricos de domínio antecedem qualquer interface gráfica de Portfolio.
