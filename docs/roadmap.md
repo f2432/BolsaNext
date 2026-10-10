@@ -250,3 +250,7 @@ Ações e ETFs long-only, incluindo quantidades fracionadas; ledger íntegro com
 ### Progresso A4 e A5 da V0.3 (2026-10-11)
 
 A4 **CONCLUÍDO E VALIDADO na especificação**: direção FX explícita, separação histórico/atual, `FxRateProvider` implementável inicialmente com yfinance, inversão testável, valores XTB preservados, valorização em moeda base, controlo de antiguidade e indisponibilidade sem totais falsamente completos. **A5 EM DISCUSSÃO**: aprovado que a moeda base pertence à carteira e que a configuração global apenas a predefine; mudanças de moeda exigem operação controlada, ainda por especificar. A1–A4 não representam implementação. A7/A8 pendentes. `main` e tag `v0.2.0` mantêm a versão publicada.
+
+### Progresso A5 da V0.3 (2026-10-11)
+
+**A5 CONCLUÍDO E VALIDADO funcionalmente**, sem implementação: `Portfolio.base_currency` é a autoridade por carteira, com moeda imutável após criação na V0.3; `AppConfig.default_base_currency` apenas preenche a criação de novas carteiras. Moedas normalizadas ISO 4217, múltiplas carteiras em moedas distintas e migração da antiga configuração com preservação e validação explícita. **Próximo: A7** (backup e recuperação, exportação canónica, importação atómica, duplicados e relatório); A6 resolvido na V0.2; A8 ainda por discutir. A V0.2.0 publicada em `main` permanece intacta.
