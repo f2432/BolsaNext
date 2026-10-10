@@ -1257,3 +1257,21 @@ Se faltar preço atual, FX necessário ou outro dado indispensável, mostrar a p
 ### Decisões relacionadas
 
 A5: autoridade de `Portfolio.base_currency`, com `AppConfig.default_base_currency` apenas como predefinição de criação; alteração de moeda numa carteira existente exige operação explícita e controlada, jamais implícita (decisões iniciais A5 já confirmadas, restantes efeitos por decidir). A7: import/export e metadados de origem. A8: divergências com XTB e reconciliação; sem classificação presumida. O A4 não adiciona código, migrações nem campos.
+
+## A5 — Autoridade e imutabilidade da moeda base (validado, 2026-10-11)
+
+**Especificação funcional aprovada, sem implementação.** A propriedade `Portfolio.base_currency` é a **única autoridade** sobre a moeda base de uma carteira persistida. A configuração global `AppConfig.default_base_currency` serve **exclusivamente para preencher o valor inicial no formulário de criação**; o utilizador pode escolher outra moeda antes de guardar. Uma mudança posterior da predefinição global nunca modifica carteiras existentes nem reavalia os seus custos/resultados.
+
+A V0.3 permite coexistirem carteiras com moedas base diferentes. Os códigos de moeda devem ser normalizados e validados segundo **ISO 4217**, com catálogo extensível e controlo de moedas efetivamente suportadas. Um código reconhecido não garante que o fornecedor FX tenha cotação para esse par; nessa situação aplicam-se os estados de indisponibilidade do A4, sem totais inválidos.
+
+**Imutabilidade:** após a criação, a moeda base da carteira não é editável na V0.3, mesmo que não haja operações. UI, domínio e repositórios devem impedir a alteração acidental; a autoridade não pode depender só de um campo bloqueado na interface. Uma eventual mudança de moeda requer funcionalidade **futura, explícita, controlada e auditável**, com backup e recálculo/reconciliação do histórico; não é implementada na V0.3. A moeda de cada transação mantém o significado e os câmbios históricos imutáveis do A4. Ao abrir uma carteira, utilizar sempre a moeda persistida, nunca reler a predefinição para a substituir.
+
+### Compatibilidade com a configuração V0.2
+
+Renomear futuramente `AppConfig.base_currency` para `AppConfig.default_base_currency`, preservando o valor anterior quando existir e for válido. Na ausência de valor anterior, usar **EUR** como predefinição. Configuração anterior inválida: erro identificado, **sem substituir silenciosamente por EUR**. Não manter em paralelo duas origens de verdade, não criar nem alterar carteiras ao migrar esta configuração. O mecanismo concreto de compatibilidade depende da inspeção da implementação existente antes de escrever código.
+
+### Critérios de aceitação
+
+Criar carteiras com moedas distintas; alteração global só afeta novas criações; persistência e recuperação conservam a moeda; tentativa de edição de carteira existente falha sem mutação; validação de ISO 4217 e moeda suportada; migração de configuração antiga válida conserva o valor; configuração antiga inválida não é silenciosamente ignorada; câmbio para posições respeita a moeda base persistida.
+
+**Estado:** A5 validado como especificação. A7 (import/export/backup e duplicados) e A8 (reconciliação) continuam sujeitos a decisão. Sem alteração de código, esquema SQLite ou dados nesta sessão.
