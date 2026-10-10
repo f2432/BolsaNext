@@ -473,3 +473,7 @@ O B9.5 documenta a estratégia, mas **não** declara cobertura completa de UI, c
 Validação B9.5 e fecho B9 (2026-10-10): o utilizador aprovou expressamente a estratégia documental de testes. **B9.5 CONCLUÍDO E VALIDADO** e **B9 (B9.1–B9.5) CONCLUÍDO E VALIDADO**. Próximo bloco: B10, auditoria de coerência canónica; primeiro analisar e propor correções sem alterar documentos antes da validação do desenho. Os itens avulsos I1–I5 e o fecho B11 continuam obrigatórios. A `main` e a tag `v0.2.0` permanecem intocadas.
 
 Validação B10 (2026-10-11): o utilizador confirmou expressamente a revisão documental. **B10 CONCLUÍDO E VALIDADO**. Os itens avulsos I1–I5 permanecem obrigatórios antes do fecho B11. Próximo passo: analisar o I1 (escrita atómica da cache de universos), sem implementar antes da validação do desenho. `main` e tag `v0.2.0` permanecem intocadas.
+
+### Verificação I1 — Escrita atómica da cache
+
+Na `dev`, executar `git pull --ff-only origin dev`, `python -m ruff check src tests` e `python -m pytest -q`; verificar jobs Linux/Windows. Em funcionamento normal, os universos devem carregar e reutilizar cache como antes. Os testes de regressão em `tests/unit/test_cached_universe_provider.py` simulam falhas na gravação e na substituição, exigindo preservação do JSON anterior e ausência de ficheiros temporários residuais. I1 só fica validado depois da confirmação do utilizador.
