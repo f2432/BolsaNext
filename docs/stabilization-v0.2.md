@@ -2224,3 +2224,11 @@ Estado: **CONCLUÍDO E VALIDADO** (2026-10-09).
 Desenho validado pelo utilizador: cache efémera de `PriceSnapshot(price, obtained_at)` no `WatchlistService`, protegida pelo `RLock` existente. Timestamp UTC por preço obtido; `WatchlistRow.price_updated_at` expõe frescura. `rows()` reutiliza preços sem contactar Yahoo; `rows(refresh_prices=True)` atualiza cada entrada com sucesso, conserva preços e timestamps antigos em falha e mantém avisos. `refresh_metadata()` não apaga preços. Remoção bem-sucedida elimina a entrada; reintrodução e reinício começam sem preços. UI mostra hora da atualização/últimos preços em memória, sem nova coluna nem semáforos visuais. Sem alteração ao schema, Alembic, repository ou dependências. Testes de regressão adicionados em `tests/unit/test_watchlist_service.py`.
 
 Commits de implementação: `dd6a63e`, `3b713b2`, `08610f2`. Validação local concluída pelo utilizador em 2026-10-09: suite e testes funcionais correram como esperado. **B8.3 CONCLUÍDO E VALIDADO.** Resultado numérico do CI não confirmado nesta atualização. Próximo sub-bloco: B8.4. A `main` e a tag `v0.2.0` permanecem intocadas.
+
+### B8.4 — Validação realista de tickers (registo de implementação)
+
+Estado: **IMPLEMENTADO EM `dev`, AGUARDA TESTES CI E VALIDAÇÃO LOCAL** (2026-10-10).
+
+O desenho foi aprovado antes da implementação. O padrão de `Instrument` foi ajustado para exigir conteúdo alfanumérico, admitir prefixo `^` de índices, segmentos separados por `.` ou `-`, `_` nos segmentos e sufixos Yahoo `=X`, `=F` e semelhantes com uma letra. Exclui apenas estruturas manifestamente malformadas como pontuação isolada, separadores consecutivos e `^` noutras posições. A normalização anterior (`strip`, `upper`), limite de 32 caracteres, tratamento de espaços e distinção entre sintaxe e existência no Yahoo ficam preservados. Nenhuma alteração ao provider, Application, UI, SQLite, Alembic ou dependências.
+
+Foram adicionados testes parametrizados em `tests/unit/test_instrument.py`, preservando os testes anteriores. Revisão estrutural dos novos casos realizada; suite Python completa e CI ainda não confirmados. Não assinalar CONCLUÍDO E VALIDADO até confirmação local do utilizador. Próximo passo depois da validação: B8.5. A `main` e tag `v0.2.0` continuam intocadas.
