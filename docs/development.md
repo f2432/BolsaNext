@@ -527,3 +527,9 @@ Especificação de testes, **não execução nem implementação**. As asserçõ
 | Ausência de câmbio indispensável | Não produzir total em moeda base aparentemente válido |
 
 Cobrir igualmente versões substituídas/anuladas sem impacto nos cálculos, preservação de auditoria, validação integral em alterações retroativas, quantidades fracionadas e proteção transacional SQLite. O cenário de splits complexos só fica autorizado após definição e teste de categorias específicas. A3/A4 fixarão casos adicionais de precisão e de FX. Testes numéricos de domínio antecedem qualquer interface gráfica de Portfolio.
+
+### V0.3 — Contratos de testes do A3 (validado, 2026-10-11)
+
+**Apenas especificação, sem código novo.** Testar: `Decimal` direto a partir de texto decimal (sem passar por float); rejeição de NaN/infinito e de valores que excedam 18 algarismos inteiros; escalas até 8 casas para quantidade/preço/comissão/retenção/montante e 12 casas para FX, com erro explícito por excesso em vez de truncagem; validação de sinais por campo; arredondamento `ROUND_HALF_EVEN` nos pontos explicitamente definidos; cálculo interno a 50 algarismos significativos; quantidades fracionadas; dízimas e custo médio derivado; venda total sem resíduo; resultados determinísticos após repetição do cálculo.
+
+Testar ainda o round-trip `Decimal → SQLite TEXT canónico → Decimal` sem diferença numérica, incluindo representações com zeros finais; rejeitar passagem acidental por SQLite REAL/float; manter o texto original do extrato quando necessário para auditoria. Para market data float, testar validação e conversão explícita (`Decimal(str(value))`) sem alegar recuperação de precisão original. A reprodução de um valor monetário confirmado da XTB deve preservá-lo e sinalizar divergências face ao cálculo, **sem resolver a política de prevalência contabilística antes de A4/A8**. Não calcular PnL fiscal nesta fase.
