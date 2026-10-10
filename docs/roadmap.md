@@ -96,7 +96,7 @@ Plano detalhado e matriz de rastreio: `docs/stabilization-v0.2.md`.
 
 ## V0.3 — Portfolio
 
-**Estado: POR INICIAR E BLOQUEADA PELO GATE DE ESTABILIZAÇÃO V0.2.**
+**Estado: ESPECIFICAÇÃO EM CURSO.** A V0.2.0 foi integrada e publicada; **A1 (âmbito funcional) concluído e validado em 2026-10-11**. A2–A5, A7 e A8 aguardam decisões, sem código Portfolio implementado.
 
 - entidade `Portfolio`;
 - entidade `Transaction`;
@@ -237,3 +237,7 @@ O módulo deve poder evoluir sem depender de execução automática de ordens.
 - instalação reproduzível;
 - revisão de segurança e privacidade;
 - limpeza final da interface.
+
+### Decisões A1 validadas (2026-10-11)
+
+Ações e ETFs long-only, incluindo quantidades fracionadas; ledger íntegro como origem da verdade; BUY/SELL; DIVIDEND manual com bruto/retenção/encargos/líquido; ADJUSTMENT manual auditável; correção por substituição rastreável e anulação lógica sem apagar originais. Sem derivados, margem, automatismos societários/fiscais, caixa nem ligação direta a brokers nesta fase. Modelos extensíveis para tipos futuros sem implementação prematura. Consultar `docs/architecture.md`, secção **Âmbito da V0.3 — Portfolio**, para contratos e questões a fechar no A2–A5, A7 e A8.
