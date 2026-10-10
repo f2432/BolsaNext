@@ -40,7 +40,6 @@ positions*.csv
 statements/
 extracts/
 extratos/
-*.pdf
 
 # Market data / caches
 data/*
