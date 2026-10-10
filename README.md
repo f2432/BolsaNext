@@ -37,7 +37,9 @@ A nova versão não pretende copiar diretamente a implementação antiga. As fun
 7. O projeto deve preservar espaço para evolução futura de IA, ensembles, explicabilidade e planeamento.
 8. Dados pessoais, posições reais, credenciais, caches e modelos treinados não são versionados.
 
-## Tecnologias previstas
+## Tecnologias atuais e previstas
+
+Na V0.2, o núcleo utiliza PySide6, pandas, SQLAlchemy, Alembic, yfinance, platformdirs e lxml. NumPy, scikit-learn, matplotlib e PyYAML encontram-se no extra opcional `analysis`, previsto para evolução futura; pytest, pytest-cov e Ruff fazem parte do extra `dev`. A lista seguinte inclui tecnologias atuais e planeadas, não sendo todas necessárias ao arranque.
 
 - Python 3.12+
 - PySide6
@@ -109,7 +111,7 @@ pytest
 bolsanext
 ```
 
-O projeto possui integração contínua através de GitHub Actions. Os testes são executados automaticamente em pushes e pull requests para `main`.
+O projeto possui integração contínua através de GitHub Actions. Os testes, a cobertura e o Ruff são executados em Linux/Python 3.12 e Windows/Python 3.14 em pushes e pull requests para `main` e `dev`.
 
 
 ## Documentação canónica
