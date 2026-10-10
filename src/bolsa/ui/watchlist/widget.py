@@ -18,6 +18,7 @@ from bolsa.domain.instruments import Instrument
 from bolsa.domain.watchlist import WatchlistState
 from bolsa.ui.table_preferences import enable_table_header_persistence
 from bolsa.ui.watchlist.operation_coordinator import WatchlistOperationCoordinator
+from bolsa.ui.watchlist.state_selection import recognised_state
 from bolsa.ui.workers import FunctionThread
 
 
@@ -299,11 +300,10 @@ class WatchlistWidget(QWidget):
             self._table.setCellWidget(row_index, 6, remove_button)
 
     def _change_state(self, ticker: str, state: str | None) -> None:
-        if self._coordinator.busy or not isinstance(state, str):
+        if self._coordinator.busy:
             return
-        try:
-            valid_state = WatchlistState(state)
-        except ValueError:
+        valid_state = recognised_state(state)
+        if valid_state is None:
             return
         self._service.set_state(ticker, valid_state)
 
