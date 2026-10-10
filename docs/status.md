@@ -656,3 +656,7 @@ Registo de validação B8.4 (2026-10-10): o utilizador confirmou que executou os
 **Implementado em `dev`, pendente de validação local.** Combobox do estado apresenta `Desconhecido` quando recebe valor sem correspondência, sem escolher outro estado automaticamente. Inicialização bloqueia sinais, e a conversão defensiva evita persistir valores inválidos. Regressões headless adicionadas. Sem alteração de schema ou domínio. B8 aguarda fecho local de B8.5.
 
 Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
+
+### B9.1 — Cobertura dos testes no GitHub Actions (2026-10-10)
+
+**Implementado em `dev`, por validar.** Workflow Linux/Python 3.12 mede cobertura com `pytest-cov` e produz relatório no log, `coverage.xml` e `htmlcov/` arquivados no GitHub Actions. Sem limiar obrigatório. Cobertura e número de testes efetivos devem ser recolhidos do novo run; não foram inventados. Próximo passo após validação: B9.2.
