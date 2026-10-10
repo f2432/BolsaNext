@@ -2309,3 +2309,7 @@ Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou
 ### I3 — Restringir .gitignore sem bloquear PDFs legítimos (2026-10-11)
 
 **IMPLEMENTADO EM `dev`, POR VALIDAR.** Após aprovação expressa do utilizador, eliminada a linha isolada `*.pdf` do `.gitignore`, sem alterar outras regras. As exclusões de pastas de extratos, statements e CSV financeiros continuam ativas; PDFs técnicos em diretórios não ignorados tornam-se adicionáveis ao Git, sujeitos a revisão para evitar dados pessoais. Não alterar código nem executar `git add` sobre quaisquer ficheiros pessoais. Próximo item I4: apresentar opções de licença e esperar decisão do utilizador, sem criar LICENSE antecipadamente. I5 e B11 permanecem pendentes.
+
+### I4 — Licença GPL-3.0 (2026-10-11)
+
+Após escolha explícita do utilizador por GPL-3.0, adicionado `LICENSE` com o texto integral oficial da GNU GPL versão 3, proveniente do repositório SPDX `license-list-data` (`text/GPL-3.0-only.txt`). A escolha foi operacionalizada como **GPL-3.0-only**, sem cláusula "or later"; a distinção é declarada no README. O texto integral da licença não foi reescrito nem abreviado. **IMPLEMENTADO EM `dev`, PENDENTE DE VALIDAÇÃO FINAL.** Não se alterou código. I5 (`run.ps1`/venv) será analisado separadamente; B11 mantém-se condicionado ao fecho de todos os itens e à autorização explícita.
