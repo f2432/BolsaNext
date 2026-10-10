@@ -9,23 +9,27 @@ description = "Plataforma pessoal de análise de investimentos"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "PySide6",
-    "pandas",
-    "numpy",
-    "SQLAlchemy",
-    "alembic",
-    "yfinance",
-    "platformdirs",
-    "scikit-learn",
-    "matplotlib",
-    "PyYAML",
-    "lxml",
+    "PySide6>=6.7",
+    "pandas>=2.2",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "yfinance>=0.2.40",
+    "platformdirs>=4",
+    # pandas.read_html() uses lxml to parse Wikipedia universe tables.
+    "lxml>=5",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-cov",
+    "pytest>=8",
+    "pytest-cov>=5",
+]
+# Future analysis/AI dependencies; not required to run the V0.2 app.
+analysis = [
+    "numpy>=1.26",
+    "scikit-learn>=1.6",
+    "matplotlib>=3.8",
+    "PyYAML>=6",
 ]
 
 [project.scripts]
