@@ -272,7 +272,14 @@ class WatchlistWidget(QWidget):
             state_combo = QComboBox()
             for state, label in _STATE_LABELS.items():
                 state_combo.addItem(label, state.value)
-            state_combo.setCurrentIndex(state_combo.findData(row.state.value))
+            state_combo.blockSignals(True)
+            state_value = getattr(row.state, "value", row.state)
+            state_index = state_combo.findData(state_value)
+            if state_index == -1:
+                state_combo.addItem("Desconhecido", None)
+                state_index = state_combo.count() - 1
+            state_combo.setCurrentIndex(state_index)
+            state_combo.blockSignals(False)
             state_combo.setEnabled(controls_enabled)
             state_combo.currentIndexChanged.connect(
                 lambda _index, ticker=row.ticker, combo=state_combo: (
@@ -291,10 +298,14 @@ class WatchlistWidget(QWidget):
             )
             self._table.setCellWidget(row_index, 6, remove_button)
 
-    def _change_state(self, ticker: str, state: str) -> None:
-        if self._coordinator.busy:
+    def _change_state(self, ticker: str, state: str | None) -> None:
+        if self._coordinator.busy or not isinstance(state, str):
             return
-        self._service.set_state(ticker, WatchlistState(state))
+        try:
+            valid_state = WatchlistState(state)
+        except ValueError:
+            return
+        self._service.set_state(ticker, valid_state)
 
     def _remove_ticker(self, ticker: str) -> None:
         if self._coordinator.busy:
