@@ -761,3 +761,9 @@ O utilizador aprovou integralmente a especificação funcional **A3 — Tipos nu
 **A5 — EM DISCUSSÃO. Duas decisões iniciais aprovadas:** `Portfolio.base_currency` é a autoridade após criação e `AppConfig.default_base_currency` só define o valor inicial de novas carteiras. Alterar moeda de carteira existente exige **operação explícita e controlada**, nunca alteração silenciosa decorrente da configuração global. Efeitos sobre histórico/custos, requisitos de conversão, validade, backup e eventual imutabilidade da moeda **ainda não decididos**. Não declarar A5 validado neste momento.
 
 **Estado vigente:** A1–A4 concluídos e validados a nível de especificação; A5 em análise; A7/A8 posteriores. Nenhum código Portfolio, migração ou schema alterado, e `main`/`v0.2.0` intactas.
+
+## V0.3 — A5 concluído e validado (2026-10-11)
+
+O utilizador aprovou **A5 — Propriedade da moeda base**, ao nível da especificação: `Portfolio.base_currency` é a autoridade persistente; `AppConfig.default_base_currency` apenas sugere o valor inicial de novas carteiras, permitindo a escolha pelo utilizador. Na V0.3, a moeda base é imutável **após criação**, e qualquer futura migração será explícita, controlada e auditável; mudar a configuração global nunca altera carteiras existentes. Moedas ISO 4217 normalizadas, com validação de códigos suportados. Migração da configuração antiga preserva valor válido; EUR somente se ausente; erro identificável em valor inválido. Detalhes em `docs/architecture.md` e plano de testes em `docs/development.md`.
+
+**Estado vigente:** A1–A5 concluídos e validados **como especificação**, A6 já tratado na estabilização da V0.2; **A7 — Backup, exportação, importação e duplicados** é o próximo bloco, mantendo a política D2/A7.1 já validada. A8 continua pendente. Nenhum código Portfolio/schema ou ficheiro na `main`/`v0.2.0` alterado neste bloco.
