@@ -670,3 +670,5 @@ Validação B9.2 (2026-10-10): o utilizador confirmou a conclusão da verificaç
 ### B9.3 — Dependências e versões (2026-10-10)
 
 **IMPLEMENTADO EM `dev`, PENDENTE DE VALIDAÇÃO.** Core reduzido a sete dependências diretas necessárias à V0.2, preservando explicitamente `lxml` para `pandas.read_html`. `numpy`, `scikit-learn`, `matplotlib` e `PyYAML` agrupadas em `analysis` opcional. Adicionados limites mínimos conservadores em `pyproject.toml` e registo das versões instaladas no CI. Não introduzidos limites máximos arbitrários nem lockfile. Validar jobs Linux/Windows e arranque local antes do fecho; B9.4 ainda por iniciar.
+
+Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador. **B9.3 CONCLUÍDO E VALIDADO**. Próximo bloco B9.4 (Ruff), ainda não implementado. `main` e a tag `v0.2.0` permanecem intactas.
