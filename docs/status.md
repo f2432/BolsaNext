@@ -1,8 +1,13 @@
 # Estado atual do projeto
 
-Última atualização canónica: 2026-10-05.
+Última atualização canónica: 2026-10-10.
 
 Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o destino; este ficheiro define o ponto em que o projeto se encontra agora.
+
+
+## Leitura rápida: estado vigente (2026-10-10)
+
+A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3 e B1–B9 estão concluídos e validados; **B10 está em implementação documental e aguarda validação**; I1–I5 e B11 ainda são obrigatórios. A V0.3 não começou. A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
 
 ## Estado global
 
