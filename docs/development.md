@@ -436,3 +436,39 @@ Instalar dependências de desenvolvimento (`python -m pip install -e ".[dev]"`) 
 Após a primeira auditoria foi removido o único import não utilizado (`F401`) identificado no teste de integração `test_schema_migrations.py`. O passo agora designado `Ruff lint` executa `python -m ruff check src tests` e **falha o job** caso existam violações; deixou de ter `continue-on-error`. Validar no GitHub Actions os jobs Linux e Windows, o passo Ruff e a suite pytest. Executar localmente `python -m ruff check src tests` e `python -m pytest -q`. A introdução do Ruff só será marcada CONCLUÍDA E VALIDADA após confirmação do utilizador.
 
 Validação B9.4 (2026-10-10): GitHub Actions execução #336, commit `bc61f9dd`, concluída com sucesso em Linux/Python 3.12 e Windows/Python 3.14; em ambos, `Ruff lint` e `Run tests with coverage` terminaram com `success`. O utilizador apresentou a execução bem-sucedida. **B9.4 CONCLUÍDO E VALIDADO**. B9.5, estratégia futura de testes, é o próximo sub-bloco, ainda por implementar. `main` e tag `v0.2.0` permanecem inalteradas.
+
+## B9.5 — Estratégia de testes para as próximas versões
+
+Esta secção define critérios futuros; não implica implementar funcionalidades nem aumentar automaticamente o número de testes na V0.2. O estado da execução de cada bloco é registado em `docs/stabilization-v0.2.md` e `docs/status.md`.
+
+### Base existente na V0.2
+
+A árvore de testes da branch `dev` já separa `tests/unit/` e `tests/integration/`. Existem testes de domínio (`Instrument`, `Watchlist`, universos), serviços e providers simulados (`WatchlistService`, `MarketService`, Yahoo, Wikipedia, cache de universos), contratos/coordenação da interface, configuração e versão, além de integração de SQLite, repository, localização/migração de dados e Alembic. Estes ficheiros demonstram a existência dos cenários de teste, não comprovam cobertura total de cada funcionalidade. Parte da UI é verificada por contratos e componentes headless; não existe garantia de testes end-to-end completos de PySide6.
+
+O CI executa `python -m ruff check src tests` e `python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov` em Linux/Python 3.12 e Windows/Python 3.14. Os artefactos de cobertura são separados por ambiente; não se impõe um limiar percentual. O ponto de partida histórico do gate era 39 testes e cerca de 55% de cobertura; não interpretar estes números como métricas atuais.
+
+### Critérios gerais para novas funcionalidades
+
+1. **Domínio e cálculos financeiros.** Preferir testes unitários determinísticos para invariantes, arredondamentos, moedas, valores nulos, erros e fronteiras. Na V0.3, posições devem resultar das transações e os cálculos de preço médio, PnL e comissões devem ser comparados com exemplos numéricos construídos manualmente. Não substituir testes com valores esperados por uma mera verificação de que o código executou.
+2. **Persistência e migrações.** Testar integração com bases SQLite temporárias e isoladas: criar, ler, atualizar, reiniciar, rollback, integridade referencial e evolução de schema. Garantir sempre que bases e backups reais do utilizador nunca são usados pelos testes. Para cada nova migração Alembic, testar base nova, upgrade a partir da revisão anterior e recusa segura de revisão incompatível, quando aplicável. Não apagar instrumentos órfãos como efeito indireto de testes ou limpezas.
+3. **Integração de serviços e fronteiras.** Testar com doubles/fakes que implementem os ports. Abranger sucesso, ausência de informação, formatos inesperados, indisponibilidade e recuperação, distinguindo falhas de provider de estados de negócio. Proibir dependência de respostas atuais do Yahoo/Wikipedia na suite obrigatória; testes reais de rede, se criados, devem ser opcionais e explicitamente separados do CI.
+4. **Interface PySide6.** Manter testes headless para a lógica e contratos sem QtWidgets sempre que possível. Em futuras funcionalidades com risco de regressão visual ou de sinais, introduzir testes Qt específicos em ambiente controlado, verificando inicialização sem escrita, estados desconhecidos, seleção, bloqueio durante operações e comportamento de erros. Não adicionar teste de interface apenas para obter uma percentagem.
+5. **Concorrência e cache.** Testar coordenação de tarefas em background, prevenção de atualizações concorrentes, preservação do último valor conhecido e ausência de alterações persistentes inesperadas. Usar sincronização determinística em vez de `sleep` ou temporizações frágeis.
+6. **Análise, estratégias e backtesting (V0.4–V0.6).** Testar indicadores com séries artificiais e valores de referência, dados em falta, alinhamento temporal, custos, slippage e ausência de antecipação de dados. Um backtest não pode utilizar informação futura nas decisões anteriores.
+7. **IA (V0.8 e posteriores).** Validar divisões cronológicas, ausência de leakage entre treino/validação/teste, ajuste de transformações apenas no treino, reprodutibilidade de seeds e versões, baselines, métricas fora da amostra e calibração. Nunca aceitar apenas accuracy agregada como demonstração de utilidade económica. Preservar a distinção entre previsão, classificação/ranking e decisão.
+8. **Regressões.** Cada bug corrigido deve ganhar, quando viável, um teste que falhe antes da correção e passe depois. As novas funcionalidades devem contemplar cenários normais, limites e erros. Os testes não devem depender da ordem de execução nem modificar ficheiros do utilizador.
+
+### Critérios de verificação por fase
+
+- **Antes de integrar mudanças em `dev`:** executar os testes relevantes, `python -m ruff check src tests` e rever o diff.
+- **Antes de declarar um bloco validado:** suite completa e CI Linux/Windows aprovados, mais validação funcional Windows do utilizador quando houver comportamento da aplicação; documentar exceções e testes não executados.
+- **No fecho B11:** recolher número efetivo de testes e percentagem de cobertura, comparar com o baseline S0, identificar módulos pouco testados e confirmar que não houve perda injustificada de cobertura. A cobertura é indicador diagnóstico, não objetivo isolado.
+- **Antes de cada versão futura:** atualizar a matriz de risco e respetivos testes quando surgirem novas operações de carteira, cálculos, migrações, UI ou modelos; evitar mecanismos de teste complexos antes de serem necessários.
+
+### Adoção de ferramentas
+
+O conjunto atual `pytest`, `pytest-cov` e `ruff` é suficiente para este ciclo. `pytest-qt`, testes de propriedades ou bibliotecas adicionais poderão ser avaliados apenas quando uma funcionalidade concreta justificar o custo. Não se introduzem dependências, testes nem alterações funcionais neste B9.5.
+
+### Situações pendentes e fronteiras
+
+O B9.5 documenta a estratégia, mas **não** declara cobertura completa de UI, cargas de rede, sistemas operativos ou dados de produção. A avaliação das advertências GitHub Actions relativas a Node.js 20 e à mudança de `ubuntu-latest` permanece uma ação de manutenção/fecho a acompanhar, sem a confundir com validação de código Python. A revisão global de coerência dos documentos cabe ao B10, e a medição final com valores efetivos cabe ao B11.
