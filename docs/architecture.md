@@ -1103,3 +1103,7 @@ Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que 
 ### Matriz de compatibilidade do CI (B9.2, pendente de validação)
 
 A suite automática preserva o runtime de referência Linux/Python 3.12 e acrescenta Windows/Python 3.14 com execução independente (`fail-fast: false`). São apenas ambientes de testes, sem alterar a arquitetura de aplicação ou impor alterações à plataforma de dados. O caso particular de Windows App Control do computador local não é uma característica exigida do runner de CI.
+
+### Dependências runtime e opcionais (B9.3)
+
+O conjunto mínimo declarado para executar V0.2 é PySide6, pandas, SQLAlchemy, alembic, yfinance, platformdirs e lxml. A análise de universos baseada em Wikipedia usa `pandas.read_html` e mantém lxml como dependência explícita. Bibliotecas previstas para análise/IA futura são organizadas no extra opcional `analysis` e não são importadas pelo fluxo principal da V0.2. A arquitetura e os modelos de dados não se alteram nesta sessão. Estado B9.3: implementação sujeita a confirmação dos testes Linux/Windows e execução local.
