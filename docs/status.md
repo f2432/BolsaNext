@@ -686,3 +686,5 @@ Validação B9.4 (2026-10-10): GitHub Actions execução #336, commit `bc61f9dd`
 ### B9.5 — Estratégia futura de testes (2026-10-10)
 
 **IMPLEMENTADO DOCUMENTALMENTE EM `dev`, POR VALIDAR PELO UTILIZADOR.** `docs/development.md` passa a explicitar a base de testes existente, políticas para domínio/cálculos, SQLite/Alembic, ports/providers, UI PySide6, concorrência, backtesting e IA temporal, critérios de regressão e gates para CI/fecho B11. Não foram criados testes, dependências ou funcionalidades. As métricas atuais da cobertura não foram inferidas da baseline histórica. B9 só fecha formalmente após validação deste sub-bloco.
+
+Validação B9.5 e fecho B9 (2026-10-10): o utilizador aprovou expressamente a estratégia documental de testes. **B9.5 CONCLUÍDO E VALIDADO** e **B9 (B9.1–B9.5) CONCLUÍDO E VALIDADO**. Próximo bloco: B10, auditoria de coerência canónica; primeiro analisar e propor correções sem alterar documentos antes da validação do desenho. Os itens avulsos I1–I5 e o fecho B11 continuam obrigatórios. A `main` e a tag `v0.2.0` permanecem intocadas.
