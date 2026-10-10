@@ -483,3 +483,7 @@ Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou
 ### I2 — Regra de persistência de instrumentos
 
 Remover um ticker da Watchlist elimina apenas a associação em `watchlist_items`. A entidade em `instruments` permanece intencionalmente, mesmo sem associações, para possível reutilização e para evitar perdas com as futuras relações de Portfolio. Não realizar limpeza automática de órfãos. O teste de integração `test_watchlist_repository_persists_removal` verifica esta regra. Decisão I2 validada pelo utilizador em 2026-10-11, sem alteração funcional ou migração.
+
+### I3 — Inclusão responsável de PDFs
+
+A regra global `*.pdf` foi removida do `.gitignore` para permitir documentação técnica legítima em PDF. Continuam ignoradas pastas `statements/`, `extracts/`, `extratos/` e os padrões financeiros privados já existentes. Antes de adicionar PDFs, confirmar que não contêm informação pessoal, credenciais ou posições reais. Decisão de desenho aprovada em 2026-10-11; implementação à espera de validação final.
