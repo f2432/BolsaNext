@@ -1275,3 +1275,32 @@ Renomear futuramente `AppConfig.base_currency` para `AppConfig.default_base_curr
 Criar carteiras com moedas distintas; alteração global só afeta novas criações; persistência e recuperação conservam a moeda; tentativa de edição de carteira existente falha sem mutação; validação de ISO 4217 e moeda suportada; migração de configuração antiga válida conserva o valor; configuração antiga inválida não é silenciosamente ignorada; câmbio para posições respeita a moeda base persistida.
 
 **Estado:** A5 validado como especificação. A7 (import/export/backup e duplicados) e A8 (reconciliação) continuam sujeitos a decisão. Sem alteração de código, esquema SQLite ou dados nesta sessão.
+
+## A7 — Formato canónico e importação (validado, 2026-10-11)
+
+**Especificação funcional aprovada pelo utilizador; sem implementação.** Mantém-se a política de backup prévio D2/A7.1, validada na estabilização V0.2, antes de operações destrutivas/migrações. Um backup completo SQLite e uma exportação de carteira são operações distintas: a exportação não substitui necessariamente o backup integral da aplicação.
+
+### Exportação e identidade
+
+O formato canónico de portabilidade de Portfolio será **JSON estruturado e versionado**, sem dependência do formato da XTB ou de outras corretoras. Deve permitir reconstruir integralmente a carteira, incluindo identidade/moeda base, instrumentos, ledger completo (BUY, SELL, DIVIDEND, ADJUSTMENT), correções, anulações, relações de auditoria, instantes/ordem de execução, câmbios históricos, proveniência e identificadores externos. Valores financeiros `Decimal` são serializados como **strings decimais exatas**; não passar por float. Identificadores técnicos SQLite não são identidades portáveis. Validar `format_version`, referências e integridade do histórico antes de importar. A estrutura JSON concreta e a compatibilidade entre versões serão desenhadas e testadas antes da implementação.
+
+Cada operação terá um **UUID canónico persistente** (`transaction_uid`) e, quando fornecida, identidade externa composta e contextualizada (origem, conta e `external_id`). UUIDs e ligações entre versões substituídas/anuladas sobrevivem a exportação/restauro. Transações economicamente idênticas podem ser legítimas e distintas: **fingerprints dos valores financeiros não provam duplicação** e apenas apoiam avisos. Coincidência de identidade com divergência de conteúdo é **conflito**, nunca autorização para substituição silenciosa. A identidade das operações é interpretada no âmbito correto de cada carteira, incluindo cópias independentes.
+
+### Importação e transação atómica
+
+A importação é obrigatoriamente **duas fases**: (1) validação integral e pré-visualização, sem mutações; (2) confirmação pelo utilizador e aplicação dentro de **uma única transação SQLite**, com reconstrução e verificação de todas as invariantes A1–A5 antes do commit. Erro, conflito não resolvido ou ledger inválido => **rollback total**, sem inserções parciais. Duplicados **comprovados** são ignorados e reportados, sem provocar inserções; conflitos são rejeitados, não resolvidos por sobreescrita.
+
+O relatório de pré-visualização e o relatório final distinguem **inseridas, ignoradas por duplicação comprovada, conflitos, rejeitadas com motivo e estado final** (concluída/sem alterações/rejeitada com rollback). Se ocorrer rollback, a contagem de inserções efetivamente confirmadas é zero. Uma segunda importação do mesmo ficheiro não duplica operações: **idempotência**. Informar casos em que duas transações com todos os valores iguais são legítimas e não devem ser colapsadas.
+
+### Restauro e cópias independentes
+
+- **Restauro numa carteira nova:** reconstruir integralmente ledger e auditoria. Se já existir UUID da carteira, resolver explicitamente a identidade antes da confirmação; nomes repetidos não provam mesma identidade.
+- **Importação complementar numa carteira existente:** exigir confirmação da carteira de destino, compatibilidade da moeda base imutável A5 e identificadores, sem eliminar ou reescrever operações existentes.
+- **Cópia independente:** atribuir **novo UUID à carteira**, registar a referência à origem e preservar identidade/proveniência histórica das operações no contexto da cópia. As cópias evoluem independentemente, nunca inserem movimentos adicionais na carteira original nem confundem duplicação entre carteiras.
+- **Substituição destrutiva integral de uma carteira existente:** explicitamente **excluída da V0.3**; qualquer recuperação integral da aplicação segue procedimento separado de backup e restauro controlado.
+
+### Validação, segurança e compatibilidade
+
+O JSON pode conter informação financeira pessoal: não exportar credenciais, tokens ou palavras-passe. Rejeitar conteúdo executável, formatos/versões não suportados, tamanhos incompatíveis, campos inconsistentes, relações de auditoria inválidas ou referências pendentes; nunca executar conteúdo importado. A importação não pode criar short selling, alterar moedas base persistidas nem violar os invariantes A2. A reconciliação com broker XTB e adaptadores de formatos externos ficam para decisões de A8 ou versões subsequentes, sem desvirtuar este formato canónico.
+
+**A7 CONCLUÍDO E VALIDADO como especificação.** Não foram criadas tabelas, migrações, testes nem funcionalidades de importação nesta fase.
