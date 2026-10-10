@@ -2244,3 +2244,13 @@ Desenho aprovado pelo utilizador. `WatchlistWidget` deixa de passar `findData() 
 Commits principais `a16bff7`, `af6c024`, `178d304`, `43cd06a`. Testes unitários do reconhecimento de estados acrescentados; a suite completa, CI e teste local aguardam confirmação. B8 só fecha depois da validação local explícita. Próximo bloco depois disso: B9. `main` e tag `v0.2.0` permanecem intactas.
 
 Registo de validação B8.5 e fecho B8 (2026-10-10): o utilizador confirmou que executou todos os testes locais e que tudo funcionou. **B8.5 CONCLUÍDO E VALIDADO** e **B8 (B8.1 a B8.5) CONCLUÍDO E VALIDADO**. Preservam-se integralmente os registos históricos e decisões anteriores. O bloco seguinte é B9 (CI, dependências e qualidade), ainda por executar. Não houve integração em `main` nem criação da tag `v0.2.0`.
+
+### B9 — Plano de execução aprovado (2026-10-10)
+
+O utilizador aprovou a divisão em B9.1 cobertura de testes, B9.2 CI Linux/Windows e triggers, B9.3 dependências/constraints, B9.4 Ruff e B9.5 estratégia futura de testes. Executar em sequência, com validação individual, preservando S0 e o fecho B11. Nenhum sub-bloco autoriza alteração em `main` ou criação da tag `v0.2.0`.
+
+#### B9.1 — Cobertura no CI
+
+Estado: **IMPLEMENTADO EM `dev`, A AGUARDAR RESULTADO CI E VALIDAÇÃO DO UTILIZADOR**.
+
+Em `.github/workflows/tests.yml`, o teste do job Linux/Python 3.12 passou a executar `python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov`. A percentagem e linhas por cobrir aparecem no log; o XML e o HTML são guardados por 14 dias como artefacto `coverage-python-3.12-ubuntu` via `actions/upload-artifact@v4`, com `if: always()` e aviso caso não existam ficheiros. Não foi estabelecido limiar mínimo, pois a primeira medição é diagnóstica. `pytest-cov` já estava em dependências de desenvolvimento. Foram preservados SO, Python 3.12 e triggers existentes; expansão de matriz/triggers fica exclusivamente para B9.2. Não há alteração de código funcional, testes ou base SQLite. Comparar com baseline S0 de 55% (39 testes), sem confundir a baseline histórica com cobertura atual. B9.1 só fecha após confirmação do workflow e validação do utilizador.
