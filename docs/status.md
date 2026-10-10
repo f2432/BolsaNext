@@ -644,3 +644,7 @@ Regras:
 **Implementado em `dev`, por validar localmente.** O `WatchlistService` mantém preços e respetivos instantes UTC apenas em memória durante a sessão. Refreshes posteriores da tabela/metadados conservam preços; erros individuais mantêm a última cotação válida com aviso; remover um ticker limpa a entrada da cache. A UI identifica a atualização e a memória da sessão. Não existe persistência de preços nem nova migração. Testes de regressão acrescentados. B8.3 permanece **PENDENTE DE VALIDAÇÃO**, B8.4/B8.5 ainda por iniciar; V0.3 continua bloqueada.
 
 Registo de validação B8.3 (2026-10-09): o utilizador confirmou que os testes locais e funcionais correram como esperado. **B8.3 CONCLUÍDO E VALIDADO**. Próximo passo B8.4, ainda não implementado. A `main` e a tag `v0.2.0` mantêm-se intocadas.
+
+### B8.4 — Validação sintática realista (2026-10-10)
+
+**Implementado em `dev`, a aguardar validação local.** O domínio `Instrument` rejeita símbolos constituídos apenas por pontuação e estruturas manifestamente malformadas sem rejeitar os formatos Yahoo já previstos (`^GSPC`, `BRK-B`, `ASML.AS`, `EURUSD=X`). Acrescentados testes de regressão parametrizados. Nenhum provider ou schema alterado. O bloco permanece pendente de validação e B8.5 ainda não foi iniciado.
