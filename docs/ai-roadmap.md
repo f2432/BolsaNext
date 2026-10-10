@@ -1,5 +1,7 @@
 # Roadmap de Inteligência Artificial
 
+O presente documento descreve investigação e funcionalidades **futuras**. Não representa módulos de IA operacionais na V0.2 e não autoriza iniciar a V0.3 antes do fecho B11.
+
 ## Objetivo
 
 A IA permanece uma área central de investigação do projeto, mas deve assentar numa base metodologicamente correta.
