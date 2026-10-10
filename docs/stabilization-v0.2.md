@@ -5,7 +5,7 @@
 
 ## Situação vigente do gate (2026-10-10)
 
-S0, D1–D3 e B1–B9 foram concluídos e validados. **B10 encontra-se em revisão documental, pendente de validação.** Os itens I1–I5 e B11 permanecem obrigatórios. Toda a informação sobre estados intermediários mais abaixo, incluindo no Anexo A preservado, é histórica quando contradiga esta secção. A V0.3 continua bloqueada; a `main` e a tag `v0.2.0` não são alteradas neste B10.
+S0, D1–D3, B1–B10 e I1–I5 foram concluídos e validados. **B11 está em auditoria final e aguarda medição comparativa de cobertura, verificação de CI final e aprovação explícita.** Consultar `docs/b11-final-audit.md`. Toda a informação sobre estados intermediários mais abaixo, incluindo no Anexo A preservado, é histórica quando contradiga esta secção. A V0.3 continua bloqueada; a `main` e a tag `v0.2.0` não são alteradas neste B10.
 
 ## Finalidade
 
@@ -2323,3 +2323,5 @@ Validação expressa I3 e I4 (2026-10-11): o utilizador confirmou concordância 
 I5, decisão complementar aprovada (2026-10-11): após o bloqueio da execução de `.ps1` pela política de execução do PowerShell, o utilizador solicitou explicitamente a criação de um ponto de entrada simples. Criado `run.cmd` em `dev` com chamada a `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0run.ps1" %*`, usando o diretório do projeto. O bypass é exclusivo do processo filho, sem alteração persistente do Windows, sujeito às restrições organizacionais; só usar com script confiável. Não se altera o `run.ps1`. **I5 implementado, a aguardar validação funcional do utilizador** antes do B11.
 
 Validação I5 (2026-10-11): o utilizador confirmou que `run.cmd` executou corretamente no Windows. **I5 CONCLUÍDO E VALIDADO**; o arranque via `run.cmd`, seleção opcional da `.venv` e sequência Ruff/pytest/aplicação foram aceites no teste funcional. **I1–I5 CONCLUÍDOS E VALIDADOS.** Abre-se B11 para revisão final de suite, cobertura, CI, diff desde S0, documentação, pendências e autorização final. Não integrar na `main`, nem criar `v0.2.0`, sem autorização explícita posterior.
+
+B11, auditoria de fecho (2026-10-11): relatório verificável em `docs/b11-final-audit.md`. Comparação `main...dev`: 291 commits à frente, zero atrás na consulta anterior aos commits deste relatório; CI #390 Linux 3.12 e Windows 3.14, Ruff e pytest aprovados. Baseline S0: 39 testes e 55%; **contagem e cobertura atuais ainda por recolher**. A auditoria está documentada, **B11 ainda não está CONCLUÍDO E VALIDADO**; a `main` e `v0.2.0` permanecem intactas.
