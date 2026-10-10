@@ -254,3 +254,7 @@ A4 **CONCLUÍDO E VALIDADO na especificação**: direção FX explícita, separa
 ### Progresso A5 da V0.3 (2026-10-11)
 
 **A5 CONCLUÍDO E VALIDADO funcionalmente**, sem implementação: `Portfolio.base_currency` é a autoridade por carteira, com moeda imutável após criação na V0.3; `AppConfig.default_base_currency` apenas preenche a criação de novas carteiras. Moedas normalizadas ISO 4217, múltiplas carteiras em moedas distintas e migração da antiga configuração com preservação e validação explícita. **Próximo: A7** (backup e recuperação, exportação canónica, importação atómica, duplicados e relatório); A6 resolvido na V0.2; A8 ainda por discutir. A V0.2.0 publicada em `main` permanece intacta.
+
+### Progresso A7 da V0.3 (2026-10-11)
+
+**A7 CONCLUÍDO E VALIDADO ao nível de especificação, não implementação.** JSON de carteira canónico e versionado, exportação integral do histórico e auditoria, identidade UUID e proveniência externa, importação atómica/idempotente com pré-visualização e relatório de conflitos, restauro seguro/cópias independentes e exclusão da substituição destrutiva; backup integral distinto da exportação funcional (D2/A7.1). **A8 é o próximo bloco**, centrado em reconciliação com a XTB e estrutura da política pessoal de investimento. A V0.2.0 permanece publicada e intacta.
