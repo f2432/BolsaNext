@@ -4,11 +4,21 @@ on:
   push:
     branches: ["main", "dev"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev"]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            artifact-suffix: linux-py312
+          - os: windows-latest
+            python-version: "3.14"
+            artifact-suffix: windows-py314
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -17,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
 
       - name: Install project
@@ -33,7 +43,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-python-3.12-ubuntu
+          name: coverage-${{ matrix.artifact-suffix }}
           path: |
             coverage.xml
             htmlcov/
