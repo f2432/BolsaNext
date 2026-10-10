@@ -672,3 +672,7 @@ Validação B9.2 (2026-10-10): o utilizador confirmou a conclusão da verificaç
 **IMPLEMENTADO EM `dev`, PENDENTE DE VALIDAÇÃO.** Core reduzido a sete dependências diretas necessárias à V0.2, preservando explicitamente `lxml` para `pandas.read_html`. `numpy`, `scikit-learn`, `matplotlib` e `PyYAML` agrupadas em `analysis` opcional. Adicionados limites mínimos conservadores em `pyproject.toml` e registo das versões instaladas no CI. Não introduzidos limites máximos arbitrários nem lockfile. Validar jobs Linux/Windows e arranque local antes do fecho; B9.4 ainda por iniciar.
 
 Validação B9.3 (2026-10-10): testes e aplicação confirmados pelo utilizador. **B9.3 CONCLUÍDO E VALIDADO**. Próximo bloco B9.4 (Ruff), ainda não implementado. `main` e a tag `v0.2.0` permanecem intactas.
+
+### B9.4 — Introdução gradual do Ruff (2026-10-10)
+
+**EM AUDITORIA, por validar.** Ruff incluído só nas dependências `dev` com regras `E4`, `E7`, `E9`, `F`; GitHub Actions recolhe resultados Linux/Windows de modo não bloqueante. Não foi aplicada reformatação automática nem corrigidos problemas ainda não medidos. É necessário verificar o log da etapa Ruff, corrigir apenas problemas reais e repetir CI antes de tornar lint obrigatório.
