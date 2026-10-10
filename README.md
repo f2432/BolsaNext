@@ -139,3 +139,7 @@ O desenvolvimento corrente é feito em `dev`. A branch `main` é reservada a est
 A passagem de `dev` para `main` só é feita após validação explícita e através de squash, para manter um único commit coerente por bloco funcional.
 
 O procedimento detalhado encontra-se em `docs/development.md` e `docs/status.md`.
+
+## Licença
+
+O código-fonte do BolsaNext é disponibilizado sob a **GNU General Public License, versão 3 (`GPL-3.0-only`)**. Consultar [LICENSE](LICENSE) para o texto integral. Esta designação corresponde à versão 3 apenas, não à opção "versão 3 ou posterior" (`GPL-3.0-or-later`).
