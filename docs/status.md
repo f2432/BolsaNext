@@ -739,3 +739,10 @@ B11, validação final do utilizador (2026-10-11): o utilizador confirmou expres
 A versão **V0.2.0 está publicada**: PR #1 integrado por squash na `main`, commit `a26852232c93cdd593fe179b4393fb2abb171d26`, tag anotada `v0.2.0` verificada a apontar para esse commit. S0, D1–D3, B1–B11 e I1–I5 concluídos e validados. Registos anteriores relativos a B11 pendente ou tag inexistente são históricos, não estado atual.
 
 **V0.3 Portfolio: especificação A1 CONCLUÍDA E VALIDADA pelo utilizador**, documentada em `docs/architecture.md`. Ações/ETFs long-only, BUY/SELL, dividendos manuais com bruto/retenção/encargos/líquido, ajustes manuais auditáveis, correção por substituição rastreável, anulação lógica com histórico preservado. Ledger como origem da verdade; várias carteiras com moeda base própria. A2–A5, A7 e A8 por decidir/validar. **Não houve implementação de Portfolio, alteração de schema ou alteração da `main` ou tag** durante o A1. Próximo passo proposto: especificação contabilística **A2** em conversa, com exemplos numéricos e decisões explícitas antes de alterar a documentação.
+
+
+## V0.3 Portfolio — A2 concluído e validado (2026-10-11)
+
+O utilizador confirmou a especificação funcional **A2 — Regras contabilísticas**, após validação sequencial: BUY/SELL com custo médio ponderado móvel e comissões; execução/UTC/liquidação opcional; desempate determinístico com alerta de ambiguidades; dividendos líquidos separados do PnL de vendas; splits simples preservando custo total; outros ajustes sujeitos a categorias/fórmulas específicas; invariantes INV-01 a INV-12; correções/anulações com reconstrução completa e rejeição atómica quando invalidam operações posteriores. Fórmulas, exemplos numéricos e invariantes encontram-se em `docs/architecture.md`; critérios de testes em `docs/development.md`.
+
+**Estado vigente:** A1 e A2 CONCLUÍDOS E VALIDADOS **como especificação**; próxima sessão **A3 — Tipos numéricos e precisão** (ainda não validada). Nenhum código Portfolio, teste, migração ou alteração de schema implementado neste bloco. `main` e tag `v0.2.0` intactas.
