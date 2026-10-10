@@ -4,7 +4,7 @@
 
 A nova aplicação deve evitar a concentração de responsabilidades existente na versão anterior, em particular a dependência excessiva da interface gráfica.
 
-A arquitetura é organizada em quatro zonas principais:
+A arquitetura é organizada em quatro zonas principais. O esquema é conceptual: o Domain não depende da Infrastructure; a Application usa contratos/ports, implementados por adapters da Infrastructure:
 
 ```text
 UI
@@ -52,7 +52,7 @@ Contém as regras e objetos centrais do projeto.
 
 ### Instruments
 
-Representa ativos financeiros, incluindo ticker, nome, mercado, moeda e tipo de instrumento.
+Representa ativos financeiros, incluindo ticker, nome, **bolsa (`exchange`)**, moeda e tipo de instrumento. A designação antiga `market` permanece apenas em registos históricos e na revisão inicial de migração.
 
 ### Portfolio
 
