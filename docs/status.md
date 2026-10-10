@@ -717,3 +717,5 @@ Validação I1 (2026-10-11): o utilizador confirmou os testes locais e autorizou
 ### I4 — Licença do projeto (2026-10-11)
 
 O utilizador escolheu **GPL-3.0**. Criado na branch `dev` o ficheiro `LICENSE` com o texto oficial da GNU General Public License versão 3, usando o identificador SPDX `GPL-3.0-only` (sem autorização automática para versões posteriores). O `README.md` identifica a licença. **IMPLEMENTADO, PENDENTE DE CONFIRMAÇÃO FINAL DO UTILIZADOR**. Nenhuma alteração de código ou dependências. I3 permanece implementado mas ainda sem confirmação final expressa; I5 e B11 pendentes.
+
+Validação expressa I3 e I4 (2026-10-11): o utilizador confirmou concordância com a alteração restrita do `.gitignore` (permitir PDFs técnicos, mantendo exclusões sensíveis) e com a licença **GPL-3.0-only**. **I3 CONCLUÍDO E VALIDADO; I4 CONCLUÍDO E VALIDADO**. I1–I4 fechados. I5 (`run.ps1` e ambiente virtual) passa à fase de auditoria e desenho; nenhuma alteração ao script sem aprovação do utilizador. B11 permanece pendente, sem alterações à `main` ou à tag `v0.2.0`.
