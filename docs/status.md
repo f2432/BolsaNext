@@ -780,3 +780,16 @@ O utilizador aprovou integralmente a **especificação funcional A7 — Backup, 
 **A8 — Reconciliação interna e política pessoal de investimento VALIDADO FUNCIONALMENTE:** a V0.3 realiza verificações internas de integridade e relatórios de discrepâncias do ledger; reconciliação automática com extratos reais XTB só numa versão futura. Políticas de risco opcionais, próprias e versionadas por carteira; indicadores de concentração por instrumento/setor/moeda, ganhos/perdas e desvios de objetivos; limites não impostos, alertas informativos sob pedido; dados essenciais ausentes ⇒ não avaliável, nunca conformidade presumida; métricas de rentabilidade anualizada exigem metodologia futura; sem sugestões automáticas de compras/vendas nem execução na XTB. Consulte `docs/architecture.md` e `docs/development.md`.
 
 **Estado vigente:** A1–A5, A7 e A8 validados **como especificações funcionais**; A6 tratado na estabilização V0.2. A fase de especificação funcional está concluída, não a implementação. **Auditoria técnica global A1–A8 recomendada, mas explicitamente NÃO autorizada nesta etapa e NÃO iniciada.** Nesta atualização apenas documentação na `dev`; sem código/schema/testes alterados e sem alteração à `main` ou tag `v0.2.0`.
+
+
+## Síntese prevalecente pós-auditoria — 2026-10-11
+
+**ESTE BLOCO PREVALECE sobre a antiga secção «Leitura rápida: estado vigente (2026-10-10)», que permanece abaixo por rastreabilidade histórica, mas está desatualizada.** A V0.2 estabilizada foi integrada por squash na `main`, commit `a26852232c93cdd593fe179b4393fb2abb171d26`, e a tag `v0.2.0` existe e aponta para esse commit. A `dev` diverge em histórico por causa desse squash; a comparação GitHub à data da auditoria indicou 328 commits à frente e 1 atrás, não sendo prova de desvio funcional por si só.
+
+**Especificação V0.3:** A1–A5, A7 e A8 funcionalmente aprovados e documentados; A6 absorvido pelo D1 da estabilização V0.2. A auditoria documental detetou e resolveu em aditamento técnico AUD-001 a AUD-012 (em `docs/architecture.md` e testes previstos em `docs/development.md`): versões e anulações, FX por componente, diferenças de corretora, concorrência, identidade de clones, dados de mercado float, replay/caches, indicadores, migração e estado Git. `AppConfig.default_base_currency` já existe no código, pelo que a renomeação prevista no A5 não é tarefa pendente sem evidência de configuração legada.
+
+**Estado de execução:** revisão e documentação apenas; sem implementação Portfolio, sem novos testes executados, sem alteração de schema ou migração. O relatório externo mencionou 161 testes e 61% de cobertura, **não reproduzidos nesta auditoria**. Permanecem por verificar os contratos na implementação e o comportamento real de extratos XTB futuros. A próxima fase técnica deve ser planeada em incrementos testáveis, sem declarar funcionalidade V0.3 já entregue.
+
+## Nota de rastreabilidade da síntese antiga
+
+A secção «Leitura rápida: estado vigente (2026-10-10)» mais acima diz que a tag ainda não existe e que `main` não recebeu o saneamento. **Estas afirmações deixaram de ser verdadeiras após a integração e publicação da V0.2.0**, e já não devem orientar agentes. Não se eliminam linhas históricas para preservar a cronologia; a síntese prevalecente é a datada de 2026-10-11 no fim deste documento.
