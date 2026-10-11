@@ -1,11 +1,13 @@
 # Estado atual do projeto
 
+> **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
+
 Última atualização canónica: 2026-10-11.
 
 Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o destino; este ficheiro define o ponto em que o projeto se encontra agora.
 
 
-## Leitura rápida: estado vigente (2026-10-10)
+## Leitura rápida: registo histórico de 2026-10-10 (substituído pela síntese pós-auditoria de 2026-10-11 no fim do documento)
 
 A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3, B1–B10 e I1–I5 estão concluídos e validados; **B11 está em auditoria final, ainda por validar e integrar**. Consultar `docs/b11-final-audit.md` para as evidências verificadas e as métricas ainda pendentes. A V0.3 não começou. A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
 
