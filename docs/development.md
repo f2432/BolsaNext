@@ -599,3 +599,13 @@ Não usar `run.cmd`/`run.ps1` nesta branch: o comportamento V0.2 muda automatica
 Usar `python -m ruff check src tests`, `python -m pytest -q --cov=bolsa --cov-report=term-missing`
 e, quando houver UI integrada, `python -m bolsa.main`. Evidências em `docs/v0.3-execution.md`.
 Migration Portfolio: testar em cópia descartável; restauro por backup em vez de downgrade.
+
+### Teste de interface V0.3
+
+Nesta branch usar `python -m bolsa.main` após instalar `pip install -e ".[dev]"`.
+Não usar run.cmd (muda para dev). Selecionar Carteira; criar uma carteira de teste, registar
+compra sintética, confirmar posições/auditoria, corrigir/anular, exportar/restaurar/clone e
+comparar após reinício. Valorizar é ação explícita de rede; os testes automáticos usam mocks.
+Qt headless: `QT_QPA_PLATFORM=offscreen python -m pytest tests/portfolio/test_gui.py -q` em Linux;
+Windows PowerShell: `$env:QT_QPA_PLATFORM="offscreen"` antes do pytest.
+Versão desta branch: `0.3.0.dev0`; os valores 0.2.0 anteriores são registos históricos.

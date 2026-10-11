@@ -1432,3 +1432,11 @@ Políticas ficam na história do agregado Ledger, separadas dos eventos económi
 persistência append-only e revisão de carteira. Migration 0004. JSON v2 inclui políticas,
 lê também v1 sem políticas. Risco/reconciliação residem no domínio e só emitem informação.
 Setores não disponíveis não são inferidos; denominador parcial nunca produz conformidade.
+
+### Implementação P6
+
+Carteira integra MainWindow através de DashboardService. UI recolhe/apresenta campos;
+Application interpreta Decimal e domínio calcula. SQL/mercado/replay em workers, mantendo
+Qt apenas na thread de interface. Dashboard valoriza o mesmo snapshot financeiro carregado;
+valorização não escreve transações. Fecho protege worker Portfolio ativo. UI disponibiliza
+pré-visualização/confirmar e distingue totais completos de subtotais/pedidos pendentes.

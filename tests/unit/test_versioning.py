@@ -16,7 +16,7 @@ def _project_root() -> Path:
 
 
 def test_package_version_has_single_canonical_value() -> None:
-    assert __version__ == "0.2.0"
+    assert __version__ == "0.3.0.dev0"
     assert bolsa.__version__ == __version__
 
 

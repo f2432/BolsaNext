@@ -11,6 +11,9 @@ class PortfolioValuationService:
 
     def evaluate(self, portfolio_uid, **valuation_options):
         ledger = self.repository.load(portfolio_uid)
+        return self.evaluate_ledger(ledger,**valuation_options)
+
+    def evaluate_ledger(self,ledger,**valuation_options):
         instruments = {v.transaction.instrument.ticker: v.transaction.instrument for v in effective_versions(ledger)}
         quotes, rates = {}, {}
         for ticker, instrument in instruments.items():
