@@ -9,7 +9,7 @@ Este documento regista o estado efetivo do projeto BolsaNext. O roadmap define o
 
 ## Leitura rápida: registo histórico de 2026-10-10 (substituído pela síntese pós-auditoria de 2026-10-11 no fim do documento)
 
-A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3, B1–B10 e I1–I5 estão concluídos e validados; **B11 está em auditoria final, ainda por validar e integrar**. Consultar `docs/b11-final-audit.md` para as evidências verificadas e as métricas ainda pendentes. A V0.3 não começou. A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
+A V0.2 foi funcionalmente integrada anteriormente; o saneamento atual decorre **exclusivamente em `dev`**. S0, D1–D3, B1–B10 e I1–I5 estão concluídos e validados; **B11 está em auditoria final, ainda por validar e integrar**. Consultar `docs/b11-final-audit.md` para as evidências verificadas e as métricas ainda pendentes. A V0.3 não começou. **[DESATUALIZADO — registo de 2026-10-10]** A `main` não recebeu este saneamento e a tag `v0.2.0` ainda não existe. **[Estado corrigido: `main` publicada e tag `v0.2.0` existente.]** Informações posteriores nesta página com a indicação «pendente» para blocos já concluídos são registos de execução histórica e não prevalecem sobre este estado.
 
 ## Estado global
 
@@ -795,3 +795,5 @@ O utilizador aprovou integralmente a **especificação funcional A7 — Backup, 
 ## Nota de rastreabilidade da síntese antiga
 
 A secção «Leitura rápida: estado vigente (2026-10-10)» mais acima diz que a tag ainda não existe e que `main` não recebeu o saneamento. **Estas afirmações deixaram de ser verdadeiras após a integração e publicação da V0.2.0**, e já não devem orientar agentes. Não se eliminam linhas históricas para preservar a cronologia; a síntese prevalecente é a datada de 2026-10-11 no fim deste documento.
+
+**Consolidação final:** regras AUD integradas nas secções A vigentes de `docs/architecture.md`; o registo AUD final é apenas histórico. A documentação B11 foi assinalada como relatório pré-publicação, não estado atual. Próximo passo: preparar incremento inicial de domínio/persistência e seus testes, sem código autorizado nesta etapa.
