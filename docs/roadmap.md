@@ -263,3 +263,10 @@ A4 **CONCLUÍDO E VALIDADO na especificação**: direção FX explícita, separa
 ### V0.3 — Fecho da especificação A8 (2026-10-11)
 
 **A8 VALIDADO FUNCIONALMENTE**, sem código: integridade/reconciliação interna do ledger, mantendo reconciliação automática de extratos XTB para fase posterior; política opcional e versionada por carteira, indicadores de concentração/exposição, ganhos/perdas e desvios de objetivos, alertas informativos avaliáveis apenas com dados completos, sem sugestões nem operações automáticas. Com A1–A5 e A7 validados e A6 já resolvido na V0.2, **a especificação funcional A1–A8 está concluída**. Próxima etapa possível: **auditoria global das especificações versus código/arquitetura**, condicionada a autorização futura do utilizador; **não iniciar agora**. V0.2.0 publicada em `main` e respetiva tag permanecem intactas.
+
+
+### V0.3 — Resolução técnica da auditoria (2026-10-11)
+
+Auditoria documental realizada e decisões técnicas AUD-001 a AUD-012 consolidadas em `docs/architecture.md` e `docs/development.md`, sem execução de testes nem alteração de código. Principais contratos: identidade económica/versões e anulação, cálculo multimoeda por componente e divergências pendentes da corretora, sincronização das escritas do ledger/revisão para importações, clones no âmbito da carteira, replay e caches derivados, metadados de risco, backup e migrações. `AppConfig.default_base_currency` já consta do código V0.2, dispensando renomeação fictícia. Corrigida por aditamento a prioridade do estado Git: `main` e tag `v0.2.0` publicadas; texto histórico preservado.
+
+**Próxima etapa possível:** plano técnico da implementação incremental V0.3 com testes de invariantes e migração validada em base descartável, seguido de desenvolvimento quando o utilizador o solicitar. Não começar implementação neste registo. Versão estável `main`/`v0.2.0` não foi modificada.
