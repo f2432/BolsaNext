@@ -258,3 +258,8 @@ A4 **CONCLUÍDO E VALIDADO na especificação**: direção FX explícita, separa
 ### Progresso A7 da V0.3 (2026-10-11)
 
 **A7 CONCLUÍDO E VALIDADO ao nível de especificação, não implementação.** JSON de carteira canónico e versionado, exportação integral do histórico e auditoria, identidade UUID e proveniência externa, importação atómica/idempotente com pré-visualização e relatório de conflitos, restauro seguro/cópias independentes e exclusão da substituição destrutiva; backup integral distinto da exportação funcional (D2/A7.1). **A8 é o próximo bloco**, centrado em reconciliação com a XTB e estrutura da política pessoal de investimento. A V0.2.0 permanece publicada e intacta.
+
+
+### V0.3 — Fecho da especificação A8 (2026-10-11)
+
+**A8 VALIDADO FUNCIONALMENTE**, sem código: integridade/reconciliação interna do ledger, mantendo reconciliação automática de extratos XTB para fase posterior; política opcional e versionada por carteira, indicadores de concentração/exposição, ganhos/perdas e desvios de objetivos, alertas informativos avaliáveis apenas com dados completos, sem sugestões nem operações automáticas. Com A1–A5 e A7 validados e A6 já resolvido na V0.2, **a especificação funcional A1–A8 está concluída**. Próxima etapa possível: **auditoria global das especificações versus código/arquitetura**, condicionada a autorização futura do utilizador; **não iniciar agora**. V0.2.0 publicada em `main` e respetiva tag permanecem intactas.
