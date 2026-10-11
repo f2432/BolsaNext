@@ -1304,3 +1304,24 @@ O relatório de pré-visualização e o relatório final distinguem **inseridas,
 O JSON pode conter informação financeira pessoal: não exportar credenciais, tokens ou palavras-passe. Rejeitar conteúdo executável, formatos/versões não suportados, tamanhos incompatíveis, campos inconsistentes, relações de auditoria inválidas ou referências pendentes; nunca executar conteúdo importado. A importação não pode criar short selling, alterar moedas base persistidas nem violar os invariantes A2. A reconciliação com broker XTB e adaptadores de formatos externos ficam para decisões de A8 ou versões subsequentes, sem desvirtuar este formato canónico.
 
 **A7 CONCLUÍDO E VALIDADO como especificação.** Não foram criadas tabelas, migrações, testes nem funcionalidades de importação nesta fase.
+
+
+## A8 — Reconciliação interna e política de investimento (validado funcionalmente, 2026-10-11)
+
+**Âmbito aprovado para V0.3; ainda sem implementação.**
+
+### Integridade e reconciliação
+
+A V0.3 valida internamente a consistência do ledger como origem de verdade: operações eficazes, posições, custos, dividendos, câmbios históricos e resultados reconstruídos segundo A1–A5; produz relatórios internos de discrepâncias com identificação e motivo, sem alterar automaticamente os lançamentos. Distinguir inconsistência efetiva de dados indisponíveis e não corrigir silenciosamente. Manter os identificadores de origem, conta e operação externa, câmbio aplicado e montantes originais da corretora para uma futura comparação. **Importar extratos reais da XTB e efetuar reconciliação automática com os movimentos/posições da corretora fica fora da V0.3**, para versão posterior. Divergências entre cálculo teórico e valores efetivos XTB não são automaticamente classificadas como comissão, spread ou erro.
+
+### Política de investimento por carteira
+
+Cada Portfolio pode ter **política opcional e configurável**, sem valores, percentagens ou metas impostos pela aplicação. As políticas são **versionadas**, com apenas uma versão ativa em cada momento, preservando versões anteriores e datas de vigência/alteração. As análises e alertas atuais utilizam a versão ativa; versões anteriores servem para rastreabilidade. Não é obrigatório persistir histórico de cada alerta calculado: avaliar sob pedido, de acordo com os dados válidos então disponíveis.
+
+Indicadores iniciais: (1) concentração por instrumento; (2) exposição por setor; (3) exposição por moeda; (4) ganhos, perdas e PnL realizado/não realizado com nomenclatura explícita; (5) desvios relativamente a objetivos/limites configurados. Exibir indicadores descritivos mesmo sem política; **não assinalar violação de limites inexistentes**. Metadados setoriais ausentes são classificados como **não determinado**, não inferidos.
+
+Concentração e exposição usam valores atuais na moeda base da carteira, obtidos apenas com cotações e FX compatíveis com A4. Se o total necessário não estiver integralmente disponível, os indicadores que exigem denominador global são **não avaliáveis**, podendo apenas mostrar subtotais claramente identificados; **dados desconhecidos nunca significam conformidade**. Estado de cada alerta: dentro do limite (avaliável), limite ultrapassado (avaliável), não avaliável (dados insuficientes). Objetivos de rentabilidade podem ser registados, mas não calcular/apresentar rentabilidade anualizada ou comparação temporal como se metodologicamente definida antes da aprovação de fórmula, período e tratamento de fluxos relevantes.
+
+Os avisos da política são **informativos**, não bloqueiam BUY/SELL legítimas; continuam obrigatórias as invariantes de integridade do ledger, como impedir vendas em excesso. A V0.3 **não dá recomendações automáticas de compra/venda**, não transmite ordens à XTB nem executa operações. O cálculo dos alertas é feito quando necessário; a persistência das versões da política é obrigatória, ao contrário do histórico de alertas.
+
+**A8 aprovado como especificação funcional**, não como código, modelo físico ou decisão sobre métricas futuras não especificadas. Segue-se, apenas após autorização separada do utilizador, auditoria global A1–A8 das especificações perante a arquitetura/código existentes.
