@@ -99,3 +99,12 @@ Regras adicionais:
 - decisões futuras de Portfolio preservadas no plano não autorizam implementação antecipada;
 - `main` continua protegida e só recebe integração após validação explícita do utilizador;
 - a tag `v0.2.0` só pode ser criada depois do fecho e validação final do saneamento.
+
+## Execução V0.3 autorizada em 2026-10-11
+
+O pedido atual do utilizador substitui as proibições históricas de iniciar Portfolio e de
+trabalhar apenas na dev. Desenvolver sequencialmente P1–P7 em `feature/v0.3-portfolio`,
+criada de `dev` no commit `6069e6860d36dda37a1acaac79bfa99a1f0b3ca7`.
+Implementação, testes, correções, commits e publicação dessa branch estão autorizados.
+Não integrar em dev/main, não criar tags/releases. Preservar os registos históricos.
+Estado e evidências correntes: `docs/v0.3-execution.md` e síntese atual de `docs/status.md`.

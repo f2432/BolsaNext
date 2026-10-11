@@ -274,3 +274,9 @@ Auditoria documental realizada e decisões técnicas AUD-001 a AUD-012 consolida
 ### V0.3 — Primeiro incremento técnico proposto após consolidação (2026-10-11)
 
 **Proposta de planeamento, não implementação:** incremento V0.3-P1 dedicado a núcleo de domínio testável sem dependência de yfinance nem UI: (1) identidade e moeda imutável da carteira; (2) modelos Decimal de operações BUY/SELL e versões/correções/anulações; (3) replay financeiro determinístico com invariantes INV-01–INV-12 relevantes; (4) repositório e migração SQLite mínimos, apenas depois de validar modelos/testes e preparar backup; (5) testes unitários e de integração para compras, vendas parciais/fecho, correções retroativas, rollback e reabertura. Dependências de importação A7, FX provider A4, alertas A8 e UI ficam para incrementos seguintes. Antes de programar, detalhar contrato de persistência e critérios de aceitação de P1. **Nenhuma alteração de código autorizada ou executada nesta consolidação.**
+
+### Execução autorizada V0.3 (2026-10-11)
+
+P1 implementado/testado em `feature/v0.3-portfolio`. Sequência vigente P1–P7 e evidências
+em `docs/v0.3-execution.md`; as propostas de não implementar registadas acima são históricas.
+A V0.3 completa continua em desenvolvimento. Sem integração em dev/main.

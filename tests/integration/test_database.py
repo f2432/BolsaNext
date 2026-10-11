@@ -31,6 +31,9 @@ def test_database_initialization_creates_initial_schema(tmp_path) -> None:
         inspector = inspect(engine)
         assert set(inspector.get_table_names()) == {
             "alembic_version",
+            "portfolios",
+            "portfolio_versions",
+            "portfolio_components",
             "instruments",
             "watchlists",
             "watchlist_items",

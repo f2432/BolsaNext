@@ -128,6 +128,9 @@ def test_new_database_is_created_at_head(tmp_path) -> None:
         inspector = inspect(engine)
         assert set(inspector.get_table_names()) == {
             "alembic_version",
+            "portfolios",
+            "portfolio_versions",
+            "portfolio_components",
             "instruments",
             "watchlists",
             "watchlist_items",

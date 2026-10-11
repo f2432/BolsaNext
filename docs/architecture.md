@@ -1393,3 +1393,11 @@ As decisões técnicas da auditoria foram **integradas nas secções A correspon
 - AUD-007/AUD-012 → `docs/status.md`, `docs/b11-final-audit.md` e práticas Git: estado histórico e higiene de commits.
 
 **AUD-007/AUD-012:** a V0.2.0 foi integrada por squash em `main`; o texto anterior referente a B11 é histórico. Novos desenvolvimentos devem preferir commits por unidade coerente, sem reescrever o histórico anterior. As verificações de implementação e testes mantêm-se pendentes.
+
+## Implementação P1 V0.3 (2026-10-11)
+
+Autorização atual substitui o estado documental «apenas especificação». Núcleo em
+`domain/portfolio`, port em `app/ports/portfolio.py`, serviço em Application e adapter
+SQLite em Infrastructure. Ledger/versões imutáveis; replay integral sem cache financeira.
+Schema, concorrência, ordenação, precisão e critérios executados estão descritos em
+`docs/v0.3-execution.md`. UUIDs de versão no âmbito da carteira seguem AUD-004 para clones.

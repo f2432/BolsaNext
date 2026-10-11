@@ -590,3 +590,12 @@ Testar que alertas não bloqueiam BUY/SELL válidas, mas invariantes A2 continua
 8. Higiene documental: síntese prevalecente de `status.md` coerente com Git main/tag, e rastreabilidade de decisões antigas.
 
 Nenhum teste novo foi executado nem o código foi alterado ao documentar estes contratos. Os **161 testes e 61%** referidos na auditoria externa são uma medição reportada por terceiros e devem ser confirmados no ambiente de execução antes de os citar como baseline atual.
+
+## Execução V0.3 em branch própria (2026-10-11)
+
+O utilizador autorizou implementação sequencial P1–P7 e commits/publicação em
+`feature/v0.3-portfolio`; as proibições históricas anteriores ficam substituídas neste ciclo.
+Não usar `run.cmd`/`run.ps1` nesta branch: o comportamento V0.2 muda automaticamente para dev.
+Usar `python -m ruff check src tests`, `python -m pytest -q --cov=bolsa --cov-report=term-missing`
+e, quando houver UI integrada, `python -m bolsa.main`. Evidências em `docs/v0.3-execution.md`.
+Migration Portfolio: testar em cópia descartável; restauro por backup em vez de downgrade.

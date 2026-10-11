@@ -797,3 +797,11 @@ O utilizador aprovou integralmente a **especificação funcional A7 — Backup, 
 A secção «Leitura rápida: estado vigente (2026-10-10)» mais acima diz que a tag ainda não existe e que `main` não recebeu o saneamento. **Estas afirmações deixaram de ser verdadeiras após a integração e publicação da V0.2.0**, e já não devem orientar agentes. Não se eliminam linhas históricas para preservar a cronologia; a síntese prevalecente é a datada de 2026-10-11 no fim deste documento.
 
 **Consolidação final:** regras AUD integradas nas secções A vigentes de `docs/architecture.md`; o registo AUD final é apenas histórico. A documentação B11 foi assinalada como relatório pré-publicação, não estado atual. Próximo passo: preparar incremento inicial de domínio/persistência e seus testes, sem código autorizado nesta etapa.
+
+## Síntese prevalecente de execução V0.3 — 2026-10-11
+
+Autorização expressa para desenvolver P1–P7 autonomamente em branch própria, sem merge
+em dev/main nem tags/releases. P1 implementado e validado automaticamente: 185 testes,
+Ruff sem erros, cobertura global 67%. Base `6069e68`; branch `feature/v0.3-portfolio`.
+As proibições anteriores de iniciar código são históricas e substituídas pelo pedido atual.
+P2–P7 pendentes. Evidências e limitações: `docs/v0.3-execution.md`.
