@@ -575,3 +575,18 @@ Políticas de risco independentes por carteira; criar política ausente/opcional
 Concentração por ativo, setor e moeda e ganhos/perdas: comparar cálculos com dados válidos de A4; setor desconhecido permanece 'não determinado'; preço, FX ou metadados indispensáveis em falta tornam o indicador dependente desses dados 'não avaliável', sem marcar cumprimento e sem usar subtotal como denominador completo. Testar os três estados dos alertas: conforme, excedido, não avaliável. Metas e limites devem ser configuráveis, sem defaults de percentagens pessoais; objetivos de rentabilidade não implicam cálculo automático de rentabilidade anualizada enquanto não estiver aprovada metodologia com período e fluxos.
 
 Testar que alertas não bloqueiam BUY/SELL válidas, mas invariantes A2 continuam a bloquear operações inválidas; a V0.3 não sugere automaticamente compras/vendas nem executa ordens externas. Nenhum teste ou código foi criado por esta consolidação.
+
+
+### Contratos de teste pós-auditoria AUD-001 a AUD-012 (2026-10-11)
+
+**Pendentes de implementação e execução**, não interpretar esta lista como testes existentes:
+1. Identidade: T1→T2→T3, uma versão eficaz por `transaction_uid`; duas correções concorrentes com `expected head`, anulação terminal, impossibilidade de ciclo/ramificação, correção rejeitada se BUY10/SELL8 virar BUY5 e rollback íntegro.
+2. Custo e câmbio: comissões em moedas diferentes, dividendos com retenção noutra moeda, conversão exata por componente, preservação de débito real e referência FX, diferença sinalizada como pendente sem custo/PnL artificial; preço de mercado float nunca usado como preço de execução exato.
+3. Concorrência: duas mutações do ledger na mesma carteira; importação com revisão obsoleta; revalidação dentro da transação; leitura e cotação concorrentes sem alteração de eventos; sessões por thread; recuperação após falha.
+4. Importação e cópias: deduplicação por `(portfolio_uid, transaction_uid)`, identidade externa de origem/conta/operação, clone com carteira nova e IDs históricos preservados, sem duplicar original, reimportação idempotente e conflito incompatível.
+5. Replay e desempenho: histórico eficaz longo com 10 000 eventos, comparação integral/snapshot derivado e invalidação de snapshot por revisão e correção antiga; registar medições de tempo/memória e experiência de UI.
+6. Metadados e risco: sector desconhecido, ETF de exposição subjacente desconhecida, moeda de cotação diferente de exposição económica, denominador zero/parcial e metas anualizadas sem metodologia.
+7. Migração: inventário do esquema real antes da revisão 0003, upgrade de cópia V0.2 e backup D2, restrições, índices, sem downgrade destrutivo enganador; verificar `AppConfig.default_base_currency` já existente e só testar chave legada quando houver origem real demonstrada.
+8. Higiene documental: síntese prevalecente de `status.md` coerente com Git main/tag, e rastreabilidade de decisões antigas.
+
+Nenhum teste novo foi executado nem o código foi alterado ao documentar estes contratos. Os **161 testes e 61%** referidos na auditoria externa são uma medição reportada por terceiros e devem ser confirmados no ambiente de execução antes de os citar como baseline atual.
