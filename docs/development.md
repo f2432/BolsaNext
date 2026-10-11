@@ -564,3 +564,14 @@ Cobrir: importação repetida do mesmo JSON sem duplicações; duas transações
 Executar validação antes de escrever e confirmar em transação SQLite única. Introduzir erro a meio da fase de escrita, ficheiro malformado, formato desconhecido, referências quebradas, sequência que viola invariantes A2 ou conflito: exigir rollback integral, zero inserções efetivas e manutenção do ledger anterior. Duplicados comprovados são ignorados e reportados. Testar relatórios de pré-visualização e pós-importação com inseridas/ignoradas/conflitos/rejeitadas e causa, bem como resultado concluída/sem alterações/rejeitada.
 
 Testar exclusão da substituição destrutiva na V0.3 e distinção entre exportação de carteira e backup integral SQLite (política D2/A7.1). Verificar ausência de credenciais, rejeição de conteúdo executável e limites de tamanho. Não implementar aqui adaptadores XTB/DEGIRO/IBKR: são posteriores ao formato canónico aprovado.
+
+
+### V0.3 — Plano de testes A8 (validado funcionalmente, 2026-10-11)
+
+**Requisitos de testes futuros, sem implementação agora:** reconstruir o ledger e conferir posições, custos médios, resultados realizados, dividendos, ajustes e câmbios históricos com os invariantes A1–A5; produzir relatório interno de discrepâncias sem modificar operações, com estados distintos para erro e informação insuficiente. Verificar preservação dos IDs externos compostos e montantes/câmbio efetivos XTB sem classificação ou correção presumida. Confirmar ausência na V0.3 de importador/conector automático de extratos XTB.
+
+Políticas de risco independentes por carteira; criar política ausente/opcional; alterar parâmetros criando nova versão ativa sem apagar versões anteriores; atribuir datas de vigência/alteração e recuperar versões por persistência; calcular alertas da política ativa sem exigir gravação do histórico dos alertas. Sem política, indicadores descritivos continuam disponíveis quando calculáveis, sem avisos por limites inexistentes.
+
+Concentração por ativo, setor e moeda e ganhos/perdas: comparar cálculos com dados válidos de A4; setor desconhecido permanece 'não determinado'; preço, FX ou metadados indispensáveis em falta tornam o indicador dependente desses dados 'não avaliável', sem marcar cumprimento e sem usar subtotal como denominador completo. Testar os três estados dos alertas: conforme, excedido, não avaliável. Metas e limites devem ser configuráveis, sem defaults de percentagens pessoais; objetivos de rentabilidade não implicam cálculo automático de rentabilidade anualizada enquanto não estiver aprovada metodologia com período e fluxos.
+
+Testar que alertas não bloqueiam BUY/SELL válidas, mas invariantes A2 continuam a bloquear operações inválidas; a V0.3 não sugere automaticamente compras/vendas nem executa ordens externas. Nenhum teste ou código foi criado por esta consolidação.
