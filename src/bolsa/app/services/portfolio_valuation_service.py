@@ -11,17 +11,22 @@ class PortfolioValuationService:
 
     def evaluate(self, portfolio_uid, **valuation_options):
         ledger = self.repository.load(portfolio_uid)
-        return self.evaluate_ledger(ledger,**valuation_options)
+        return self.evaluate_ledger(ledger, **valuation_options)
 
-    def evaluate_ledger(self,ledger,**valuation_options):
-        instruments = {v.transaction.instrument.ticker: v.transaction.instrument for v in effective_versions(ledger)}
+    def evaluate_ledger(self, ledger, **valuation_options):
+        instruments = {
+            v.transaction.instrument.ticker: v.transaction.instrument
+            for v in effective_versions(ledger)
+        }
         quotes, rates = {}, {}
         for ticker, instrument in instruments.items():
             try:
                 quotes[ticker] = self.quote_provider.get_quote(instrument)
                 denomination = quotes[ticker].currency
                 if denomination != ledger.portfolio.base_currency and denomination not in rates:
-                    rates[denomination] = self.fx_provider.get_rate(denomination, ledger.portfolio.base_currency)
+                    rates[denomination] = self.fx_provider.get_rate(
+                        denomination, ledger.portfolio.base_currency
+                    )
             except MarketDataError:
                 continue
         return value_portfolio(ledger, quotes, rates, **valuation_options)

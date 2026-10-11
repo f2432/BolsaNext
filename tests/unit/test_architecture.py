@@ -35,3 +35,16 @@ def test_application_does_not_import_infrastructure() -> None:
         "A camada Application não pode depender de Infrastructure:\n"
         + "\n".join(violations)
     )
+
+
+def test_domain_does_not_import_application_infrastructure_or_ui():
+    root = Path(__file__).resolve().parents[2]
+    violations = []
+    for path in (root/'src/bolsa/domain').rglob('*.py'):
+        for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
+            modules = [a.name for a in node.names] if isinstance(node,ast.Import) else (
+                [node.module or ''] if isinstance(node,ast.ImportFrom) else [])
+            for module in modules:
+                if module.startswith(('bolsa.app','bolsa.infrastructure','bolsa.ui')):
+                    violations.append((str(path),module))
+    assert violations == []

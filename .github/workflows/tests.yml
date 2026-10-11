@@ -2,7 +2,7 @@ name: tests
 
 on:
   push:
-    branches: ["main", "dev"]
+    branches: ["main", "dev", "feature/v0.3-portfolio"]
   pull_request:
     branches: ["main", "dev"]
 
@@ -19,6 +19,9 @@ jobs:
             python-version: "3.14"
             artifact-suffix: windows-py314
     runs-on: ${{ matrix.os }}
+
+    env:
+      QT_QPA_PLATFORM: offscreen
 
     steps:
       - name: Checkout
@@ -37,6 +40,10 @@ jobs:
 
       - name: Record installed dependency versions
         run: python -m pip list --format=freeze
+
+      - name: Install headless Qt libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0
 
       - name: Ruff lint
         run: python -m ruff check src tests

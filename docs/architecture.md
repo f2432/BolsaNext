@@ -1,5 +1,7 @@
 # Arquitetura
 
+> Estado de implementação: P1–P7 V0.3 testados automaticamente na branch própria; ver `docs/v0.3-execution.md`. Decisões A1–A8 mantêm autoridade funcional. Textos «especificação apenas» registam a fase anterior ao pedido de implementação.
+
 ## Objetivo
 
 A nova aplicação deve evitar a concentração de responsabilidades existente na versão anterior, em particular a dependência excessiva da interface gráfica.
@@ -1440,3 +1442,13 @@ Application interpreta Decimal e domínio calcula. SQL/mercado/replay em workers
 Qt apenas na thread de interface. Dashboard valoriza o mesmo snapshot financeiro carregado;
 valorização não escreve transações. Fecho protege worker Portfolio ativo. UI disponibiliza
 pré-visualização/confirmar e distingue totais completos de subtotais/pedidos pendentes.
+
+### Estabilização P7
+
+Migrações SQLite decorrem em transação DDL explícita, com rollback de schema/revisão em
+falha, além de backup prévio D2. Revisões 0003/0004 contêm snapshots fixos independentes
+dos Table runtime. Lotes de append/import validam a união integral uma vez antes da escrita.
+Conhecimento de fuso original e validação de relações preservados. Cotação só com data usa
+limite conservador de idade UTC para janela real de 72h; não é um timestamp de execução.
+A UI pagina o ledger completo; não existem caches financeiras. ETF não tem setor inferido
+por rótulo. Relatório e evidências executadas: `docs/v0.3-execution.md`.

@@ -17,21 +17,21 @@ def check_uid(value: str):
         if str(UUID(value)) != value:
             raise ValueError()
     except (ValueError, TypeError, AttributeError) as exc:
-        raise LedgerError('UUID canónico inválido.') from exc
+        raise LedgerError("UUID canónico inválido.") from exc
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-MONEY_FIELDS = ('price', 'commission', 'observed_net', 'gross', 'withholding', 'charges', 'net')
+MONEY_FIELDS = ("price", "commission", "observed_net", "gross", "withholding", "charges", "net")
 
 
 class TransactionType(StrEnum):
-    BUY = 'BUY'
-    SELL = 'SELL'
-    DIVIDEND = 'DIVIDEND'
-    ADJUSTMENT = 'ADJUSTMENT'
+    BUY = "BUY"
+    SELL = "SELL"
+    DIVIDEND = "DIVIDEND"
+    ADJUSTMENT = "ADJUSTMENT"
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,9 +42,9 @@ class Portfolio:
     origin_portfolio_uid: str | None = None
 
     def __post_init__(self):
-        if not self.name.strip() or len(self.name) > 120:
-            raise LedgerError('Nome de carteira inválido.')
-        object.__setattr__(self, 'base_currency', currency(self.base_currency))
+        if not isinstance(self.name, str) or not self.name.strip() or len(self.name) > 120:
+            raise LedgerError("Nome de carteira inválido.")
+        object.__setattr__(self, "base_currency", currency(self.base_currency))
         check_uid(self.portfolio_uid)
         if self.origin_portfolio_uid is not None:
             check_uid(self.origin_portfolio_uid)
@@ -62,7 +62,7 @@ class Transaction:
     order_key: str = field(default_factory=uid)
     broker_sequence: int | None = None
     settled_on: date | None = None
-    notes: str = ''
+    notes: str = ""
     source: str | None = None
     account_ref: str | None = None
     external_id: str | None = None
@@ -74,53 +74,105 @@ class Transaction:
     net: Money | None = None
     adjustment_category: str | None = None
     split_factor: Decimal | None = None
-    adjustment_reason: str = ''
+    adjustment_reason: str = ""
+    execution_timezone: str | None = None
 
     def __post_init__(self):
         check_uid(self.transaction_uid)
         check_uid(self.order_key)
         if self.related_transaction_uid is not None:
             check_uid(self.related_transaction_uid)
+        if not isinstance(self.instrument, Instrument):
+            raise LedgerError("Instrumento inválido.")
+        if any(
+            getattr(self, role) is not None and not isinstance(getattr(self, role), Money)
+            for role in MONEY_FIELDS
+        ):
+            raise LedgerError("Componente monetária inválida.")
+        if not isinstance(self.notes, str) or len(self.notes) > 10000:
+            raise LedgerError("Notas inválidas ou demasiado longas.")
         if not isinstance(self.type, TransactionType):
-            raise LedgerError('Tipo financeiro não suportado.')
-        if self.instrument.asset_type not in ('stock', 'etf'):
-            raise LedgerError('Portfolio aceita apenas ações e ETFs.')
+            raise LedgerError("Tipo financeiro não suportado.")
+        if self.instrument.asset_type not in ("stock", "etf"):
+            raise LedgerError("Portfolio aceita apenas ações e ETFs.")
         decimal_input(self.quantity)
-        if self.settled_on is not None and (not isinstance(self.settled_on, date) or isinstance(self.settled_on, datetime)):
-            raise LedgerError('Liquidação deve ser uma data.')
+        if self.settled_on is not None and (
+            not isinstance(self.settled_on, date) or isinstance(self.settled_on, datetime)
+        ):
+            raise LedgerError("Liquidação deve ser uma data.")
         if self.type in (TransactionType.BUY, TransactionType.SELL):
             decimal_input(self.quantity, positive=True)
             if not isinstance(self.price, Money) or not isinstance(self.commission, Money):
-                raise LedgerError('Preço e comissão obrigatórios.')
+                raise LedgerError("Preço e comissão obrigatórios.")
             decimal_input(self.price.amount, positive=True)
-            if any(v is not None for v in (self.gross, self.withholding, self.charges, self.net,
-                                          self.adjustment_category, self.split_factor)) or self.adjustment_reason:
-                raise LedgerError('Campos incompatíveis com BUY/SELL.')
+            if (
+                any(
+                    v is not None
+                    for v in (
+                        self.gross,
+                        self.withholding,
+                        self.charges,
+                        self.net,
+                        self.adjustment_category,
+                        self.split_factor,
+                    )
+                )
+                or self.adjustment_reason
+            ):
+                raise LedgerError("Campos incompatíveis com BUY/SELL.")
         elif self.type == TransactionType.DIVIDEND:
             if self.quantity != 0 or self.price is not None or self.commission is not None:
-                raise LedgerError('Dividendo não altera quantidade nem preço.')
-            if not all(isinstance(v, Money) for v in (self.gross, self.withholding, self.charges, self.net)):
-                raise LedgerError('Componentes do dividendo obrigatórias.')
-            if self.adjustment_category is not None or self.split_factor is not None or self.adjustment_reason:
-                raise LedgerError('Campos de ajuste num dividendo.')
+                raise LedgerError("Dividendo não altera quantidade nem preço.")
+            if not all(
+                isinstance(v, Money) for v in (self.gross, self.withholding, self.charges, self.net)
+            ):
+                raise LedgerError("Componentes do dividendo obrigatórias.")
+            if (
+                self.adjustment_category is not None
+                or self.split_factor is not None
+                or self.adjustment_reason
+            ):
+                raise LedgerError("Campos de ajuste num dividendo.")
         else:
-            if self.adjustment_category != 'SPLIT' or not self.adjustment_reason.strip():
-                raise LedgerError('Apenas split manual justificado está aprovado.')
+            if self.adjustment_category != "SPLIT" or not self.adjustment_reason.strip():
+                raise LedgerError("Apenas split manual justificado está aprovado.")
             decimal_input(self.split_factor, positive=True)
-            if self.quantity != 0 or any(v is not None for v in (self.price, self.commission, self.gross,
-                                                                self.withholding, self.charges, self.net, self.observed_net)):
-                raise LedgerError('Split conserva o custo; campos incompatíveis.')
+            if self.quantity != 0 or any(
+                v is not None
+                for v in (
+                    self.price,
+                    self.commission,
+                    self.gross,
+                    self.withholding,
+                    self.charges,
+                    self.net,
+                    self.observed_net,
+                )
+            ):
+                raise LedgerError("Split conserva o custo; campos incompatíveis.")
         if not isinstance(self.executed_at, date):
-            raise LedgerError('Data de execução inválida.')
+            raise LedgerError("Data de execução inválida.")
         if isinstance(self.executed_at, datetime):
             if self.executed_at.tzinfo is None or self.executed_at.utcoffset() is None:
-                raise LedgerError('Instante sem fuso conhecido.')
-            object.__setattr__(self, 'executed_at', self.executed_at.astimezone(timezone.utc))
-        if self.broker_sequence is not None and (type(self.broker_sequence) is not int or self.broker_sequence < 0):
-            raise LedgerError('Sequência da corretora inválida.')
+                raise LedgerError("Instante sem fuso conhecido.")
+            if self.execution_timezone is None:
+                object.__setattr__(self, "execution_timezone", str(self.executed_at.tzinfo))
+            object.__setattr__(self, "executed_at", self.executed_at.astimezone(timezone.utc))
+        elif self.execution_timezone is not None:
+            raise LedgerError("Data sem instante não tem fuso inventado.")
+        if self.execution_timezone is not None and (
+            not isinstance(self.execution_timezone, str) or len(self.execution_timezone) > 100
+        ):
+            raise LedgerError("Fuso de origem inválido.")
+        if self.broker_sequence is not None and (
+            type(self.broker_sequence) is not int or self.broker_sequence < 0
+        ):
+            raise LedgerError("Sequência da corretora inválida.")
         identity = (self.source, self.account_ref, self.external_id)
-        if any(x is not None for x in identity) and not all(isinstance(x, str) and x.strip() for x in identity):
-            raise LedgerError('Identidade externa deve conter origem, conta e ID.')
+        if any(x is not None for x in identity) and not all(
+            isinstance(x, str) and x.strip() for x in identity
+        ):
+            raise LedgerError("Identidade externa deve conter origem, conta e ID.")
 
     @property
     def external_identity(self):
@@ -131,8 +183,12 @@ class Transaction:
         # Date-only facts retain their precision. Mixed precision is flagged by replay.
         stamp = self.executed_at.isoformat()
         if not isinstance(self.executed_at, datetime):
-            stamp += 'T00:00:00+00:00'
-        return (stamp, self.broker_sequence if self.broker_sequence is not None else -1, self.order_key)
+            stamp += "T00:00:00+00:00"
+        return (
+            stamp,
+            self.broker_sequence if self.broker_sequence is not None else -1,
+            self.order_key,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,27 +198,31 @@ class TransactionVersion:
     transaction_version_uid: str = field(default_factory=uid)
     previous_version_uid: str | None = None
     voided: bool = False
-    reason: str = ''
+    reason: str = ""
     recorded_at: datetime = field(default_factory=utc_now)
-    author: str = 'local'
+    author: str = "local"
 
     def __post_init__(self):
         check_uid(self.transaction_version_uid)
         if self.previous_version_uid is not None:
             check_uid(self.previous_version_uid)
         if type(self.version_number) is not int or self.version_number < 1:
-            raise LedgerError('Número de versão inválido.')
+            raise LedgerError("Número de versão inválido.")
         if (self.version_number == 1) != (self.previous_version_uid is None):
-            raise LedgerError('Antecessor incompatível com versão.')
+            raise LedgerError("Antecessor incompatível com versão.")
         if (self.version_number > 1 or self.voided) and not self.reason.strip():
-            raise LedgerError('Motivo de correção/anulação obrigatório.')
+            raise LedgerError("Motivo de correção/anulação obrigatório.")
         if self.voided and self.version_number == 1:
-            raise LedgerError('Anulação exige versão anterior.')
-        if self.recorded_at.tzinfo is None or self.recorded_at.utcoffset() is None:
-            raise LedgerError('Registo de auditoria exige fuso.')
-        object.__setattr__(self, 'recorded_at', self.recorded_at.astimezone(timezone.utc))
-        if not self.author.strip():
-            raise LedgerError('Autoria local obrigatória.')
+            raise LedgerError("Anulação exige versão anterior.")
+        if (
+            not isinstance(self.recorded_at, datetime)
+            or self.recorded_at.tzinfo is None
+            or self.recorded_at.utcoffset() is None
+        ):
+            raise LedgerError("Registo de auditoria exige fuso.")
+        object.__setattr__(self, "recorded_at", self.recorded_at.astimezone(timezone.utc))
+        if not isinstance(self.author, str) or not self.author.strip():
+            raise LedgerError("Autoria local obrigatória.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,5 +233,15 @@ class Ledger:
     policies: tuple = ()
 
     def __post_init__(self):
-        object.__setattr__(self, 'policies', tuple(sorted(self.policies, key=lambda p:p.version_number)))
-        object.__setattr__(self, 'versions', tuple(sorted(self.versions, key=lambda v: (v.transaction.transaction_uid, v.version_number))))
+        object.__setattr__(
+            self, "policies", tuple(sorted(self.policies, key=lambda p: p.version_number))
+        )
+        object.__setattr__(
+            self,
+            "versions",
+            tuple(
+                sorted(
+                    self.versions, key=lambda v: (v.transaction.transaction_uid, v.version_number)
+                )
+            ),
+        )

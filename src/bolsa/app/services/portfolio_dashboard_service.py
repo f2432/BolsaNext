@@ -22,25 +22,29 @@ class PortfolioDashboard:
 
 
 class PortfolioDashboardService:
-    def __init__(self,portfolio_service,valuation_service):
+    def __init__(self, portfolio_service, valuation_service):
         self.portfolio = portfolio_service
         self.repository = portfolio_service.repository
         self.valuation = valuation_service
         self.transfer = PortfolioTransferService(self.repository)
         self.policy = PortfolioPolicyService(self.repository)
 
-    def overview(self,portfolio_uid=None, *, market=False):
+    def overview(self, portfolio_uid=None, *, market=False):
         portfolios = self.repository.list_portfolios()
-        selected = next((p for p in portfolios if p.portfolio_uid == portfolio_uid),None)
+        selected = next((p for p in portfolios if p.portfolio_uid == portfolio_uid), None)
         if selected is None:
             selected = portfolios[0] if portfolios else None
         if selected is None:
-            return PortfolioDashboard(portfolios,None,None,None)
+            return PortfolioDashboard(portfolios, None, None, None)
         ledger = self.repository.load(selected.portfolio_uid)
         financial = replay(ledger)
         valued = self.valuation.evaluate_ledger(ledger) if market else None
-        risk = self.policy.evaluate(ledger,valued,now=datetime.now(timezone.utc)) if valued else None
+        risk = (
+            self.policy.evaluate(ledger, valued, now=datetime.now(timezone.utc)) if valued else None
+        )
         with localcontext(FINANCIAL_CONTEXT):
-            realized = sum((p.realized_pnl for p in financial.positions),Decimal(0))
-            dividends = sum((p.dividends for p in financial.positions),Decimal(0))
-        return PortfolioDashboard(portfolios,ledger,financial,reconcile(ledger),valued,risk,realized,dividends)
+            realized = sum((p.realized_pnl for p in financial.positions), Decimal(0))
+            dividends = sum((p.dividends for p in financial.positions), Decimal(0))
+        return PortfolioDashboard(
+            portfolios, ledger, financial, reconcile(ledger), valued, risk, realized, dividends
+        )

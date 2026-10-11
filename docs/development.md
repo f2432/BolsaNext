@@ -609,3 +609,11 @@ comparar após reinício. Valorizar é ação explícita de rede; os testes auto
 Qt headless: `QT_QPA_PLATFORM=offscreen python -m pytest tests/portfolio/test_gui.py -q` em Linux;
 Windows PowerShell: `$env:QT_QPA_PLATFORM="offscreen"` antes do pytest.
 Versão desta branch: `0.3.0.dev0`; os valores 0.2.0 anteriores são registos históricos.
+
+### Validação automática final da branch V0.3
+
+`python -m ruff check src tests` e `python -m pytest -q --cov=bolsa --cov-report=term-missing`
+passaram em Linux/Python 3.12.14: 253 testes, cobertura global 78%. CI passou a executar
+também em pushes de `feature/v0.3-portfolio` (pull requests continuam main/dev). Qt offscreen
+é definido no workflow; Linux instala libegl1/libopengl0. O resultado CI deve ser consultado
+no SHA publicado, não inferido desta medição. Fonte de versão atual da branch: `0.3.0.dev0`.

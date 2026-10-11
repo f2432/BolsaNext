@@ -28,6 +28,10 @@ class AppConfig:
     database_name: str = "bolsanext.sqlite3"
     data_dir_is_override: bool = False
 
+    def __post_init__(self):
+        from bolsa.domain.portfolio.money import currency
+        object.__setattr__(self,'default_base_currency',currency(self.default_base_currency))
+
     @property
     def database_path(self) -> Path:
         return self.data_dir / self.database_name

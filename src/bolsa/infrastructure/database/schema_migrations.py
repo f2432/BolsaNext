@@ -162,7 +162,15 @@ def _run_alembic(path: Path, operation, revision: str) -> None:
         with engine.connect() as connection:
             config = _alembic_config()
             config.attributes["connection"] = connection
-            operation(config, revision)
+            # sqlite3 legacy transaction mode does not begin for DDL. Force a real
+            # SQLite transaction so a migration error cannot leave half a schema.
+            connection.exec_driver_sql('BEGIN IMMEDIATE')
+            try:
+                operation(config,revision)
+                connection.commit()
+            except BaseException:
+                connection.rollback()
+                raise
     finally:
         engine.dispose()
 

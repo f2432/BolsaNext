@@ -22,12 +22,17 @@ def reconcile(ledger):
     try:
         result = replay(ledger)
     except LedgerError as exc:
-        return ReconciliationReport('invalid',(Discrepancy(None,'integrity',str(exc)),))
-    discrepancies = [Discrepancy(None,'temporal_ambiguity',w) for w in result.warnings]
+        return ReconciliationReport("invalid", (Discrepancy(None, "integrity", str(exc)),))
+    discrepancies = [Discrepancy(None, "temporal_ambiguity", w) for w in result.warnings]
     with localcontext(FINANCIAL_CONTEXT):
         for version in effective_versions(ledger):
             tx = version.transaction
             if tx.transaction_uid in result.pending_reconciliation:
-                discrepancies.append(Discrepancy(tx.transaction_uid,'observed_difference',
-                    'Montante observado difere do reconstruído; origem preservada, sem classificação automática.'))
-    return ReconciliationReport('pending' if discrepancies else 'consistent',tuple(discrepancies))
+                discrepancies.append(
+                    Discrepancy(
+                        tx.transaction_uid,
+                        "observed_difference",
+                        "Montante observado difere do reconstruído; origem preservada, sem classificação automática.",
+                    )
+                )
+    return ReconciliationReport("pending" if discrepancies else "consistent", tuple(discrepancies))

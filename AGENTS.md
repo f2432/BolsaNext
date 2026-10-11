@@ -1,5 +1,7 @@
 # Instruções para agentes
 
+> Estado vigente: execução V0.3 autorizada em branch própria. Ler `docs/v0.3-execution.md` e a síntese P7 de `docs/status.md`. Proibições antigas de iniciar Portfolio pertencem ao ciclo V0.2 encerrado. Não integrar em dev/main sem novo pedido.
+
 Lê antes de alterar código:
 
 - `README.md`

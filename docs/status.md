@@ -1,6 +1,8 @@
 # Estado atual do projeto
 
-> **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
+> **Estado atual (2026-10-11):** V0.3 `0.3.0.dev0` implementada/testada em `feature/v0.3-portfolio`, P1–P7 para revisão. 253 testes, cobertura global 78%. Consulte a **«Síntese prevalecente P7»** e `docs/v0.3-execution.md`. Main/tag V0.2.0 intactas.
+
+> **Registo histórico anterior à execução:** **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
 
 Última atualização canónica: 2026-10-11.
 
@@ -835,3 +837,18 @@ compatibilidade de leitura v1. P6–P7 pendentes; UI Portfolio ainda não integr
 P6 implementado e validado automaticamente: 221 testes, cobertura global 76%, incluindo
 Qt offscreen/fluxos sintéticos e inspeção visual. Versão `0.3.0.dev0`, sem release/tag.
 UI Carteira integrada; P7 em preparação. Teste interativo Windows ainda não realizado.
+
+## Síntese prevalecente P7 — V0.3 para revisão (2026-10-11)
+
+P1–P7 implementados e validados automaticamente em `feature/v0.3-portfolio`, versão
+`0.3.0.dev0`. **253 testes passaram**, Ruff/diff sem erros; cobertura global **78%**, domínio
+Portfolio **91,67%**, repositório Portfolio **94,20%** e UI Portfolio **86,68%**.
+Replay de 10000 eventos medido e correção retroativa verificada. Migrações receberam teste
+de backup, upgrade V0.2 e rollback real de falha DDL. GUI Qt offscreen cobre operações,
+correção/anulação, política, reconciliação, exportação/importação/clone e paginação.
+
+Branch publicada para revisão, sem merge em dev/main nem tags/releases. CI remoto e teste
+interativo Windows devem ser verificados separadamente. Nenhum dado financeiro real foi
+consultado. Relatório completo/limitações e histórico: `docs/v0.3-execution.md`.
+As sínteses antigas «não iniciado», «sem código autorizado» e pendências intermédias são
+registos históricos, não o estado atual. A V0.2.0 em main/tag continua intacta.

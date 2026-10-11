@@ -14,10 +14,17 @@ from bolsa.app.services.portfolio_service import PortfolioService
 
 @pytest.fixture
 def trade():
-    def make(kind='BUY', quantity='10', price='100', fee='0', day=0, **kwargs):
-        return Transaction(Instrument('TEST', currency='EUR'), TransactionType(kind),
+    def make(kind="BUY", quantity="10", price="100", fee="0", day=0, **kwargs):
+        return Transaction(
+            Instrument("TEST", currency="EUR"),
+            TransactionType(kind),
             datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(days=day),
-            Decimal(quantity), Money(Decimal(price), 'EUR'), Money(Decimal(fee), 'EUR'), **kwargs)
+            Decimal(quantity),
+            Money(Decimal(price), "EUR"),
+            Money(Decimal(fee), "EUR"),
+            **kwargs,
+        )
+
     return make
 
 

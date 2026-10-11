@@ -280,3 +280,9 @@ Auditoria documental realizada e decisões técnicas AUD-001 a AUD-012 consolida
 P1 implementado/testado em `feature/v0.3-portfolio`. Sequência vigente P1–P7 e evidências
 em `docs/v0.3-execution.md`; as propostas de não implementar registadas acima são históricas.
 A V0.3 completa continua em desenvolvimento. Sem integração em dev/main.
+
+### Estado prevalecente V0.3 após P7 (2026-10-11)
+
+P1–P7 implementados e testados automaticamente na branch própria, **para revisão**, sem
+integração/release. 253 testes/78% de cobertura global. Relatório e limitações em
+`docs/v0.3-execution.md`. A anterior «especificação em curso» é histórica; a V0.4 não começou.
