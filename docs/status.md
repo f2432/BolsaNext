@@ -816,4 +816,10 @@ P3–P7 pendentes. Publicação via conector GitHub, pois push direto não tem c
 
 P3 implementado e validado automaticamente: ports/adapters FX, taxas históricas de referência
 sem look-ahead, valorização atual com total indisponível quando faltam dados essenciais.
-206 testes passaram; Ruff sem erros. P4–P7 pendentes; sem consulta a dados reais.
+205 testes passaram; Ruff sem erros. P4–P7 pendentes; sem consulta a dados reais.
+
+### Progresso P4 (2026-10-11)
+
+P4 implementado/testado: 214 testes, cobertura global 70%, Ruff sem erros. JSON v1 completo,
+pré-visualização/confirmar, deduplicação provada, conflitos, clones e rollback atómico.
+P3 teve 205 testes/68% (contagem inicial documental corrigida). P5–P7 pendentes.

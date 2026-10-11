@@ -109,3 +109,42 @@ class SqlAlchemyPortfolioRepository:
             except BaseException:
                 connection.rollback()
                 raise
+
+    def import_ledger(self, incoming, *, expected_revision):
+        from dataclasses import replace
+        from bolsa.domain.portfolio.importing import merge_ledger, ImportRejected, ImportReport
+        portfolio = incoming.portfolio
+        with self.engine.connect() as connection:
+            connection.exec_driver_sql('BEGIN IMMEDIATE')
+            try:
+                exists = connection.execute(select(portfolios.c.portfolio_uid)
+                                            .where(portfolios.c.portfolio_uid == portfolio.portfolio_uid)).first()
+                if expected_revision is None:
+                    if exists:
+                        raise StaleRevisionError('A carteira surgiu depois da pré-visualização.')
+                    existing = Ledger(portfolio)
+                else:
+                    if not exists:
+                        raise StaleRevisionError('Carteira de destino inexistente.')
+                    existing = self._load(connection, portfolio.portfolio_uid)
+                    if existing.revision != expected_revision:
+                        raise StaleRevisionError('Importação obsoleta; repetir pré-visualização.')
+                candidate, report = merge_ledger(existing, incoming)
+                if not exists:
+                    connection.execute(insert(portfolios).values(portfolio_uid=portfolio.portfolio_uid,
+                        name=portfolio.name, base_currency=portfolio.base_currency,
+                        origin_portfolio_uid=portfolio.origin_portfolio_uid, ledger_revision=0))
+                stored_ids = {v.transaction_version_uid for v in existing.versions}
+                for version in candidate.versions:
+                    if version.transaction_version_uid not in stored_ids:
+                        self._insert_version(connection, portfolio.portfolio_uid, version)
+                connection.execute(update(portfolios).where(portfolios.c.portfolio_uid == portfolio.portfolio_uid)
+                                   .values(ledger_revision=candidate.revision))
+                connection.commit()
+                return candidate, replace(report, status='completed' if report.inserted else 'no_changes')
+            except (StaleRevisionError, ImportRejected):
+                connection.rollback()
+                raise
+            except Exception as exc:
+                connection.rollback()
+                raise ImportRejected(ImportReport(rejected=(f'Falha de escrita: {exc}',))) from exc

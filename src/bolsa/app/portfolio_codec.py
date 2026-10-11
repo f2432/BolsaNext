@@ -15,6 +15,8 @@ def money_dict(money: Money) -> dict:
 
 
 def money_from(data: dict) -> Money:
+    if set(data) != {'amount','currency','fx_rate','original_text'}:
+        raise ValueError('Campos monetários não suportados.')
     if type(data['amount']) is not str or (data['fx_rate'] is not None and type(data['fx_rate']) is not str):
         raise ValueError('Valores financeiros JSON devem ser texto.')
     return Money(Decimal(data['amount']), data['currency'],

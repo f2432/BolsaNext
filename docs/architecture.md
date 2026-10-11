@@ -1417,3 +1417,11 @@ explícita float→Decimal e distingue FX corrente de factos históricos. Dados 
 conservam data, usando idade por dia quando não existe precisão de instante; timestamps
 conhecidos usam janela de horas. O calendário da última sessão é uma entrada explícita,
 sem inferir feriados. Resultados completos/subtotais e pendências de reconciliação separados.
+
+### Implementação P4
+
+Arquivo JSON v1 com carteira e lista canónica de versões completas. Instrumento é snapshot
+por operação, conservando metadados históricos; a tabela instruments continua reutilizável
+por ticker/associações. Componentes monetárias são texto exato. Duas fases: plan de Application
+sem escrita; adapter confirma/revalida toda a união sob transação/revisão. Clone muda apenas
+identidade da carteira/proveniência, preservando UUIDs históricos no seu âmbito.
