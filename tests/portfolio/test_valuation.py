@@ -14,10 +14,11 @@ from bolsa.infrastructure.market_data.portfolio_quotes import YFinanceFxRateProv
 NOW = datetime(2026, 1, 5, 12, tzinfo=timezone.utc)
 
 
-def test_historical_and_current_fx_separate(trade):
+@pytest.mark.parametrize("historical_currency", ["USD", "EUR", None])
+def test_historical_and_current_fx_separate(trade, historical_currency):
     tx = replace(
         trade(quantity="1"),
-        instrument=Instrument("TEST", currency="USD"),
+        instrument=Instrument("TEST", currency=historical_currency),
         price=Money(Decimal(100), "USD", Decimal(".9")),
     )
     ledger = Ledger(Portfolio("S", "EUR"), (TransactionVersion(tx),))
@@ -26,8 +27,70 @@ def test_historical_and_current_fx_separate(trade):
     valued = value_portfolio(ledger, {"TEST": q}, {"USD": r}, now=NOW)
     assert valued.total == Decimal("93.50") and valued.unrealized_pnl == Decimal("3.50")
     assert tx.price.fx_rate == Decimal(".9")
+    assert tx.instrument.currency == historical_currency
     partial = value_portfolio(ledger, {"TEST": q}, {}, now=NOW)
     assert partial.total is partial.unrealized_pnl is None and partial.known_subtotal == 0
+
+
+def test_current_asset_type_controls_valuation_and_sector_risk(trade):
+    from bolsa.domain.portfolio.policy import InvestmentPolicy, evaluate_risk
+
+    ledger = Ledger(Portfolio("S", "EUR"), (TransactionVersion(trade()),))
+    quote = Quote("TEST", "EUR", Decimal(110), NOW, "synthetic", asset_type="etf")
+    valued = value_portfolio(ledger, {"TEST": quote}, {}, now=NOW)
+    risk = evaluate_risk(
+        valued, policy=InvestmentPolicy(max_sector_weight=Decimal(".5")),
+        sectors={"TEST": "Technology"},
+    )
+    assert valued.total == 1100
+    assert risk.sector_weights == (("não determinado", Decimal(1)),)
+    assert risk.alerts[0].state == "not_evaluable"
+    unsupported = value_portfolio(
+        ledger, {"TEST": replace(quote, asset_type="index")}, {}, now=NOW
+    )
+    assert unsupported.total is None and unsupported.positions[0].reason
+
+
+def test_invalid_current_metadata_is_unavailable_without_mutating_ledger(
+    service, repository, trade,
+):
+    from bolsa.app.ports.errors import MarketDataFormatError
+    from bolsa.app.services.portfolio_valuation_service import PortfolioValuationService
+    from bolsa.infrastructure.market_data.portfolio_quotes import YFinancePortfolioQuoteProvider
+
+    class Market:
+        def get_instrument_details(self, instrument):
+            return replace(instrument, currency=None)
+
+        def get_historical_data(self, instrument, **kwargs):
+            return pd.DataFrame({"Close": [110.0]}, index=pd.to_datetime([NOW], utc=True))
+
+    provider = YFinancePortfolioQuoteProvider(Market())
+    with pytest.raises(MarketDataFormatError):
+        provider.get_quote(Instrument("TEST"))
+    uid = service.create("S", "EUR").portfolio.portfolio_uid
+    before = service.record(uid, trade(), expected_revision=0)
+    result = PortfolioValuationService(repository, provider, None).evaluate(uid, now=NOW)
+    assert result.total is None and result.positions[0].reason
+    assert repository.load(uid) == before
+
+
+def test_quote_adapter_uses_fresh_currency_and_type():
+    from bolsa.domain.instruments import AssetType
+    from bolsa.infrastructure.market_data.portfolio_quotes import YFinancePortfolioQuoteProvider
+
+    class Market:
+        def get_instrument_details(self, instrument):
+            return replace(instrument, currency="USD", asset_type=AssetType.ETF)
+
+        def get_historical_data(self, instrument, **kwargs):
+            assert instrument.currency == "USD" and instrument.asset_type == AssetType.ETF
+            return pd.DataFrame({"Close": [110.0]}, index=pd.to_datetime([NOW], utc=True))
+
+    historical = Instrument("TEST", currency="EUR")
+    quote = YFinancePortfolioQuoteProvider(Market()).get_quote(historical)
+    assert quote.currency == "USD" and quote.asset_type == AssetType.ETF
+    assert historical.currency == "EUR" and historical.asset_type == AssetType.STOCK
 
 
 def test_stale_future_calendar_and_identity(trade):

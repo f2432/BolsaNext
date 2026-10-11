@@ -27,6 +27,7 @@ class Quote:
     as_of: date | datetime
     source: str
     available: bool = True
+    asset_type: str | None = None
 
     def __post_init__(self):
         object.__setattr__(self, "currency", currency(self.currency))
@@ -143,12 +144,10 @@ def value_portfolio(
             instrument = instruments[pos.ticker]
             if quote is None or not quote.available:
                 reason = "Cotação indisponível"
-            elif (
-                instrument.currency is None
-                or quote.ticker != pos.ticker
-                or quote.currency != instrument.currency
-            ):
-                reason = "Moeda/metadados da cotação incompatíveis ou desconhecidos"
+            elif quote.ticker != pos.ticker:
+                reason = "Identidade da cotação incompatível"
+            elif quote.asset_type is not None and quote.asset_type not in ("stock", "etf"):
+                reason = "Classe atual do instrumento não suportada"
             elif not current(
                 quote.as_of, now, max_age=max_age, last_session=sessions.get(pos.ticker)
             ):
@@ -168,7 +167,8 @@ def value_portfolio(
                 complete = False
                 values.append(
                     ValuedPosition(
-                        pos.ticker, None, None, reason, quote, rate, instrument.asset_type
+                        pos.ticker, None, None, reason, quote, rate,
+                        quote.asset_type if quote and quote.asset_type else instrument.asset_type,
                     )
                 )
             else:
@@ -183,7 +183,7 @@ def value_portfolio(
                         unrealized,
                         quote=quote,
                         fx=rate,
-                        asset_type=instrument.asset_type,
+                        asset_type=quote.asset_type or instrument.asset_type,
                     )
                 )
     return Valuation(

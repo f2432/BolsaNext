@@ -1452,3 +1452,8 @@ Conhecimento de fuso original e validação de relações preservados. Cotação
 limite conservador de idade UTC para janela real de 72h; não é um timestamp de execução.
 A UI pagina o ledger completo; não existem caches financeiras. ETF não tem setor inferido
 por rótulo. Relatório e evidências executadas: `docs/v0.3-execution.md`.
+
+Na valorização, a moeda/classe do Quote atual tem autoridade para o preço atual; não se
+exige igualdade com o snapshot histórico do instrumento. A moeda/preço de execução e
+FX originais mantêm-se no ledger. Ticker incompatível ou classe atual não suportada impede
+total completo; metadados externos inválidos são indisponibilidade de mercado previsível.

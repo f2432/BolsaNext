@@ -33,9 +33,17 @@ class YFinancePortfolioQuoteProvider:
         self.market_data = market_data
 
     def get_quote(self, instrument):
-        details = self.market_data.get_instrument_details(instrument)
-        value, day = last_close(self.market_data.get_historical_data(details, period="5d"))
-        return Quote(details.ticker, details.currency, value, day, "yfinance daily Close")
+        try:
+            details = self.market_data.get_instrument_details(instrument)
+            value, day = last_close(self.market_data.get_historical_data(details, period="5d"))
+            return Quote(
+                details.ticker, details.currency, value, day, "yfinance daily Close",
+                asset_type=details.asset_type,
+            )
+        except MarketDataError:
+            raise
+        except Exception as exc:
+            raise MarketDataFormatError("Metadados/cotação atuais inválidos.") from exc
 
 
 class YFinanceFxRateProvider:

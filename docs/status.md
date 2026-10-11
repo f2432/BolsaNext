@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-> **Estado atual (2026-10-11):** V0.3 `0.3.0.dev0` implementada/testada em `feature/v0.3-portfolio`, P1–P7 para revisão. 258 testes locais, cobertura global 78%; CI Linux/Windows do P7 passou. Consulte a **«Síntese prevalecente P7»** e `docs/v0.3-execution.md`. Main/tag V0.2.0 intactas.
+> **Estado atual (2026-10-11):** V0.3 `0.3.0.dev0` implementada/testada em `feature/v0.3-portfolio`, P1–P7 para revisão. 263 testes locais, cobertura global 78%; CI Linux/Windows do P7 e correções anteriores passou. Consulte a **«Síntese prevalecente P7»** e `docs/v0.3-execution.md`. Main/tag V0.2.0 intactas.
 
 > **Registo histórico anterior à execução:** **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
 
