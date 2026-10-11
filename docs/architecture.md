@@ -1408,3 +1408,12 @@ DIVIDEND e SPLIT manuais no domínio/replay e persistência extensível por comp
 PnL de negociação e dividendos são parcelas separadas. Acumuladores internos de custo de
 compra/proveitos de vendas são reconstituídos do ledger para cancelar resíduos no fecho.
 Ajustes de categorias não aprovadas são rejeitados. Detalhes/testes em `docs/v0.3-execution.md`.
+
+### Implementação P3
+
+Ports FX/cotação datada em Application; adapters reutilizam histórico normalizado do
+MarketData sem depender de Yahoo no domínio. `domain/portfolio/valuation.py` faz conversão
+explícita float→Decimal e distingue FX corrente de factos históricos. Dados de fecho diário
+conservam data, usando idade por dia quando não existe precisão de instante; timestamps
+conhecidos usam janela de horas. O calendário da última sessão é uma entrada explícita,
+sem inferir feriados. Resultados completos/subtotais e pendências de reconciliação separados.

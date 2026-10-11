@@ -811,3 +811,9 @@ P2–P7 pendentes. Evidências e limitações: `docs/v0.3-execution.md`.
 P2 implementado e validado: 195 testes, cobertura global 67%, Ruff sem erros. Dividendos
 manuais e split auditável persistentes; corrigido resíduo de PnL em fecho após dízimas.
 P3–P7 pendentes. Publicação via conector GitHub, pois push direto não tem credencial.
+
+### Progresso P3 (2026-10-11)
+
+P3 implementado e validado automaticamente: ports/adapters FX, taxas históricas de referência
+sem look-ahead, valorização atual com total indisponível quando faltam dados essenciais.
+206 testes passaram; Ruff sem erros. P4–P7 pendentes; sem consulta a dados reais.
