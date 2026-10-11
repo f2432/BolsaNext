@@ -4,7 +4,7 @@ from sqlalchemy import select, insert, update
 
 from bolsa.app.portfolio_codec import version_dict, version_from, money_dict
 from bolsa.domain.portfolio.ledger import append_version, replay
-from bolsa.domain.portfolio.models import Ledger, Portfolio
+from bolsa.domain.portfolio.models import MONEY_FIELDS, Ledger, Portfolio
 from bolsa.domain.portfolio.money import Money, LedgerError, StaleRevisionError, canonical
 from bolsa.infrastructure.database.models import InstrumentModel
 from bolsa.infrastructure.database.portfolio_tables import portfolios, versions, components
@@ -47,7 +47,7 @@ class SqlAlchemyPortfolioRepository:
         for row in rows:
             data = json.loads(row.payload)
             data['transaction']['quantity'] = canonical(row.quantity)
-            for role in ('price', 'commission', 'observed_net'):
+            for role in MONEY_FIELDS:
                 data['transaction'][role] = monetary.get(row.transaction_version_uid, {}).get(role)
             version = version_from(data)
             if (version.transaction.transaction_uid, version.transaction_version_uid, version.version_number,
@@ -75,14 +75,14 @@ class SqlAlchemyPortfolioRepository:
                 asset_type=tx.instrument.asset_type)).inserted_primary_key[0]
         data = version_dict(version)
         data['transaction'].pop('quantity')
-        for role in ('price', 'commission', 'observed_net'):
+        for role in MONEY_FIELDS:
             data['transaction'].pop(role)
         connection.execute(insert(versions).values(portfolio_uid=portfolio_uid,
             transaction_version_uid=version.transaction_version_uid, transaction_uid=tx.transaction_uid,
             version_number=version.version_number, previous_version_uid=version.previous_version_uid,
             instrument_id=instrument_id, quantity=tx.quantity,
             payload=json.dumps(data, sort_keys=True, separators=(',', ':'))))
-        for role in ('price', 'commission', 'observed_net'):
+        for role in MONEY_FIELDS:
             money = getattr(tx, role)
             if money is not None:
                 connection.execute(insert(components).values(portfolio_uid=portfolio_uid,

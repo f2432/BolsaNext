@@ -1401,3 +1401,10 @@ Autorização atual substitui o estado documental «apenas especificação». N�
 SQLite em Infrastructure. Ledger/versões imutáveis; replay integral sem cache financeira.
 Schema, concorrência, ordenação, precisão e critérios executados estão descritos em
 `docs/v0.3-execution.md`. UUIDs de versão no âmbito da carteira seguem AUD-004 para clones.
+
+### Implementação P2
+
+DIVIDEND e SPLIT manuais no domínio/replay e persistência extensível por componente.
+PnL de negociação e dividendos são parcelas separadas. Acumuladores internos de custo de
+compra/proveitos de vendas são reconstituídos do ledger para cancelar resíduos no fecho.
+Ajustes de categorias não aprovadas são rejeitados. Detalhes/testes em `docs/v0.3-execution.md`.

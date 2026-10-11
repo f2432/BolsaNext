@@ -14,6 +14,8 @@ class Position:
     cost: Decimal = ZERO
     realized_pnl: Decimal = ZERO
     dividends: Decimal = ZERO
+    lifetime_purchase_cost: Decimal = ZERO
+    lifetime_sale_proceeds: Decimal = ZERO
 
     @property
     def average_cost(self):
@@ -66,32 +68,56 @@ def replay(ledger: Ledger) -> ReplayResult:
     positions = {}
     warnings = []
     pending = []
-    seen_dates = {}
+    seen_stamps = {}
+    seen_precision = {}
     with localcontext(FINANCIAL_CONTEXT):
         for version in effective_versions(ledger):
             tx = version.transaction
-            key = (tx.instrument.ticker, tx.executed_at.isoformat()[:10])
-            same_day = seen_dates.setdefault(key, [])
-            if any(t.executed_at == tx.executed_at and (t.broker_sequence is None or tx.broker_sequence is None)
-                   or type(t.executed_at) is not type(tx.executed_at) for t in same_day):
+            key = (tx.instrument.ticker, tx.executed_at.isoformat())
+            previous_sequence = seen_stamps.get(key, 'unseen')
+            day_key = (tx.instrument.ticker, tx.executed_at.isoformat()[:10])
+            precision = type(tx.executed_at)
+            prior_precision = seen_precision.get(day_key)
+            if (previous_sequence != 'unseen' and
+                (previous_sequence is None or tx.broker_sequence is None or previous_sequence == tx.broker_sequence)
+                or prior_precision is not None and prior_precision is not precision):
                 warnings.append(f'Ordem temporal ambígua: {tx.transaction_uid}')
-            same_day.append(tx)
+            seen_stamps[key] = tx.broker_sequence
+            seen_precision[day_key] = precision
             pos = positions.get(tx.instrument.ticker, Position(tx.instrument.ticker))
-            # Convert every monetary component separately, before arithmetic in base currency.
-            gross = tx.quantity * tx.price.in_base(ledger.portfolio.base_currency)
-            fee = tx.commission.in_base(ledger.portfolio.base_currency)
-            derived_net = gross + fee if tx.type == TransactionType.BUY else gross - fee
-            if tx.observed_net is not None and tx.observed_net.in_base(ledger.portfolio.base_currency) != derived_net:
-                pending.append(tx.transaction_uid)
-            if tx.type == TransactionType.BUY:
-                pos = replace(pos, quantity=pos.quantity + tx.quantity, cost=pos.cost + derived_net)
+            base = ledger.portfolio.base_currency
+            if tx.type == TransactionType.DIVIDEND:
+                derived_net = tx.gross.in_base(base) - tx.withholding.in_base(base) - tx.charges.in_base(base)
+                if tx.net.in_base(base) != derived_net:
+                    raise LedgerError(f'Dividendo líquido inconsistente: {tx.transaction_uid}')
+                pos = replace(pos, dividends=pos.dividends + derived_net)
+            elif tx.type == TransactionType.ADJUSTMENT:
+                if not pos.quantity:
+                    raise LedgerError(f'Split sem posição: {tx.transaction_uid}')
+                pos = replace(pos, quantity=pos.quantity * tx.split_factor)
+                derived_net = None
             else:
-                if tx.quantity > pos.quantity:
-                    raise LedgerError(f'Venda excede quantidade disponível: {tx.transaction_uid}')
-                allocated = pos.cost if tx.quantity == pos.quantity else tx.quantity * pos.cost / pos.quantity
-                remaining = pos.quantity - tx.quantity
-                pos = replace(pos, quantity=remaining, cost=pos.cost - allocated if remaining else ZERO,
-                              realized_pnl=pos.realized_pnl + derived_net - allocated)
+                # Convert each component independently before arithmetic in base currency.
+                gross = tx.quantity * tx.price.in_base(base)
+                fee = tx.commission.in_base(base)
+                derived_net = gross + fee if tx.type == TransactionType.BUY else gross - fee
+                if tx.type == TransactionType.BUY:
+                    pos = replace(pos, quantity=pos.quantity + tx.quantity, cost=pos.cost + derived_net,
+                                  lifetime_purchase_cost=pos.lifetime_purchase_cost + derived_net)
+                else:
+                    if tx.quantity > pos.quantity:
+                        raise LedgerError(f'Venda excede quantidade disponível: {tx.transaction_uid}')
+                    allocated = pos.cost if tx.quantity == pos.quantity else tx.quantity * pos.cost / pos.quantity
+                    remaining = pos.quantity - tx.quantity
+                    remaining_cost = pos.cost - allocated if remaining else ZERO
+                    proceeds = pos.lifetime_sale_proceeds + derived_net
+                    # Reconstruct realized profit from exact cumulative inputs and remaining cost.
+                    # This cancels division residues on full closure rather than summing rounded PnL.
+                    pos = replace(pos, quantity=remaining, cost=remaining_cost,
+                                  lifetime_sale_proceeds=proceeds,
+                                  realized_pnl=proceeds - pos.lifetime_purchase_cost + remaining_cost)
+            if tx.observed_net is not None and tx.observed_net.in_base(base) != derived_net:
+                pending.append(tx.transaction_uid)
             positions[pos.ticker] = pos
     return ReplayResult(tuple(positions[k] for k in sorted(positions)), tuple(warnings), tuple(pending))
 

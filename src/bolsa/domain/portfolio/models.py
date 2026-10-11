@@ -24,9 +24,14 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+MONEY_FIELDS = ('price', 'commission', 'observed_net', 'gross', 'withholding', 'charges', 'net')
+
+
 class TransactionType(StrEnum):
     BUY = 'BUY'
     SELL = 'SELL'
+    DIVIDEND = 'DIVIDEND'
+    ADJUSTMENT = 'ADJUSTMENT'
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,9 +55,9 @@ class Transaction:
     instrument: Instrument
     type: TransactionType
     executed_at: date | datetime
-    quantity: Decimal
-    price: Money
-    commission: Money
+    quantity: Decimal = Decimal(0)
+    price: Money | None = None
+    commission: Money | None = None
     transaction_uid: str = field(default_factory=uid)
     order_key: str = field(default_factory=uid)
     broker_sequence: int | None = None
@@ -63,18 +68,48 @@ class Transaction:
     external_id: str | None = None
     observed_net: Money | None = None
     related_transaction_uid: str | None = None
+    gross: Money | None = None
+    withholding: Money | None = None
+    charges: Money | None = None
+    net: Money | None = None
+    adjustment_category: str | None = None
+    split_factor: Decimal | None = None
+    adjustment_reason: str = ''
 
     def __post_init__(self):
         check_uid(self.transaction_uid)
         check_uid(self.order_key)
         if self.related_transaction_uid is not None:
             check_uid(self.related_transaction_uid)
-        if self.type not in (TransactionType.BUY, TransactionType.SELL):
+        if not isinstance(self.type, TransactionType):
             raise LedgerError('Tipo financeiro não suportado.')
         if self.instrument.asset_type not in ('stock', 'etf'):
             raise LedgerError('Portfolio aceita apenas ações e ETFs.')
-        decimal_input(self.quantity, positive=True)
-        decimal_input(self.price.amount, positive=True)
+        decimal_input(self.quantity)
+        if self.settled_on is not None and (not isinstance(self.settled_on, date) or isinstance(self.settled_on, datetime)):
+            raise LedgerError('Liquidação deve ser uma data.')
+        if self.type in (TransactionType.BUY, TransactionType.SELL):
+            decimal_input(self.quantity, positive=True)
+            if not isinstance(self.price, Money) or not isinstance(self.commission, Money):
+                raise LedgerError('Preço e comissão obrigatórios.')
+            decimal_input(self.price.amount, positive=True)
+            if any(v is not None for v in (self.gross, self.withholding, self.charges, self.net,
+                                          self.adjustment_category, self.split_factor)) or self.adjustment_reason:
+                raise LedgerError('Campos incompatíveis com BUY/SELL.')
+        elif self.type == TransactionType.DIVIDEND:
+            if self.quantity != 0 or self.price is not None or self.commission is not None:
+                raise LedgerError('Dividendo não altera quantidade nem preço.')
+            if not all(isinstance(v, Money) for v in (self.gross, self.withholding, self.charges, self.net)):
+                raise LedgerError('Componentes do dividendo obrigatórias.')
+            if self.adjustment_category is not None or self.split_factor is not None or self.adjustment_reason:
+                raise LedgerError('Campos de ajuste num dividendo.')
+        else:
+            if self.adjustment_category != 'SPLIT' or not self.adjustment_reason.strip():
+                raise LedgerError('Apenas split manual justificado está aprovado.')
+            decimal_input(self.split_factor, positive=True)
+            if self.quantity != 0 or any(v is not None for v in (self.price, self.commission, self.gross,
+                                                                self.withholding, self.charges, self.net, self.observed_net)):
+                raise LedgerError('Split conserva o custo; campos incompatíveis.')
         if not isinstance(self.executed_at, date):
             raise LedgerError('Data de execução inválida.')
         if isinstance(self.executed_at, datetime):

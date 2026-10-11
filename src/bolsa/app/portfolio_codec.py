@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from bolsa.domain.instruments import AssetType, Instrument
-from bolsa.domain.portfolio.models import Transaction, TransactionType, TransactionVersion
+from bolsa.domain.portfolio.models import MONEY_FIELDS, Transaction, TransactionType, TransactionVersion
 from bolsa.domain.portfolio.money import Money, canonical
 
 
@@ -25,7 +25,8 @@ def version_dict(version: TransactionVersion) -> dict:
     tx = version.transaction
     data = asdict(tx)
     data['quantity'] = canonical(tx.quantity)
-    for key in ('price', 'commission', 'observed_net'):
+    data['split_factor'] = canonical(tx.split_factor) if tx.split_factor is not None else None
+    for key in MONEY_FIELDS:
         money = getattr(tx, key)
         data[key] = money_dict(money) if money is not None else None
     data['executed_at'] = tx.executed_at.isoformat()
@@ -52,7 +53,11 @@ def version_from(data: dict) -> TransactionVersion:
     if type(tx['quantity']) is not str:
         raise ValueError('Quantidade JSON deve ser texto.')
     tx['quantity'] = Decimal(tx['quantity'])
-    for key in ('price', 'commission', 'observed_net'):
+    if tx['split_factor'] is not None:
+        if type(tx['split_factor']) is not str:
+            raise ValueError('Fator de split deve ser texto.')
+        tx['split_factor'] = Decimal(tx['split_factor'])
+    for key in MONEY_FIELDS:
         tx[key] = money_from(tx[key]) if tx[key] is not None else None
     if type(fields['voided']) is not bool:
         raise ValueError('Estado de anulação inválido.')

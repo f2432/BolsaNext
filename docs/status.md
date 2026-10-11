@@ -805,3 +805,9 @@ em dev/main nem tags/releases. P1 implementado e validado automaticamente: 185 t
 Ruff sem erros, cobertura global 67%. Base `6069e68`; branch `feature/v0.3-portfolio`.
 As proibições anteriores de iniciar código são históricas e substituídas pelo pedido atual.
 P2–P7 pendentes. Evidências e limitações: `docs/v0.3-execution.md`.
+
+### Progresso P2 (2026-10-11)
+
+P2 implementado e validado: 195 testes, cobertura global 67%, Ruff sem erros. Dividendos
+manuais e split auditável persistentes; corrigido resíduo de PnL em fecho após dízimas.
+P3–P7 pendentes. Publicação via conector GitHub, pois push direto não tem credencial.
