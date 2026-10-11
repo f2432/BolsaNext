@@ -105,6 +105,7 @@ def test_widget_creation_record_valuation_export_import(
         predicate=lambda: widget.dashboard.ledger.portfolio.portfolio_uid != original_uid,
     )
     assert widget.selector.count() == 2 and "Importação" in widget.status.text()
+    assert widget.selector.itemText(0) != widget.selector.itemText(1)
     widget.close()
 
 

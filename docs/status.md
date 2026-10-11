@@ -861,3 +861,7 @@ e Ruff sem erros. Última correção valida tipos de metadados/auditoria antes d
 94,20%, UI 86,68%. O commit de fecho dispara novamente a matriz; resultados por SHA em
 Actions da branch. Implementação para revisão; teste interativo Windows ainda pendente.
 O estado prevalecente é este fecho e o relatório `docs/v0.3-execution.md`.
+
+Última verificação de apresentação: carteiras com nome igual são distinguidas por identidade
+visível na seleção, incluindo clones, sem mudar os nomes ou históricos. 258 testes locais
+passaram; o resultado remoto de cada commit está em Actions da branch.

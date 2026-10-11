@@ -176,7 +176,14 @@ class PortfolioWidget(QWidget):
         self.selector.clear()
         for portfolio in dashboard.portfolios:
             self.selector.addItem(
-                f"{portfolio.name} ({portfolio.base_currency})", portfolio.portfolio_uid
+                f"{portfolio.name} ({portfolio.base_currency}, {portfolio.portfolio_uid[:8]})",
+                portfolio.portfolio_uid,
+            )
+            identity = f"Carteira: {portfolio.portfolio_uid}"
+            if portfolio.origin_portfolio_uid:
+                identity += f"; cópia de {portfolio.origin_portfolio_uid}"
+            self.selector.setItemData(
+                self.selector.count() - 1, identity, Qt.ItemDataRole.ToolTipRole
             )
         ledger = dashboard.ledger
         if ledger:
