@@ -131,6 +131,7 @@ def test_new_database_is_created_at_head(tmp_path) -> None:
             "portfolios",
             "portfolio_versions",
             "portfolio_components",
+            "portfolio_policies",
             "instruments",
             "watchlists",
             "watchlist_items",

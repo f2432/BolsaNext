@@ -170,6 +170,8 @@ class Ledger:
     portfolio: Portfolio
     versions: tuple[TransactionVersion, ...] = ()
     revision: int = 0
+    policies: tuple = ()
 
     def __post_init__(self):
+        object.__setattr__(self, 'policies', tuple(sorted(self.policies, key=lambda p:p.version_number)))
         object.__setattr__(self, 'versions', tuple(sorted(self.versions, key=lambda v: (v.transaction.transaction_uid, v.version_number))))

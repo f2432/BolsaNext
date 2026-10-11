@@ -823,3 +823,9 @@ sem look-ahead, valorização atual com total indisponível quando faltam dados 
 P4 implementado/testado: 214 testes, cobertura global 70%, Ruff sem erros. JSON v1 completo,
 pré-visualização/confirmar, deduplicação provada, conflitos, clones e rollback atómico.
 P3 teve 205 testes/68% (contagem inicial documental corrigida). P5–P7 pendentes.
+
+### Progresso P5 (2026-10-11)
+
+P5 implementado/testado: 217 testes, cobertura global 71%, Ruff sem erros. Reconciliação
+interna e políticas opcionais append-only com vigência. JSON v2 preserva política, mantendo
+compatibilidade de leitura v1. P6–P7 pendentes; UI Portfolio ainda não integrada.

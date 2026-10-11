@@ -58,7 +58,23 @@ def merge_ledger(existing: Ledger, incoming: Ledger):
         inserted += 1
     if conflicts:
         raise ImportRejected(ImportReport(ignored=ignored, conflicts=tuple(conflicts)))
-    candidate = replace(existing, versions=tuple(versions), revision=existing.revision + inserted)
+    from bolsa.domain.portfolio.policy import validate_policies
+    policies = list(existing.policies)
+    policy_numbers = {p.version_number:p for p in policies}
+    for policy in incoming.policies:
+        previous = policy_numbers.get(policy.version_number)
+        if previous is not None:
+            if previous != policy:
+                raise ImportRejected(ImportReport(conflicts=('Conflito de versão de política.',)))
+            ignored += 1
+        else:
+            policies.append(policy)
+            inserted += 1
+    try:
+        validate_policies(policies)
+    except LedgerError as exc:
+        raise ImportRejected(ImportReport(rejected=(str(exc),))) from exc
+    candidate = replace(existing, versions=tuple(versions), policies=tuple(policies), revision=existing.revision + inserted)
     try:
         replay(candidate)
     except LedgerError as exc:

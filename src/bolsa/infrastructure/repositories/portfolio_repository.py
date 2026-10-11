@@ -3,6 +3,8 @@ import json
 from sqlalchemy import select, insert, update
 
 from bolsa.app.portfolio_codec import version_dict, version_from, money_dict
+from bolsa.app.policy_codec import policy_dict, policy_from
+from bolsa.infrastructure.database.policy_tables import policies
 from bolsa.domain.portfolio.ledger import append_version, replay
 from bolsa.domain.portfolio.models import MONEY_FIELDS, Ledger, Portfolio
 from bolsa.domain.portfolio.money import Money, LedgerError, StaleRevisionError, canonical
@@ -55,7 +57,12 @@ class SqlAlchemyPortfolioRepository:
                                                   row.version_number, row.previous_version_uid):
                 raise LedgerError('Metadados do ledger inconsistentes.')
             result.append(version)
-        return Ledger(portfolio, tuple(result), revision)
+        policy_rows = connection.execute(select(policies).where(policies.c.portfolio_uid == portfolio_uid)
+                                         .order_by(policies.c.version_number))
+        policy_history = tuple(policy_from(json.loads(p.payload)) for p in policy_rows)
+        from bolsa.domain.portfolio.policy import validate_policies
+        validate_policies(policy_history)
+        return Ledger(portfolio, tuple(result), revision, policy_history)
 
     def load(self, portfolio_uid):
         with self.engine.connect() as connection:
@@ -138,6 +145,13 @@ class SqlAlchemyPortfolioRepository:
                 for version in candidate.versions:
                     if version.transaction_version_uid not in stored_ids:
                         self._insert_version(connection, portfolio.portfolio_uid, version)
+                stored_policies = {p.policy_version_uid for p in existing.policies}
+                for policy in candidate.policies:
+                    if policy.policy_version_uid not in stored_policies:
+                        connection.execute(insert(policies).values(portfolio_uid=portfolio.portfolio_uid,
+                            policy_version_uid=policy.policy_version_uid,version_number=policy.version_number,
+                            previous_version_uid=policy.previous_version_uid,
+                            payload=json.dumps(policy_dict(policy),sort_keys=True)))
                 connection.execute(update(portfolios).where(portfolios.c.portfolio_uid == portfolio.portfolio_uid)
                                    .values(ledger_revision=candidate.revision))
                 connection.commit()

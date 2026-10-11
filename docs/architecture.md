@@ -1425,3 +1425,10 @@ por operação, conservando metadados históricos; a tabela instruments continua
 por ticker/associações. Componentes monetárias são texto exato. Duas fases: plan de Application
 sem escrita; adapter confirma/revalida toda a união sob transação/revisão. Clone muda apenas
 identidade da carteira/proveniência, preservando UUIDs históricos no seu âmbito.
+
+### Implementação P5
+
+Políticas ficam na história do agregado Ledger, separadas dos eventos económicos, com
+persistência append-only e revisão de carteira. Migration 0004. JSON v2 inclui políticas,
+lê também v1 sem políticas. Risco/reconciliação residem no domínio e só emitem informação.
+Setores não disponíveis não são inferidos; denominador parcial nunca produz conformidade.

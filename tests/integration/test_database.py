@@ -34,6 +34,7 @@ def test_database_initialization_creates_initial_schema(tmp_path) -> None:
             "portfolios",
             "portfolio_versions",
             "portfolio_components",
+            "portfolio_policies",
             "instruments",
             "watchlists",
             "watchlist_items",
