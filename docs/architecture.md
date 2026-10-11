@@ -1325,3 +1325,58 @@ Concentração e exposição usam valores atuais na moeda base da carteira, obti
 Os avisos da política são **informativos**, não bloqueiam BUY/SELL legítimas; continuam obrigatórias as invariantes de integridade do ledger, como impedir vendas em excesso. A V0.3 **não dá recomendações automáticas de compra/venda**, não transmite ordens à XTB nem executa operações. O cálculo dos alertas é feito quando necessário; a persistência das versões da política é obrigatória, ao contrário do histórico de alertas.
 
 **A8 aprovado como especificação funcional**, não como código, modelo físico ou decisão sobre métricas futuras não especificadas. Segue-se, apenas após autorização separada do utilizador, auditoria global A1–A8 das especificações perante a arquitetura/código existentes.
+
+
+## Auditoria pré-implementação V0.3 — resolução técnica AUD-001 a AUD-012 (2026-10-11)
+
+Esta secção é um **aditamento normativo** às especificações A1–A8, após revisão independente e autorização do utilizador. Em caso de conflito técnico com descrições anteriores, prevalece este aditamento **apenas nos assuntos explicitamente aqui resolvidos**. Não representa implementação nem execução de testes.
+
+### AUD-001 — Identidade, versões e anulações do ledger (decisão)
+
+Separar **identidade económica** `transaction_uid` (UUID estável no âmbito da carteira) de **identidade de versão** `transaction_version_uid` (UUID único por registo versionado). Cada versão contém número de versão monotónico, referência à versão anterior (exceto primeira), tipo económico e valores completos, data/hora de execução e respetiva precisão/fuso conhecidos, instante de registo/alteração, motivo obrigatório de correção/anulação, proveniência e autoria local disponível. Os campos financeiros de uma versão confirmada são imutáveis. Correção acrescenta versão completa sucessora; anulação acrescenta **evento auditável terminal sem impacto financeiro**, sem apagar versões. Estado efetivo é **derivado da cadeia**: no máximo uma versão eficaz por `transaction_uid`, ou nenhuma se anulada; não depender de flags contraditórias como únicas fontes de verdade. Nunca contar várias versões como diferentes BUY/SELL.
+
+Impor unicidade `(portfolio_uid, transaction_uid, version_number)` e unicidade global de `transaction_version_uid`; impedir ramificações, ciclos, sucessores duplicados e versões com carteira diferente, através de restrições e validação de domínio. Uma correção/anulação é anexada atomicamente sob controlo de concorrência; rejeitar pedidos que partam de versão entretanto substituída (**expected head/version**). Não permitir reativar automaticamente operação anulada na V0.3; reintrodução requer nova operação económica auditavelmente relacionada, nunca mutação retroativa. Exportação A7 guarda a cadeia e estado derivados.
+
+Toda a sequência efetiva afetada é reproduzida após correção/anulação antes de commit; se qualquer venda posterior exceder a quantidade disponível, rejeitar integralmente o pedido. Exemplo: BUY10, SELL8, correção do BUY para 5 => rejeição atómica. Recalcular desde primeiro evento afetado e conservar ordem determinística com chave persistente para empates temporais; a data de correção **não substitui** a data económica da operação corrigida. Uma cadeia de versões não pode alterar o passado sem revalidar consequências futuras.
+
+### AUD-002 e AUD-005 — Origem, moedas e montantes da corretora (decisão conservadora)
+
+Separar **factos originais** (valores efetivamente debitados/creditados, moedas, taxas aplicadas, referência externa, comissões/taxas discriminadas, se disponíveis) de **valores derivados** (cálculo pela fórmula, taxa de referência e valorização de mercado). Montantes e câmbios observados não devem ser substituídos por preços yfinance ou presumidos encargos. Cada componente monetária (preço de execução e seu montante, comissão, retenção, outros encargos, dividendo) transporta moeda própria e, quando exige conversão, taxa **histórica explícita** para a moeda base; não aplicar o FX de uma componente a outra sem evidência da mesma taxa.
+
+Para operações manuais, custo/proveitos contabilísticos derivam de componentes normalizadas para moeda base segundo A2/A4 e taxas históricas explicitadas. Se houver **montante líquido efetivo fornecido pela corretora** e divergente do derivado, conservar o observado, calcular a diferença e marcar operação como **pendente de reconciliação**, sem incorporá-la automaticamente como comissão, spread, ajuste ou PnL. Não apresentar custo/PnL dessa operação como definitivamente conciliado enquanto a diferença material não for resolvida. Resolução requer lançamento/componentização explícita e rastreável ou aceitação motivada de tolerância definida, mantendo os valores originais imutáveis; não inventar entradas financeiras. A contabilização de diferenças não discriminadas **não é automatizada na V0.3**. Valores necessários de moedas/FX ausentes => operação não confirmável quando impede o ledger determinístico; sem fallback fictício a 1.
+
+Dividendos mantêm bruto, retenção, outros encargos e líquido na moeda de cada parcela, com conversão histórica individual quando necessária. Rejeitar dupla conversão. Manter distinção entre moeda de cotação do instrumento, execução, liquidação e moeda base. Esta decisão é uma política prudencial de sinalização, não uma alegação de que os montantes da XTB seguem sempre a mesma semântica; especificar no adaptador futuro.
+
+### AUD-003 — Concorrência e atomicidade financeira
+
+O `WatchlistOperationCoordinator` da V0.2 **não** constitui bloqueio de escrita de Portfolio. Serializar mutações do ledger da mesma carteira através de serviço de aplicação/repositório com transação SQLite e verificação **optimista de revisão** (`portfolio_ledger_revision`) ou exclusão mútua equivalente verificável. UI pode avisar sobre ocupação, mas não é a barreira de integridade. Análises/leitura de mercado não obtêm permissão para alterar o ledger; cotações concorrentes não mudam transações históricas. A pré-visualização de importação A7 contém revisão observada; **revalidar revisão, duplicados, relações e invariantes dentro da transação imediatamente antes do commit**. Se a revisão mudou, abortar e exigir nova pré-visualização; nunca confirmar plano obsoleto. Não partilhar uma sessão SQLAlchemy entre threads. Testar duas compras/vendas/correções/importações concorrentes sobre a mesma carteira e recuperação de falhas.
+
+### AUD-004 — Cópias independentes e idempotência
+
+A identidade de uma operação económica usada na deduplicação é **`(portfolio_uid, transaction_uid)`**, não apenas o UUID isolado quando há cópias independentes. Um clone recebe novo `portfolio_uid`, referencia `origin_portfolio_uid`, conserva `transaction_uid`, `transaction_version_uid` e proveniência como IDs históricos **no âmbito da cópia**, sem escrever na original. IDs técnicos de linhas SQLite podem diferir. Identificador externo composto `(source, account_ref, external_id)` identifica uma execução dentro do âmbito da fonte/conta, sendo associado ao contexto da carteira e recusando colisões contraditórias. Não deduplicar exclusivamente por quantidade, preço e instante. Diferenciar: (a) restauro da mesma carteira, (b) importação complementar, (c) clone deliberado; exigir escolha explícita e pré-visualização A7.
+
+### AUD-006 — Configuração existente
+
+Inspeção de `src/bolsa/config.py` na `dev` confirma **`AppConfig.default_base_currency: str = "EUR"` já existente**. Logo, a renomeação `base_currency` → `default_base_currency` nos textos A5 **não é trabalho pendente da implementação atual**. Antes de qualquer migração de instalações legadas, verificar empiricamente se existe configuração persistida com chave antiga; só construir compatibilidade se essa origem existir. Não criar migração fictícia, não alterar carteiras, manter autoridade em `Portfolio.base_currency`.
+
+### AUD-008 — Replay, desempenho e caches
+
+Ledger eficaz permanece verdade. Permitir snapshots/posições derivados **apenas como caches invalidadas por revisão e reconstituíveis**; nunca tratá-los como autoridade ou ignorar evento anterior. Criar testes de equivalência entre replay integral e replay a partir de snapshot válido, e de invalidação após correções retroativas. Medir tempo/memória em históricos longos (incluindo 10 000 eventos) e manter a interface responsiva, com processamento fora do ciclo UI sem violar limites de sessão SQLAlchemy. Não impor já um SLA numérico não medido.
+
+### AUD-009 — Precisão na fronteira de Market Data
+
+`src/bolsa/infrastructure/market_data/yfinance_provider.py` utiliza `float` para fatores de subunidades, e o port atual retorna `float`. Isso é compatível com preços de mercado aproximados na V0.2, **não** com factos financeiros de execução exata. Converter de forma explícita e validada na fronteira A3, sem alegar precisão recuperada; considerar refatorar o adaptador para fator decimal antes de cálculos de Portfolio caso testes revelem discrepâncias relevantes. Nunca enviar valores de execução originais XTB por esta via.
+
+### AUD-010 — Indicadores e metodologia
+
+Os indicadores de concentração só são calculáveis com **denominador integral disponível**. Peso por instrumento = valor de mercado do instrumento / valor de mercado total positivo e completo; sem denominador positivo, marcar não avaliável. Exposição por setor deve distinguir instrumento desconhecido e ETFs multissetoriais, **não presumir automaticamente a exposição subjacente de um ETF**. Exposição por moeda indica claramente se significa **moeda de cotação** (implementável inicialmente) ou risco económico cambial subjacente (não inferível diretamente de ETF multinacional). Sem rótulo explícito, não apresentar como risco cambial económico total. Objetivos anualizados continuam sem cálculo até metodologia aprovada. PnL e rendibilidade são conceitos distintos; evitar percentagens de retorno para portefólios com fluxos sem método definido.
+
+### AUD-011 — Persistência, migração e backup
+
+O projeto tem revisões Alembic `0001_v02_baseline` e `0002_market_to_exchange`. Antes de implementar A1–A8, definir revisão seguinte de schema Portfolio (provável `0003`, sujeita a inspeção da sequência corrente), restrições de integridade, tipos DECIMAL TEXT, índices por carteira/ordem/referências, tratamento de sessões e backup pré-migração D2. Não executar migração de produção sem prova de upgrade em base de teste com cópia de dados V0.2 e validação pós-upgrade. Documentar estratégia explícita de downgrade ou de **restauro por backup** quando downgrade sem perda for impossível; nunca prometer reversibilidade de uma migração destrutiva. Portfolio inicialmente novo, sem migração de posições legadas presumida.
+
+### AUD-007 e AUD-012 — Estado canónico e higiene de Git
+
+Uma secção antiga de `docs/status.md` afirma incorretamente que `main` não foi integrada e `v0.2.0` não existe. Registar adiante o estado real como **prevalecente** e marcar a síntese antiga como histórica, sem apagar rastreabilidade. Integração squash explica `dev` estar à frente e um commit atrás de `main`; isso não implica, isoladamente, desvio de conteúdo. Para desenvolvimento futuro, preferir commits por unidade de trabalho com resumo claro; não reescrever o histórico de 328 commits para melhorar a aparência de Git.
+
+**Fecho da auditoria documental:** as decisões acima resolvem as ambiguidades de contrato relevantes, mas **não substituem verificação de implementação**, testes concorrentes, migração em base descartável, benchmark ou validação da semântica real de extratos da corretora. Iniciar código só depois de plano de incrementos com testes por invariante.
