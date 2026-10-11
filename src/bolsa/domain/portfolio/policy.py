@@ -21,6 +21,8 @@ class InvestmentPolicy:
 
     def __post_init__(self):
         check_uid(self.policy_version_uid)
+        if not isinstance(self.notes, str) or len(self.notes) > 10000:
+            raise LedgerError("Notas da política inválidas.")
         if self.previous_version_uid is not None:
             check_uid(self.previous_version_uid)
         if type(self.version_number) is not int or self.version_number < 1:

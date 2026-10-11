@@ -204,6 +204,10 @@ class TransactionVersion:
 
     def __post_init__(self):
         check_uid(self.transaction_version_uid)
+        if type(self.voided) is not bool:
+            raise LedgerError("Estado de anulação deve ser booleano.")
+        if not isinstance(self.reason, str) or len(self.reason) > 10000:
+            raise LedgerError("Motivo de auditoria deve ser textual.")
         if self.previous_version_uid is not None:
             check_uid(self.previous_version_uid)
         if type(self.version_number) is not int or self.version_number < 1:

@@ -51,6 +51,8 @@ class Money:
 
     def __post_init__(self):
         decimal_input(self.amount)
+        if self.original_text is not None and not isinstance(self.original_text, str):
+            raise LedgerError("Texto de origem deve permanecer textual.")
         object.__setattr__(self, "currency", currency(self.currency))
         if self.fx_rate is not None:
             decimal_input(self.fx_rate, scale=12, positive=True)

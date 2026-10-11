@@ -389,3 +389,24 @@ def test_dashboard_consistent_snapshot_reports_realized_dividends_and_fx(
         ).price.fx_rate
         == ledger.versions[0].transaction.price.fx_rate
     )
+
+
+@pytest.mark.parametrize("original", [{"invalid": "object"}, 1.25])
+def test_origin_financial_text_is_not_a_float_or_object(original):
+    with pytest.raises(LedgerError, match="textual"):
+        Money(Decimal(1), "EUR", original_text=original)
+
+
+@pytest.mark.parametrize("flag", ["false", 1])
+def test_audit_void_flag_must_be_boolean(trade, flag):
+    with pytest.raises(LedgerError, match="booleano"):
+        TransactionVersion(trade(), voided=flag)
+
+
+def test_policy_and_audit_notes_are_typed_text_before_import(trade):
+    from bolsa.domain.portfolio.policy import InvestmentPolicy
+
+    with pytest.raises(LedgerError):
+        InvestmentPolicy(notes={"invalid": "object"})
+    with pytest.raises(LedgerError):
+        TransactionVersion(trade(), reason=["invalid"])

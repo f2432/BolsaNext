@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-> **Estado atual (2026-10-11):** V0.3 `0.3.0.dev0` implementada/testada em `feature/v0.3-portfolio`, P1–P7 para revisão. 253 testes, cobertura global 78%. Consulte a **«Síntese prevalecente P7»** e `docs/v0.3-execution.md`. Main/tag V0.2.0 intactas.
+> **Estado atual (2026-10-11):** V0.3 `0.3.0.dev0` implementada/testada em `feature/v0.3-portfolio`, P1–P7 para revisão. 258 testes locais, cobertura global 78%; CI Linux/Windows do P7 passou. Consulte a **«Síntese prevalecente P7»** e `docs/v0.3-execution.md`. Main/tag V0.2.0 intactas.
 
 > **Registo histórico anterior à execução:** **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
 
@@ -852,3 +852,12 @@ interativo Windows devem ser verificados separadamente. Nenhum dado financeiro r
 consultado. Relatório completo/limitações e histórico: `docs/v0.3-execution.md`.
 As sínteses antigas «não iniciado», «sem código autorizado» e pendências intermédias são
 registos históricos, não o estado atual. A V0.2.0 em main/tag continua intacta.
+
+### Fecho P7: CI e validação de metadados (2026-10-11)
+
+CI P7 `a02a800` **PASSOU em Linux/Python 3.12 e Windows/Python 3.14**, 253 testes por plataforma
+e Ruff sem erros. Última correção valida tipos de metadados/auditoria antes da confirmação:
+**258 testes locais passaram**, cobertura global 78%, domínio Portfolio 91,77%, repositório
+94,20%, UI 86,68%. O commit de fecho dispara novamente a matriz; resultados por SHA em
+Actions da branch. Implementação para revisão; teste interativo Windows ainda pendente.
+O estado prevalecente é este fecho e o relatório `docs/v0.3-execution.md`.
