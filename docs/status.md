@@ -1,5 +1,18 @@
 # Estado atual do projeto
 
+## Síntese prevalecente — execução V0.3 (2026-10-13)
+
+Desenvolvimento autónomo autorizado pelo utilizador, exclusivamente na `dev`.
+Clone atualizado por fast-forward para `6069e68`; A1–A8 e auditoria técnica
+aprovadas conforme síntese de 2026-10-11. `main` e `v0.2.0` não alteradas.
+Baseline local reproduzida: 161 testes aprovados (10,27 s), Windows/Python 3.14.
+P1 em implementação: núcleo BUY/SELL, valores Decimal, replay, versões e
+anulações implementados; 28 testes novos de domínio aprovados e Ruff sem erros.
+Persistência/migração P1 ainda pendentes. Nenhum incremento inteiro concluído,
+nenhuma UI Portfolio, operação real, ordem externa ou negociação automática.
+As proibições de iniciar V0.3 nos registos anteriores são históricas e foram
+substituídas pela autorização explícita desta execução. Histórico preservado.
+
 > **Estado atual (2026-10-11):** V0.2.0 integrada na `main` e tag publicada; A1–A5, A7 e A8 especificados para V0.3, A6 fechado no D1. Consulte **«Síntese prevalecente pós-auditoria»**, no fim deste documento. A antiga leitura rápida de 2026-10-10 é histórica e não constitui o estado vigente.
 
 Última atualização canónica: 2026-10-11.

@@ -1,5 +1,15 @@
 # Roadmap
 
+## Execução autorizada V0.3 (2026-10-13)
+
+A autorização explícita do utilizador inicia V0.3-P1 na `dev`. A proposta P1
+no fim deste documento mantém-se como origem do âmbito; os contratos e critérios
+de aceitação estão detalhados no início de `docs/architecture.md`.
+P1 está em implementação, sem interface gráfica. Incrementos seguintes ainda
+precisam de sequência técnica documentada: eventos DIVIDEND/split; valorização e
+FX; importação/exportação; reconciliação/política; integração UI. Não interpretar
+esta sequência como prova de conclusão nem como autorização de versões posteriores.
+
 O roadmap é incremental. Cada versão deve produzir uma aplicação executável e testável.
 
 O estado efetivo e detalhado do trabalho encontra-se em `docs/status.md`.

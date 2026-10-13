@@ -1,5 +1,49 @@
 # Arquitetura
 
+## Implementação V0.3-P1 — contrato técnico (2026-10-13)
+
+O utilizador autorizou desenvolvimento autónomo na `dev`, começando pelo P1
+do roadmap. Este aditamento prevalece sobre indicações históricas de «sem código
+autorizado», sem alterar as decisões A1–A8. P1 cobre BUY/SELL e respetivo histórico;
+dividendos, splits, valorização atual, importação e política de risco continuam pendentes.
+
+Domínio: `domain/portfolio` contém valores e agregados imutáveis. Entradas exatas
+Decimal/texto, limites A3, cálculo em contexto local de 50 algarismos; custo médio
+derivado conserva-se durante vendas parciais, sem quantização de apresentação.
+As componentes preço/comissão têm moeda e FX histórico próprios. Não há provider
+FX neste incremento nem taxa presumida entre moedas diferentes. Catálogo inicial
+de moedas suportadas explícito em `values.py`, extensível por alteração testada.
+
+Versões completas são anexadas por UUID económico; anulação é sucessor terminal
+sem payload financeiro. O replay valida a cadeia e todo o histórico eficaz antes de
+devolver uma nova carteira. Desempate por sequência conhecida e UUID económico
+persistente, nunca pela inserção. Dados só com data conservam a data e geram aviso;
+o início do dia UTC é apenas bucket de ordenação, não instante atribuído à operação.
+Dados com data e hora preservam o fuso recebido e ordenam pelo equivalente UTC.
+
+Persistência P1 planeada: revisão Alembic `0003_portfolio_ledger`, tabelas novas
+`portfolios` e `portfolio_versions`, sem modificar as tabelas V0.2. Moeda da
+carteira imutável, revisão optimista e versões append-only. Identidade de versão
+no âmbito da carteira permite clones futuros segundo AUD-004 (que esclarece a
+unicidade global anteriormente indicada por AUD-001). Restrições de cadeia,
+referências a instrumentos preservados e índices por carteira/identidade.
+Valores financeiros em TEXT decimal canónico com adaptador SQLAlchemy explícito;
+metadados originais mantidos separadamente. Repositório recebe engine, nunca
+resolve a localização dos dados do utilizador nem migra automaticamente.
+Escrita verifica revisão, prefixo histórico e replay dentro da mesma transação;
+erro implica rollback integral. Sem atualização de posições persistidas.
+
+Migração de base existente passa pelo mecanismo D2/A7.1 já implementado, com
+backup validado antes do upgrade. Downgrade que eliminaria histórico financeiro
+é recusado: recuperação por backup explícito, preservando a base problemática.
+Não executar a aplicação nem migrar bases pessoais nesta execução.
+
+Aceitação P1: exemplos exatos A2, escalas/limites/FX A3–A5, fracionadas/dízimas,
+fecho sem resíduo, correções/anulações retroativas, cadeias inválidas, empates,
+isolamento, round-trip TEXT, rollback, concorrência com revisão obsoleta,
+reabertura e upgrade de cópia sintética V0.2 com backup. Suite completa e Ruff
+obrigatórios; validação local não constitui validação de UI nem CI remoto.
+
 ## Objetivo
 
 A nova aplicação deve evitar a concentração de responsabilidades existente na versão anterior, em particular a dependência excessiva da interface gráfica.
