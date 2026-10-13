@@ -2,6 +2,8 @@ from dataclasses import FrozenInstanceError, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, localcontext
 from uuid import UUID, uuid4
+from time import perf_counter
+import tracemalloc
 
 import pytest
 
@@ -112,9 +114,7 @@ def test_currency_and_base_immutability():
     assert portfolio.base_currency == "EUR"
     with pytest.raises(FrozenInstanceError):
         portfolio.base_currency = "USD"
-    for code in ("AAA", "GBp", "", "EU"):
-        if code == "GBp":
-            continue  # Canonical codes are case-insensitively normalized; provider subunits stay outside domain.
+    for code in ("AAA", "", "EU"):
         with pytest.raises(PortfolioError):
             Portfolio("Synthetic", code)
 
@@ -197,3 +197,56 @@ def test_duplicate_external_identity_rejected_but_equal_trades_allowed():
         portfolio.record(t)
     with pytest.raises(LedgerConflictError):
         portfolio.record(trade(), transaction_uid=portfolio.versions[0].transaction_uid)
+
+
+def test_cancelled_external_identity_still_belongs_to_original_economic_event():
+    p = Portfolio("Synthetic", "EUR").record(trade(
+        source="synthetic", account_ref="test", external_id="one"
+    ))
+    head = p.versions[0]
+    p = p.revise(head.transaction_uid, head.transaction_version_uid, None, reason="Cancel")
+    with pytest.raises(PortfolioError, match="external identity"):
+        p.record(head.trade)
+
+
+def test_terminal_audit_chain_cannot_be_revived_by_reconstruction():
+    p = Portfolio("Synthetic", "EUR").record(trade())
+    first = p.versions[0]
+    cancelled = p.revise(first.transaction_uid, first.transaction_version_uid, None, reason="Cancel")
+    successor = TransactionVersion(p.portfolio_uid, first.transaction_uid, trade(), 3,
+                                   cancelled.versions[-1].transaction_version_uid, reason="Revive")
+    with pytest.raises(PortfolioError, match="terminal"):
+        replace(cancelled, versions=cancelled.versions + (successor,))
+
+
+def test_high_magnitude_fx_applies_after_execution_gross():
+    t = replace(trade("999999999999999999.12345678"),
+                unit_price=MoneyComponent(D("987654321987654321.12345678"), "USD", D("0.123456789012")))
+    p = Portfolio("Synthetic", "EUR").record(t)
+    with localcontext() as context:
+        context.prec = 50
+        expected = t.quantity * t.unit_price.amount * t.unit_price.historical_fx
+    assert p.reconstruct().position("TEST").cost == expected
+
+
+def test_long_ledger_replay_is_exact_and_order_independent():
+    uid = UUID(int=1)
+    versions = tuple(TransactionVersion(
+        uid, UUID(int=i + 1),
+        replace(trade("1" if i % 2 == 0 else "0.5", "3" if i % 2 == 0 else "4",
+                      kind=TradeType.BUY if i % 2 == 0 else TradeType.SELL),
+                executed_at=START + timedelta(seconds=i)),
+        transaction_version_uid=UUID(int=i + 20000), recorded_at=START,
+    ) for i in range(10000))
+    tracemalloc.start()
+    start = perf_counter()
+    result = replay(uid, "EUR", versions)
+    elapsed = perf_counter() - start
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert result == replay(uid, "EUR", tuple(reversed(versions)))
+    position = result.position("TEST")
+    assert (position.quantity, position.cost, position.average_cost, position.realized_pnl) == (
+        D(2500), D(7500), D(3), D(2500)
+    )
+    print(f"Replay 10000 events: {elapsed:.3f}s; peak replay allocations {peak / 1024 / 1024:.2f} MiB")

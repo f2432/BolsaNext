@@ -34,6 +34,8 @@ def test_database_initialization_creates_initial_schema(tmp_path) -> None:
             "instruments",
             "watchlists",
             "watchlist_items",
+            "portfolios",
+            "portfolio_versions",
         }
     finally:
         engine.dispose()

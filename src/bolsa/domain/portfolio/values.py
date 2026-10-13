@@ -64,7 +64,7 @@ class MoneyComponent:
                 self.historical_fx, scale=12, positive=True
             ))
 
-    def in_base(self, base_currency: str) -> Decimal:
+    def rate_to_base(self, base_currency: str) -> Decimal:
         base = currency_code(base_currency)
         if self.currency == base:
             if self.historical_fx not in (None, Decimal("1")):
@@ -74,5 +74,8 @@ class MoneyComponent:
             if self.historical_fx is None:
                 raise PortfolioError(f"Missing historical FX: {self.currency} -> {base}")
             rate = self.historical_fx
+        return rate
+
+    def in_base(self, base_currency: str) -> Decimal:
         with localcontext(FINANCIAL_CONTEXT):
-            return self.amount * rate
+            return self.amount * self.rate_to_base(base_currency)

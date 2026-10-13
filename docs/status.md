@@ -2,11 +2,27 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Atualização de execução P1:** domínio BUY/SELL, serviço/port, repositório SQLite
+e migration `0003_portfolio_ledger` implementados e validados localmente. Suite
+completa: **205 testes aprovados em 9,02 s**, Ruff aprovado, cobertura global
+**67%** (2157 statements/716 miss). Domínio financeiro: `ledger.py` 93%,
+`values.py` 100%; serviço 100%, repository 91%, adaptador Decimal TEXT 100%.
+O relatório de cobertura apresenta módulos Alembic como 0% pela forma de carga
+dinâmica; upgrade/downgrade/backup foram efetivamente exercitados por testes,
+sem alegar cobertura de linhas desses módulos. Replay de 10 000 eventos:
+0,719 s e 1,70 MiB de pico de alocações durante replay (tracemalloc, sem incluir
+construção dos eventos), resultados exatos e independentes da ordem de entrada.
+Commit de domínio: `29c5d0b`; persistência e reforços seguem em commit próprio.
+**P1 implementado e validado localmente; CI Linux/Windows ainda por confirmar.**
+Sem validação visual/UI nem utilização de base real. Próximo incremento funcional
+P2: dividendos manuais e split simples auditável, com evolução do schema,
+replay/testes/persistência; só avançar após fecho do gate P1.
+
 Desenvolvimento autónomo autorizado pelo utilizador, exclusivamente na `dev`.
 Clone atualizado por fast-forward para `6069e68`; A1–A8 e auditoria técnica
 aprovadas conforme síntese de 2026-10-11. `main` e `v0.2.0` não alteradas.
 Baseline local reproduzida: 161 testes aprovados (10,27 s), Windows/Python 3.14.
-P1 em implementação: núcleo BUY/SELL, valores Decimal, replay, versões e
+Registo inicial desta execução (substituído pela atualização P1 acima): núcleo BUY/SELL, valores Decimal, replay, versões e
 anulações implementados; 28 testes novos de domínio aprovados e Ruff sem erros.
 Persistência/migração P1 ainda pendentes. Nenhum incremento inteiro concluído,
 nenhuma UI Portfolio, operação real, ordem externa ou negociação automática.

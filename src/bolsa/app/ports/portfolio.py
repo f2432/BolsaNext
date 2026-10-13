@@ -1,0 +1,10 @@
+from typing import Protocol
+from uuid import UUID
+
+from bolsa.domain.portfolio.ledger import Portfolio
+
+
+class PortfolioRepository(Protocol):
+    def create(self, portfolio: Portfolio) -> None: ...
+    def load(self, portfolio_uid: UUID) -> Portfolio: ...
+    def save(self, portfolio: Portfolio, *, expected_revision: int) -> None: ...

@@ -1,5 +1,33 @@
 # Desenvolvimento local
 
+## Validação técnica V0.3-P1 (2026-10-13)
+
+P1 não é ligado à interface. Os casos de uso estão em `PortfolioService`, com
+`PortfolioRepository` como port e adapter SQLite explícito; cada escrita exige
+`expected_revision`, e cada correção/anulação também `expected_head`.
+Anulação passa payload `None` e motivo, preservando versões anteriores.
+
+Validar com `python -m pytest -q --cov=bolsa --cov-report=term-missing` e
+`python -m ruff check src tests`. Casos novos em `test_portfolio_ledger.py` e
+`test_portfolio_repository.py`: exemplos A2, limites/FX/precisão, auditoria,
+execução temporal, reabertura, concorrência por revisão, falha a meio da escrita,
+proteção DB do histórico/moeda/instrumentos, backup de V0.2 sintética e recusa
+de downgrade destrutivo. Dois testes de schema existentes foram ampliados para
+verificar as novas tabelas sem retirar as verificações V0.2.
+
+Testes usam exclusivamente `tmp_path` e dados sintéticos, sem descobrir ou abrir
+bases pessoais. O Python local desta execução é 3.14.5 no caminho instalado;
+o alias WindowsApps não funcionou dentro do sandbox. Não modificar instalações
+nem contornar Windows App Control. Para reproduzir a medição de 10 000 eventos,
+executar `python -m pytest -q -s tests/unit/test_portfolio_ledger.py::test_long_ledger_replay_is_exact_and_order_independent`.
+Não existe SLA, snapshot/cache de posições nem benchmark de UI neste incremento.
+
+Migration P1 segue `0002_market_to_exchange` e usa o backup do runtime existente;
+ao iniciar futuramente a aplicação, uma base V0.2 será migrada pelo mecanismo
+normal. Esta execução não inicia a aplicação nem migra bases reais. Downgrade
+de `0003` recusado: recuperar por restauro explícito de backup validado, preservando
+a base atual antes da substituição. Produção não foi validada nesta execução.
+
 ## Requisitos
 
 - Python 3.12 ou superior

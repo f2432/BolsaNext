@@ -46,7 +46,7 @@ class Trade:
     original_facts: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self):
-        if not isinstance(self.instrument, Instrument) or self.instrument.asset_type not in (
+        if not isinstance(self.instrument, Instrument) or not isinstance(self.instrument.asset_type, AssetType) or self.instrument.asset_type not in (
             AssetType.STOCK, AssetType.ETF
         ):
             raise PortfolioError("Only stocks and ETFs are supported")
@@ -136,12 +136,19 @@ class ReplayResult:
 def effective_versions(portfolio_uid, versions):
     chains = defaultdict(list)
     seen = set()
+    external_owners = {}
     for version in versions:
         if not isinstance(version, TransactionVersion) or version.portfolio_uid != portfolio_uid:
             raise PortfolioError("Version belongs to another portfolio")
         if version.transaction_version_uid in seen:
             raise PortfolioError("Duplicate version UUID")
         seen.add(version.transaction_version_uid)
+        if version.trade is not None and version.trade.external_id:
+            trade = version.trade
+            key = (trade.source, trade.account_ref, trade.external_id)
+            owner = external_owners.setdefault(key, version.transaction_uid)
+            if owner != version.transaction_uid:
+                raise PortfolioError("Duplicate external identity in audit history")
         chains[version.transaction_uid].append(version)
     effective = []
     for chain in chains.values():
@@ -197,7 +204,7 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
             ticker = trade.instrument.ticker
             current = positions.get(ticker, Position(ticker))
             quantity = trade.quantity
-            gross = quantity * trade.unit_price.in_base(base)
+            gross = quantity * trade.unit_price.amount * trade.unit_price.rate_to_base(base)
             fee = trade.commission.in_base(base)
             if trade.kind is TradeType.BUY:
                 q = current.quantity + quantity
