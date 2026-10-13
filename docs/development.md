@@ -1,5 +1,23 @@
 # Desenvolvimento local
 
+## Validação V0.3-P2 — valorização e FX (2026-10-14)
+
+`PortfolioValuationService.evaluate()` recebe carteira, snapshots `PriceQuote`,
+instante de avaliação aware e limite temporal (72 h por omissão); consulta FX
+uma vez por moeda necessária e não consulta rede para identidade monetária ou
+posições encerradas. Resultado inclui fonte/data, limite/fallback, erros de
+fornecimento, estado por posição, subtotal conhecido e total/PnL consolidados
+apenas quando completos. Cotação diária conserva precisão de data.
+
+Os 36 casos de `tests/unit/test_portfolio_valuation.py` verificam exemplo
+90 EUR histórico / 93,50 EUR atual / +3,50 EUR, independência do contexto Decimal
+ambiente, indisponibilidade/stale/futuro/sem timestamp, subtotais incompletos,
+fecho, identidade FX, limites de idade, par invertido, dízima de inversão a 50
+algarismos, fronteira float por texto, erros de provider e recuperação.
+Tudo usa snapshots/fakes, sem rede Yahoo. Suite completa local: 241 aprovados,
+Ruff aprovado, 69% global. O CI P1 #446 confirmou Linux e Windows; o CI P2 é
+gate separado, ainda pendente nesta atualização.
+
 ## Validação técnica V0.3-P1 (2026-10-13)
 
 P1 não é ligado à interface. Os casos de uso estão em `PortfolioService`, com

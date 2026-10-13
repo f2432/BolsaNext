@@ -2,6 +2,19 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+Estado em 2026-10-14: P1 **concluído e validado local/CI** (#446, Linux/Windows).
+P2 **implementado e validado localmente**, 241 testes/Ruff, 69% global; CI
+pendente. P3–P6 por implementar. Limites e trabalho pendente em `docs/status.md`.
+
+Sequência técnica refinada durante a execução: **P2 = valorização atual e port
+FX**, independente de novas escritas/migrações do ledger; **P3 = dividendos
+manuais e split simples** com evolução de schema. A proposta inicial de começar
+pelos eventos adicionais fica histórica (abaixo); o refinamento antecipa a
+verificação INV-12 de totais incompletos e separação FX histórico/atual, sem
+alterar decisões funcionais nem adiar silenciosamente dividendos/splits.
+P4 importação/exportação, P5 reconciliação/política, P6 integração UI e fecho.
+Todos permanecem pendentes até terem código e testes; iniciar P2 só após CI P1.
+
 A autorização explícita do utilizador inicia V0.3-P1 na `dev`. A proposta P1
 no fim deste documento mantém-se como origem do âmbito; os contratos e critérios
 de aceitação estão detalhados no início de `docs/architecture.md`.

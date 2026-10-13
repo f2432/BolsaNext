@@ -2,6 +2,19 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Atualização P2 (2026-10-14):** P1 fechado com CI #446 aprovado em Linux/Python
+3.12 e Windows/Python 3.14 (pytest e Ruff); commits `29c5d0b`, `0ddca77`
+publicados na `dev`. P2 implementado: snapshots atuais Decimal, valorização
+headless, subtotais/totais/PnL distintos, fallback temporal configurável, port FX,
+adapter Yahoo diário com direção/inversão explícita e erros tipados. **241 testes
+locais aprovados em 9,19 s**, Ruff aprovado, cobertura global **69%**
+(2357 statements/721 miss). `valuation.py` 98%, serviço valorização 100%,
+adapter FX 95%. Sem chamadas reais Yahoo nem alteração de transações históricas.
+**P2 validado localmente; CI pendente antes de P3.** Não existe UI Portfolio,
+provider de snapshots atuais de preços com timestamp, calendário fiável de
+sessões nem precisão recuperada de float. Dividendos/splits continuam para P3;
+importação/exportação, reconciliação/políticas e UI continuam pendentes.
+
 **Atualização de execução P1:** domínio BUY/SELL, serviço/port, repositório SQLite
 e migration `0003_portfolio_ledger` implementados e validados localmente. Suite
 completa: **205 testes aprovados em 9,02 s**, Ruff aprovado, cobertura global

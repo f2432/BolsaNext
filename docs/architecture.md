@@ -2,6 +2,31 @@
 
 ## Implementação V0.3-P1 — contrato técnico (2026-10-13)
 
+### Contrato do incremento seguinte P2 — planeamento
+
+Depois da validação completa P1, implementar valorização em moeda base por
+posição, PnL não realizado contra custo histórico e subtotal/total separados.
+Cotações/taxas atuais são snapshots Decimal independentes do ledger, com moeda,
+origem e instante/data conhecidos; precisão de data conserva-se como data, nunca
+como hora inventada. Sem calendário de sessões fiável, usar limite configurável
+de 72 horas corridas e indicar fallback; data sem hora usa início do dia apenas
+para limite conservador de idade. Timestamp ausente/futuro torna valor não
+avaliável. Um total só existe se todas as posições abertas forem avaliáveis;
+posições encerradas não exigem dados de mercado. Histórico não é modificado.
+
+Port `FxRateProvider`: obter moeda base por unidade original, identidade 1 sem
+rede; adapter Yahoo reutiliza `MarketDataProvider` para última Close não ajustada
+de histórico diário, conserva data da sessão e inverte par explicitamente (USD
+para EUR através de EURUSD=X). Fronteira de float aproximado convertida por texto
+e validada; rates derivados da inversão usam 50 algarismos sem forçar escala de
+entrada histórica. Falhas tipadas e snapshots ausentes/stale impedem totais,
+sem fabricar FX. Não há chamadas reais Yahoo nos testes.
+
+Serviço de valorização recebe snapshots de preços explicitamente: o port de
+preço atual V0.2 não fornece hora da cotação e não deve ser usado como prova de
+frescura. Integração de UI/provider de snapshots de preços fica pendente. Este
+P2 é funcionalidade headless de cálculo e fornecimento FX, não integração UI.
+
 O utilizador autorizou desenvolvimento autónomo na `dev`, começando pelo P1
 do roadmap. Este aditamento prevalece sobre indicações históricas de «sem código
 autorizado», sem alterar as decisões A1–A8. P1 cobre BUY/SELL e respetivo histórico;
