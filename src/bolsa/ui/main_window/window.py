@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
         app_name: str = "BolsaNext",
         watchlist_service: WatchlistService | None = None,
         universe_service: UniverseService | None = None,
+        portfolio_dashboard_service=None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(app_name)
@@ -60,7 +61,13 @@ class MainWindow(QMainWindow):
             )
             tabs.addTab(watchlist_area, "Watchlist")
 
-        tabs.addTab(self._placeholder("Carteira"), "Carteira")
+        self.portfolio_widget = None
+        if portfolio_dashboard_service is not None:
+            from bolsa.ui.portfolio import PortfolioWidget
+            self.portfolio_widget = PortfolioWidget(portfolio_dashboard_service)
+            tabs.addTab(self.portfolio_widget, "Carteira")
+        else:
+            tabs.addTab(self._placeholder("Carteira"), "Carteira")
         tabs.addTab(self._placeholder("Análise"), "Análise")
         tabs.addTab(self._placeholder("Backtesting"), "Backtesting")
         tabs.addTab(self._placeholder("IA"), "IA")
@@ -68,8 +75,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabs)
 
         status = QStatusBar()
-        status.showMessage(version_label("Market Data"))
+        status.showMessage(version_label("Portfolio em integração") if self.portfolio_widget
+                           else version_label("Market Data"))
         self.setStatusBar(status)
+
+    def closeEvent(self, event):
+        if self.portfolio_widget is not None and self.portfolio_widget.busy:
+            event.ignore()
+            self.statusBar().showMessage("Aguarda o fim da operação da carteira antes de fechar.")
+            return
+        super().closeEvent(event)
 
     @staticmethod
     def _placeholder(title: str) -> QWidget:

@@ -1,5 +1,16 @@
 # Desenvolvimento local
 
+## Validação da integração V0.3 (2026-10-14)
+
+Branch `integration/v0.3`, sem merge automático na dev. Testes novos de oráculo
+Fraction, snapshots concorrentes, Qt offscreen e rejeição não destrutiva do schema
+alternativo. Executar pytest com cobertura, Ruff e git diff --check. O CI de push
+inclui esta branch, Linux/Python 3.12 e Windows/Python 3.14, com QT_QPA_PLATFORM
+offscreen. Testes Qt usam bases tmp_path e providers sintéticos; não iniciar a
+aplicação com dados pessoais nesta execução. Conversor do Portfolio da feature
+ainda não implementado; nunca trocar migrations antigas nem alterar alembic_version
+para fingir compatibilidade. Histórico e decisões em `docs/v0.3-integration.md`.
+
 Fecho da execução financeira V0.3 (2026-10-14): revisão `c75b07b` aprovada no
 CI #451, Linux/Python 3.12 e Windows/Python 3.14, testes/cobertura/Ruff em ambos.
 Suite final local: 316 testes, 72% global e Ruff aprovado. P1–P5 fechados

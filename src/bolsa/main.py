@@ -24,6 +24,11 @@ from bolsa.infrastructure.market_data import (
 from bolsa.infrastructure.repositories import SqlAlchemyWatchlistRepository
 from bolsa.logging_config import configure_logging
 from bolsa.ui.main_window import MainWindow
+from bolsa.app.services.portfolio_dashboard_service import PortfolioDashboardService
+from bolsa.app.services.portfolio_valuation_service import PortfolioValuationService
+from bolsa.infrastructure.repositories.portfolio_repository import SqlAlchemyPortfolioRepository
+from bolsa.infrastructure.market_data.fx_provider import YFinanceFxRateProvider
+from bolsa.infrastructure.market_data.portfolio_quotes import YFinancePortfolioQuoteProvider
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +68,13 @@ def main() -> int:
         watchlist_repository = SqlAlchemyWatchlistRepository(session_factory)
         watchlist = watchlist_repository.load("Principal") or Watchlist("Principal")
 
-        market_service = MarketService(YFinanceMarketDataProvider())
+        market_provider = YFinanceMarketDataProvider()
+        market_service = MarketService(market_provider)
+        portfolio_dashboard = PortfolioDashboardService(
+            SqlAlchemyPortfolioRepository(engine),
+            PortfolioValuationService(YFinanceFxRateProvider(market_provider)),
+            YFinancePortfolioQuoteProvider(market_provider),
+        )
         universe_service = UniverseService(
             CachedUniverseProvider(
                 WikipediaUniverseProvider(),
@@ -88,6 +99,7 @@ def main() -> int:
             config.app_name,
             watchlist_service=watchlist_service,
             universe_service=universe_service,
+            portfolio_dashboard_service=portfolio_dashboard,
         )
         window.show()
 

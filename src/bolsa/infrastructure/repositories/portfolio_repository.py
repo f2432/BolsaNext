@@ -69,6 +69,14 @@ class SqlAlchemyPortfolioRepository:
             connection.exec_driver_sql("BEGIN")
             return self._load(connection, portfolio_uid)
 
+    def list_portfolios(self) -> tuple[Portfolio, ...]:
+        with self._engine.connect() as connection:
+            connection.exec_driver_sql("BEGIN")
+            identities = connection.execute(select(self._portfolios.c.portfolio_uid).order_by(
+                self._portfolios.c.name, self._portfolios.c.portfolio_uid
+            )).scalars().all()
+            return tuple(self._load(connection, UUID(uid)) for uid in identities)
+
     def create(self, portfolio: Portfolio) -> None:
         if portfolio.versions or portfolio.policies:
             raise PortfolioError("Create an empty portfolio before appending ledger events")

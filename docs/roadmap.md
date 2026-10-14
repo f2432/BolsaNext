@@ -1,5 +1,15 @@
 # Roadmap
 
+## Integração autorizada entre branches (2026-10-14)
+
+`integration/v0.3` conserva domínio e migrações dev após comparação com feature.
+P6/UI agora implementado para validação automática: carteiras, formulários,
+auditoria paginada, cotação diária/FX, correção/anulação, transferências e política.
+P7 de integração exige regressão completa, publicação/CI e auditoria final;
+validação interativa Windows e conversão do schema/JSON alternativo continuam
+pendentes. As sequências P2–P3 das branches eram diferentes; não inferir conclusão
+pela coincidência de identificadores. Evidências em `docs/v0.3-integration.md`.
+
 ## Execução autorizada V0.3 (2026-10-13)
 
 **Gate financeiro fechado:** P1–P5 validados localmente e no CI #451

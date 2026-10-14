@@ -1,5 +1,17 @@
 # Estado atual do projeto
 
+## Síntese prevalecente — integração V0.3 (2026-10-14)
+
+Trabalho autorizado em `integration/v0.3` a partir da dev `bf30dcf`, comparando
+feature `7d3e4f7`. Dev mantém-se base técnica após oráculos independentes; nenhuma
+integração automática em dev/main. Relatório incremental: `docs/v0.3-integration.md`.
+Reforços financeiros: conservação exata do realizado no fecho e de produtos/somas
+nos limites A3. Cadeia Alembic publicada preservada, schemas divergentes recusados.
+UI Portfolio adaptada e testes Qt offscreen implementados, sem operar bases reais.
+Os registos P6 por iniciar abaixo são históricos face a esta integração; P6 não
+constitui validação manual ou release. Conversão de bases/JSON da feature,
+validação interativa Windows e CI final continuam pendentes neste registo.
+
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
 **Fecho técnico desta execução (2026-10-14):** P1–P5 implementados e validados
