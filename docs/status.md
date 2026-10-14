@@ -2,6 +2,21 @@
 
 ## Síntese prevalecente — correções de usabilidade após testes Windows
 
+**CI final confirmado:** #458, commit `9755571`, pytest/cobertura/Ruff aprovados
+em Linux/Python3.12 e Windows/Python3.14, incluindo os testes adicionais. Pendências
+de CI nas notas seguintes ficam históricas. Relatório final/commits preservados
+em `docs/v0.3-integration.md`. Revalidação interativa das telas modificadas continua
+pendente; isto não autoriza utilização com dados reais nem integração em dev/main.
+Evidência: https://github.com/f2432/BolsaNext/actions/runs/38638516910
+
+**Fecho local:** código `8defa56` aprovado no CI #457 em Linux/Python3.12 e
+Windows/Python3.14. Testes adicionais `9755571` aprovados localmente: **373 testes**
+em 44,37s, Ruff/diff aprovados, **83,1709% global** (3898 statements/656 miss).
+CI dos testes adicionais pendente nesta nota; código é o mesmo aprovado no #457.
+Versão executável/metadata verificadas: 0.3.0.dev0. Sem tag/release, sem alterações
+em main/dev/v0.2.0, sem bases pessoais. Validação interativa das novas telas/DPI
+e conversor da feature continuam pendentes; V0.3 não pronta para dados reais.
+
 O utilizador reportou 12 testes funcionais manuais Windows com resultados
 financeiros corretos (carteiras, operações, correções/anulações, dividendos,
 persistência, Yahoo, transferências e clones). Esta evidência comunicada substitui

@@ -2,6 +2,17 @@
 
 ## Correções de apresentação após validação funcional Windows
 
+CI final #458 (`9755571`) confirmado em Linux/Python3.12 e Windows/Python3.14:
+pytest/cobertura/Ruff aprovados, incluindo os testes adicionais de apresentação.
+As notas de CI pendente abaixo são históricas. Rerun manual das telas modificadas
+e auditoria de utilização real permanecem pendentes.
+
+Resultado local final: 373 testes em Windows/Python3.14.5 (44,37s), Ruff/diff
+aprovados, 83,1709% global (3898 statements/656 miss). Apresentação97%, parsing/
+validação formulários90%, preview92%, Qt widget93% e diálogo99%. CI #457 do código
+8defa56 passou Linux/Python3.12 e Windows/Python3.14; testes adicionais9755571
+aguardam CI nesta nota. Registadas lacunas de cobertura restantes sem remover testes.
+
 Versão de desenvolvimento: **0.3.0.dev0**, definida exclusivamente em version.py;
 pyproject mantém configuração dinâmica e os testes confrontam source/metadata/UI.
 Atualizar a instalação editável depois de mudança de versão. Nesta execução
