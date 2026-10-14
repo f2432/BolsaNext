@@ -1,5 +1,10 @@
 # Desenvolvimento local
 
+Fecho da execução financeira V0.3 (2026-10-14): revisão `c75b07b` aprovada no
+CI #451, Linux/Python 3.12 e Windows/Python 3.14, testes/cobertura/Ruff em ambos.
+Suite final local: 316 testes, 72% global e Ruff aprovado. P1–P5 fechados
+tecnicamente; P6/UI e validação funcional da integração continuam pendentes.
+
 ### Revisão financeira final P5 (2026-10-14)
 
 Bruto, retenção e encargos continuam não negativos; o líquido de dividendo é

@@ -102,5 +102,3 @@ def decode_version_fields(row):
         UUID(row["transaction_version_uid"]), datetime.fromisoformat(row["recorded_at"]),
         row["reason"], row["author"],
     )
-
-

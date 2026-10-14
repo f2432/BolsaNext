@@ -2,6 +2,26 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Fecho técnico desta execução (2026-10-14):** P1–P5 implementados e validados
+localmente e no CI Linux/Python 3.12 + Windows/Python 3.14. A revisão financeira
+`c75b07b` passou no CI **#451** (pytest e Ruff em ambos), após P5 `854f96f`
+ter passado #450. Suite local final **316 testes, Ruff aprovado, 72% global**;
+não se eliminaram testes. Commits funcionais na `dev`: `29c5d0b`, `0ddca77`,
+`6ecaa57`, `3651b49`, `132b68e`, `854f96f`, `c75b07b`.
+
+Documentação canónica comparada com `6069e68`: apenas aditamentos, sem remoção
+de informação substantiva. `main` local permaneceu em `d4bbe1113704754f0cb8fe8972d07957aa173ffb`;
+tag `v0.2.0` permaneceu em `a26852232c93cdd593fe179b4393fb2abb171d26`.
+Clone limpo/sincronizado após publicação. Nenhuma operação em dados reais.
+
+**V0.3 permanece incompleta: P6/UI por iniciar.** Próximo trabalho: integrar
+serviços na UI com formulário/auditoria/transferências/políticas, provider de
+snapshots atuais de preços com fonte/data e operações em background, testes
+Qt e validação funcional Windows. Forex atual tem adapter e testes simulados;
+calendário fiável, demais ajustes e importadores broker permanecem fora do
+núcleo entregue. Limites operacionais e diagnóstico de cobertura Alembic
+continuam registados acima; não criar tag V0.3 nem integrar `main` sem pedido.
+
 **Revisão final P5 (2026-10-14):** o commit `854f96f` passou no CI #450 em
 Linux/Python 3.12 e Windows/Python 3.14. Uma revisão adicional corrigiu um caso
 de sinal: líquido de dividendo negativo por encargos é conservado exatamente,

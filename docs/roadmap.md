@@ -2,6 +2,10 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+**Gate financeiro fechado:** P1–P5 validados localmente e no CI #451
+(revisão `c75b07b`, Linux/Windows), 316 testes locais/Ruff, 72% global.
+P6/UI por iniciar; V0.3 ainda não concluída. Evidências/commits em `docs/status.md`.
+
 Revisão final: P5 passou CI #450; reforços de sinal de dividendos e metadados
 desconhecidos passaram localmente (316 testes/Ruff, 72%). CI desta revisão
 pendente. P6/UI permanece por iniciar; V0.3 não concluída.
