@@ -160,3 +160,28 @@ def import_report_text(report):
     return (f"Importação: {state_label(report.state)}. Inseridos: {report.inserted}; "
             f"duplicados ignorados: {report.ignored}; conflitos: {report.conflicts}; "
             f"rejeições: {report.rejected}. " + " | ".join(message(r) for r in report.reasons))
+
+
+def version_details(version):
+    from bolsa.app.portfolio_forms import form_values, MONEY_FIELDS
+    if version.trade is None:
+        return "Anulação auditável; os factos financeiros permanecem nas versões anteriores."
+    trade = version.trade
+    fields = form_values(trade)
+    parts = [f"UUID económico: {version.transaction_uid}", f"Instrumento: {trade.instrument.ticker}",
+             f"Execução original: {fields['executed_at']}", f"Notas: {trade.notes or 'Sem notas'}"]
+    for role in MONEY_FIELDS:
+        if fields[role + "_amount"]:
+            label = {"price": "Preço unitário", "commission": "Comissão", "observed_net": "Movimento observado",
+                     "gross": "Bruto", "withholding": "Retenção", "charges": "Encargos", "net": "Líquido"}[role]
+            parts.append(f"{label}: {fields[role + '_amount'].replace('.', ',')} {fields[role + '_currency']}; "
+                         f"FX histórico: {fields[role + '_fx'].replace('.', ',') or 'não indicado (identidade monetária se moedas iguais)'}")
+    if fields["quantity"]:
+        parts.append("Quantidade: " + quantity(trade.quantity))
+    if fields["split_factor"]:
+        parts.append("Fator split: " + quantity(trade.factor))
+        parts.append("Motivo split: " + trade.adjustment_reason)
+    for label, value in (("Origem", trade.source), ("Referência de conta", trade.account_ref), ("ID externo", trade.external_id)):
+        parts.append(f"{label}: {value or 'Não indicado'}")
+    parts.extend(f"Facto original — {key}: {value}" for key, value in trade.original_facts)
+    return "\n".join(parts)

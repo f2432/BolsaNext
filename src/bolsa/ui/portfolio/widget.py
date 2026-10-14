@@ -32,15 +32,17 @@ class PortfolioWidget(QWidget):
         self._worker = None
         self._page_number = 0
         self._pending_confirmation = False
+        self._selection_uid = None
         layout = QVBoxLayout(self)
         self.selector = QComboBox()
         self.selector.currentIndexChanged.connect(self._select)
         layout.addWidget(self.selector)
         bar = QHBoxLayout()
         self._buttons = []
+        self.action_buttons = {}
         for label, callback in (
             ("Nova carteira", self._new_portfolio), ("Registar", self._record),
-            ("Corrigir", self._correct), ("Anular", self._void),
+            ("Corrigir operação", self._correct), ("Anular operação", self._void),
             ("Valorizar", self._market), ("Exportar", self._export),
             ("Importar", self._import), ("Política", self._policy),
             ("Reconciliar", self._reconcile), ("Detalhe", self._details),
@@ -49,6 +51,7 @@ class PortfolioWidget(QWidget):
             button.clicked.connect(callback)
             bar.addWidget(button)
             self._buttons.append(button)
+            self.action_buttons[callback.__name__] = button
         layout.addLayout(bar)
         self.summary = QLabel()
         self.summary.setWordWrap(True)
@@ -56,7 +59,12 @@ class PortfolioWidget(QWidget):
         self.positions = self._table(["Ticker", "Quantidade", "Custo", "Custo médio", "Realizado",
                                       "Dividendos", "Mercado", "Não realizado", "Estado contabilístico"])
         layout.addWidget(self.positions)
+        layout.addWidget(QLabel("Histórico de operações — seleciona uma versão eficaz para corrigir ou anular. "
+                                "Versões antigas continuam disponíveis para consulta."))
         self.history = self._table(["Execução", "Ticker", "Tipo", "Versão", "Estado", "UUID económico"])
+        self.history.itemSelectionChanged.connect(self._selection_changed)
+        for name in ("_correct", "_void"):
+            self.action_buttons[name].setToolTip("Atua sobre a operação eficaz selecionada no histórico inferior.")
         layout.addWidget(self.history)
         pager = QHBoxLayout()
         self.page_label = QLabel()
@@ -65,6 +73,7 @@ class PortfolioWidget(QWidget):
             button = QPushButton(label)
             button.clicked.connect(lambda _=False, delta=step: self._page(delta))
             pager.addWidget(button)
+            self._buttons.append(button)
         layout.addLayout(pager)
         self.status = QLabel()
         self.status.setWordWrap(True)
@@ -77,6 +86,11 @@ class PortfolioWidget(QWidget):
         table.setHorizontalHeaderLabels(headers)
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        metrics = table.fontMetrics()
+        for column, label in enumerate(headers):
+            table.setColumnWidth(column, max(115, metrics.horizontalAdvance(label) + 36))
+        table.horizontalHeader().setStretchLastSection(True)
         return table
 
     @property
@@ -107,6 +121,32 @@ class PortfolioWidget(QWidget):
         self.selector.setEnabled(True)
         for button in self._buttons:
             button.setEnabled(True)
+        self._update_actions()
+
+    def _selection_changed(self):
+        selected = self._selected_version()
+        self._selection_uid = selected.transaction_version_uid if selected else None
+        self._update_actions()
+
+    def _selected_version(self):
+        rows = self.history.selectionModel().selectedRows()
+        if not rows:
+            return None
+        item = self.history.item(rows[0].row(), 0)
+        return item.data(Qt.ItemDataRole.UserRole) if item else None
+
+    def _is_effective(self, version):
+        if version is None or self._active() is None:
+            return False
+        chain = [v for v in self._active().versions if v.transaction_uid == version.transaction_uid]
+        return bool(chain and max(chain, key=lambda v: v.version_number) == version and version.trade is not None)
+
+    def _update_actions(self):
+        selected = self._selected_version()
+        effective = self._is_effective(selected)
+        for name in ("_correct", "_void"):
+            self.action_buttons[name].setEnabled(not self.busy and effective)
+        self.action_buttons["_details"].setEnabled(not self.busy and selected is not None)
 
     def closeEvent(self, event):
         if self.busy:
@@ -120,6 +160,7 @@ class PortfolioWidget(QWidget):
     def _select(self, *_):
         if not self.busy:
             self._page_number = 0
+            self._selection_uid = None
             uid = self.selector.currentData()
             self._run(lambda: self.service.overview(uid))
 
@@ -143,11 +184,12 @@ class PortfolioWidget(QWidget):
             self.selector.setCurrentIndex(self.selector.findData(dashboard.portfolio.portfolio_uid))
         self.selector.blockSignals(False)
         self.positions.setRowCount(0)
-        self.history.setRowCount(0)
         portfolio = self._active()
         if portfolio is None:
             self.summary.setText("Sem carteiras. Cria uma carteira ou importa um arquivo canónico.")
             self.status.setText("")
+            self.history.setRowCount(0)
+            self._update_actions()
             return
         valuation, analysis = dashboard.valuation, dashboard.analysis
         self.summary.setText(
@@ -189,6 +231,8 @@ class PortfolioWidget(QWidget):
         pages = max(1, (len(ordered) + 199) // 200)
         self._page_number = max(0, min(self._page_number, pages - 1))
         self.page_label.setText(f"Histórico: página {self._page_number + 1} de {pages} ({len(ordered)} versões)")
+        selected_uid = self._selection_uid
+        self.history.blockSignals(True)
         self.history.setRowCount(0)
         for version in ordered[self._page_number * 200:(self._page_number + 1) * 200]:
             head = heads[version.transaction_uid]
@@ -197,19 +241,22 @@ class PortfolioWidget(QWidget):
             self._row(self.history, [trade.executed_at.isoformat() if trade else "—",
                       trade.instrument.ticker if trade else "—",
                       transaction_from_kind(trade), version.version_number, state, version.transaction_uid], version)
+            if version.transaction_version_uid == selected_uid:
+                self.history.setCurrentCell(self.history.rowCount() - 1, 0)
+        self.history.blockSignals(False)
+        self._selection_uid = selected_uid
+        self._update_actions()
 
     def _page(self, delta):
         self._page_number += delta
         self._render_history()
 
     def _selected(self):
-        item = self.history.item(self.history.currentRow(), 0)
-        if item is None or self._active() is None:
+        version = self._selected_version()
+        if version is None:
+            self.status.setText("Seleciona uma operação eficaz no histórico inferior.")
             return None
-        version = item.data(Qt.ItemDataRole.UserRole)
-        head = max((v for v in self._active().versions if v.transaction_uid == version.transaction_uid),
-                   key=lambda v: v.version_number)
-        if head != version or head.trade is None:
+        if not self._is_effective(version):
             self.status.setText("Só a versão eficaz pode ser corrigida ou anulada.")
             return None
         return version
@@ -364,15 +411,15 @@ class PortfolioWidget(QWidget):
             self._run(lambda: self.service.overview(uid))
 
     def _details(self):
-        item = self.history.item(self.history.currentRow(), 0)
-        if item:
-            version = item.data(Qt.ItemDataRole.UserRole)
+        version = self._selected_version()
+        if version:
+            from bolsa.app.portfolio_presentation import version_details
             QMessageBox.information(self, "Auditoria", f"UUID versão: {version.transaction_version_uid}\n"
                 f"Registo: {version.recorded_at.isoformat()}\nAutor: {version.author}\nMotivo: {version.reason}\n"
-                f"Factos completos: {version.trade}")
+                + version_details(version))
 
 
 def transaction_from_kind(trade):
     if trade is None:
         return "ANULAÇÃO"
-    return trade.kind.value if hasattr(trade, "kind") else "DIVIDEND" if hasattr(trade, "gross") else "SPLIT"
+    return {"BUY": "Compra", "SELL": "Venda"}[trade.kind] if hasattr(trade, "kind") else "Dividendo" if hasattr(trade, "gross") else "Split"

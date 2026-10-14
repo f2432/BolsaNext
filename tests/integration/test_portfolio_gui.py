@@ -263,3 +263,78 @@ def test_stale_gui_revision_is_rejected_without_overwriting(app, dashboard, monk
     assert "entretanto alterada" in widget.status.text()
     assert dashboard.repository.load(p.portfolio_uid).ledger_revision == 1
     widget.close()
+
+
+def test_history_actions_follow_effective_uuid_and_keep_old_details(app, dashboard):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    p = dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    assert not widget.action_buttons["_correct"].isEnabled()
+    assert not widget.action_buttons["_void"].isEnabled()
+    widget.history.setCurrentCell(0, 0)
+    version_uid = widget._selected_version().transaction_version_uid
+    assert widget.action_buttons["_correct"].isEnabled()
+    widget._render_history()
+    assert widget._selected_version().transaction_version_uid == version_uid
+    widget.history.clearSelection()
+    assert not widget.action_buttons["_void"].isEnabled()
+    head = p.versions[0]
+    dashboard.portfolio.revise(p.portfolio_uid, head.transaction_uid, head.transaction_version_uid,
+                              replace(trade(), quantity=Decimal("11")), reason="Synthetic", expected_revision=1)
+    widget._render(dashboard.overview(p.portfolio_uid))
+    widget.history.setCurrentCell(0, 0)
+    assert not widget.action_buttons["_correct"].isEnabled()
+    assert widget.action_buttons["_details"].isEnabled()
+    widget.history.setCurrentCell(1, 0)
+    assert widget.action_buttons["_void"].isEnabled()
+    assert widget.positions.columnWidth(8) >= widget.positions.fontMetrics().horizontalAdvance("Estado contabilístico")
+    widget.close()
+
+
+def test_summary_no_raw_none_states_or_decimal_expansion(app, dashboard):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    assert "None" not in widget.summary.text()
+    assert "information_insufficient" not in widget.summary.text()
+    assert "Informação insuficiente" in widget.summary.text()
+    assert "valorização está incompleta" in widget.status.text()
+    assert "Indisponível" in widget.positions.item(0, 6).text()
+    widget.close()
+
+
+def test_fx_form_inline_validation_preserves_user_rates(app):
+    dialog = TransactionDialog("EUR", trade())
+    # Existing values are unchanged, and a blank identity FX needs no input.
+    assert not dialog.inputs["price_fx"].isEnabled()
+    dialog.inputs["reason"].setText("Synthetic")
+    dialog.inputs["price_currency"].setCurrentText("USD")
+    assert dialog.inputs["price_fx"].isEnabled()
+    assert "EUR por 1 USD" in dialog.inputs["price_fx"].placeholderText()
+    dialog.accept()
+    assert dialog.result() != QDialog.DialogCode.Accepted
+    assert "taxa FX histórica" in dialog.errors["price_fx"].text()
+    dialog.inputs["price_fx"].setText("0,912345678912")
+    dialog.inputs["price_currency"].setCurrentText("EUR")
+    assert dialog.inputs["price_fx"].text() == "0,912345678912"
+    dialog.accept()
+    assert "deixa a taxa FX vazia ou indica 1" in dialog.errors["price_fx"].text()
+    assert dialog.inputs["price_fx"].isEnabled()  # Never trap an invalid supplied rate.
+    dialog.inputs["price_fx"].clear()
+    dialog.accept()
+    assert dialog.result() == QDialog.DialogCode.Accepted
+    dialog.close()
+
+
+def test_form_shows_amount_date_and_reason_errors_before_accept(app):
+    dialog = TransactionDialog("EUR", trade())
+    dialog.inputs["quantity"].setText("1,000.00")
+    dialog.inputs["executed_at"].setText("2026-01-01T12:00:00")
+    dialog.accept()
+    assert dialog.result() != QDialog.DialogCode.Accepted
+    assert "separadores" in dialog.errors["quantity"].text()
+    assert "fuso" in dialog.errors["executed_at"].text()
+    assert "motivo" in dialog.errors["reason"].text()
+    dialog.close()

@@ -8,6 +8,7 @@ from bolsa.domain.portfolio.events import Dividend, Split
 from bolsa.domain.portfolio.ledger import Trade, TradeType
 from bolsa.domain.portfolio.values import (
     MoneyComponent, SignedMoneyComponent, ReportedSettlement, PortfolioError,
+    financial_decimal,
 )
 
 MONEY_FIELDS = ("price", "commission", "observed_net", "gross", "withholding", "charges", "net")
@@ -88,3 +89,77 @@ def form_values(transaction):
         result[role + "_currency"] = component.currency if component else ""
         result[role + "_fx"] = str(component.historical_fx) if component and component.historical_fx is not None else ""
     return result
+
+
+def form_errors(fields, base_currency, *, previous=None):
+    """Validate form fields using domain input contracts; no ledger writes/replay."""
+    from bolsa.app.portfolio_presentation import message
+    errors = {}
+    kind = fields.get("type")
+    roles = ("price", "commission") if kind in ("BUY", "SELL") else (
+        ("gross", "withholding", "charges", "net") if kind == "DIVIDEND" else ()
+    )
+    if kind != "ADJUSTMENT" and fields.get("observed_net_amount", "").strip():
+        roles += ("observed_net",)
+    elif kind != "ADJUSTMENT" and fields.get("observed_net_fx", "").strip():
+        errors["observed_net_amount"] = "Indica o movimento observado a que esta taxa se aplica."
+    for role in roles:
+        amount_key, fx_key, currency_key = role + "_amount", role + "_fx", role + "_currency"
+        try:
+            amount = decimal_text(fields.get(amount_key, ""))
+            signed = role in ("net", "observed_net")
+            financial_decimal(amount.copy_abs() if signed else amount,
+                              positive=role in ("price", "gross"))
+        except (ValueError, ArithmeticError) as exc:
+            errors[amount_key] = message(str(exc))
+            continue
+        try:
+            fx_text = fields.get(fx_key, "").strip()
+            fx = decimal_text(fx_text) if fx_text else None
+            if fx is not None:
+                financial_decimal(fx, scale=12, positive=True)
+            cls = SignedMoneyComponent if signed else MoneyComponent
+            component = cls(amount, fields[currency_key], fx)
+            # Existing domain identity/FX contracts, no rate inferred or supplied.
+            if isinstance(component, SignedMoneyComponent):
+                MoneyComponent(component.amount.copy_abs(), component.currency, component.historical_fx).rate_to_base(base_currency)
+            else:
+                component.rate_to_base(base_currency)
+        except (ValueError, ArithmeticError) as exc:
+            errors[fx_key] = message(str(exc))
+    for key, parser in (
+        ("quantity", lambda text: financial_decimal(decimal_text(text), positive=True)),
+        ("executed_at", lambda text: datetime.fromisoformat(text) if "T" in text or " " in text else date.fromisoformat(text)),
+        ("settled_on", date.fromisoformat),
+        ("broker_sequence", int),
+    ):
+        text = fields.get(key, "").strip()
+        if (key == "quantity" and kind not in ("BUY", "SELL")) or (
+            not text and key in ("settled_on", "broker_sequence")
+        ):
+            continue
+        try:
+            value = parser(text)
+            if key == "broker_sequence" and value < 0:
+                raise ValueError("Negative sequence")
+            if key == "executed_at" and isinstance(value, datetime) and value.utcoffset() is None:
+                raise ValueError("Indica o fuso horário: por exemplo +01:00 ou +00:00.")
+        except (ValueError, ArithmeticError) as exc:
+            errors[key] = (message(str(exc)) if key == "quantity" else
+                           "Indica uma data ISO válida e fuso para instantes (AAAA-MM-DD ou AAAA-MM-DDTHH:MM:SS+00:00)."
+                           if key in ("executed_at", "settled_on") else "Indica um número inteiro não negativo.")
+    if previous is not None and not fields.get("reason", "").strip():
+        errors["reason"] = "Indica o motivo da correção."
+    if bool(fields.get("account_ref", "").strip()) != bool(fields.get("external_id", "").strip()):
+        errors["external_id"] = "Preenche a referência de conta e o ID externo em conjunto."
+    try:
+        Instrument(fields.get("ticker", ""), currency=fields.get("instrument_currency"),
+                   asset_type=AssetType(fields["asset_type"]))
+    except ValueError as exc:
+        errors["ticker"] = message(str(exc))
+    if not errors:
+        try:
+            transaction_from_form(fields, previous=previous)
+        except (ValueError, ArithmeticError) as exc:
+            errors["split_factor" if kind == "ADJUSTMENT" else "_form"] = message(str(exc))
+    return errors
