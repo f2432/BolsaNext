@@ -2,6 +2,31 @@
 
 ## Implementação V0.3-P1 — contrato técnico (2026-10-13)
 
+### Contrato P3 — eventos manuais (planeamento, 2026-10-14)
+
+P3 acrescenta DIVIDEND com componentes bruto/retenção/encargos/líquido e FX
+histórico por componente, sem quantidade/preço fictícios. Validação manual:
+líquido em moeda base igual a bruto menos retenção e encargos; divergência é
+erro de introdução identificável, sem substituição silenciosa. Factos externos
+não discriminados e reconciliação broker permanecem pendentes em P5, nunca
+interpretados automaticamente. Dividendos acumulados são parcela separada de
+PnL realizado e não alteram quantidade/custo. ADJUSTMENT inclui apenas split
+manual simples de fator inteiro >=2, com motivo obrigatório: multiplica quantidade,
+conserva custo e não cria PnL. Reverse splits, frações residuais/compensações em
+dinheiro e outros ajustes não são antecipados.
+
+Schema P3 planeado: `0004_manual_financial_events` cria `ledger_versions` como
+tabela autoritativa de versões com payloads próprios BUY/SELL/DIVIDEND/split.
+Copia integralmente as versões P1, sem aritmética financeira SQL, conservando
+UUIDs/cadeias/auditoria/revisão. A tabela P1 `portfolio_versions` fica histórica,
+com INSERT/UPDATE/DELETE bloqueados, não é lida no replay depois da migração.
+Esta retenção evita apagar histórico ou desativar foreign keys para reconstruir
+a tabela autorreferente SQLite. A criação/cópia usa transação e restrições;
+backup pré-migração existente continua obrigatório. Cópia não equivale a contar
+duas operações: apenas `ledger_versions` alimenta o domínio. Downgrade recusado;
+restauro explícito por backup. Confirmar conservação de dados P1 e V0.2,
+foreign_key_check, triggers e replay exato antes do commit.
+
 ### Contrato do incremento seguinte P2 — planeamento
 
 Depois da validação completa P1, implementar valorização em moeda base por

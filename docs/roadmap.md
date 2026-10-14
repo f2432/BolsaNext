@@ -2,6 +2,9 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+Atualização P3: P1/P2 concluídos com CI; P3 implementado e validado localmente
+(260 testes/Ruff), CI pendente. P4–P6 permanecem por implementar.
+
 Estado em 2026-10-14: P1 **concluído e validado local/CI** (#446, Linux/Windows).
 P2 **implementado e validado localmente**, 241 testes/Ruff, 69% global; CI
 pendente. P3–P6 por implementar. Limites e trabalho pendente em `docs/status.md`.

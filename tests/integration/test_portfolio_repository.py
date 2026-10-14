@@ -62,7 +62,7 @@ def test_exact_round_trip_reopen_and_full_audit(store):
         reopened.dispose()
     with engine.connect() as connection:
         rows = connection.exec_driver_sql("SELECT price, typeof(price), quantity, typeof(quantity) "
-                                          "FROM portfolio_versions WHERE trade_kind = 'BUY'").all()
+                                          "FROM ledger_versions WHERE trade_kind = 'BUY'").all()
         assert rows == [("100.12345678", "text", "10", "text"), ("100.12345678", "text", "11", "text")]
 
 
@@ -107,7 +107,7 @@ def test_injected_mid_write_failure_rolls_back_instrument_events_and_revision(st
 
     def fail_second(connection, cursor, statement, parameters, context, executemany):
         nonlocal inserted
-        if statement.startswith("INSERT INTO portfolio_versions"):
+        if statement.startswith("INSERT INTO ledger_versions"):
             inserted += 1
             if inserted == 2:
                 raise RuntimeError("Injected ledger failure")
@@ -121,7 +121,7 @@ def test_injected_mid_write_failure_rolls_back_instrument_events_and_revision(st
     assert repository.load(original.portfolio_uid) == original
     with engine.connect() as connection:
         assert connection.exec_driver_sql("SELECT count(*) FROM instruments").scalar() == 0
-        assert connection.exec_driver_sql("SELECT count(*) FROM portfolio_versions").scalar() == 0
+        assert connection.exec_driver_sql("SELECT count(*) FROM ledger_versions").scalar() == 0
     repository.save(candidate, expected_revision=0)
     assert repository.load(original.portfolio_uid).ledger_revision == 2
 
@@ -155,8 +155,8 @@ def test_database_immutability_and_instrument_restrict(store):
     for sql in (
         "UPDATE portfolios SET base_currency = 'USD'",
         "UPDATE portfolios SET portfolio_uid = 'another'",
-        "UPDATE portfolio_versions SET price = '0'",
-        "DELETE FROM portfolio_versions",
+        "UPDATE ledger_versions SET price = '0'",
+        "DELETE FROM ledger_versions",
         "DELETE FROM instruments",
         "DELETE FROM portfolios",
     ):
@@ -176,7 +176,7 @@ def test_database_chain_constraints_and_decimal_adapter(store):
     p = service.record(p.portfolio_uid, buy(), expected_revision=0)
     with pytest.raises(IntegrityError):
         with engine.begin() as connection:
-            connection.exec_driver_sql("INSERT INTO portfolio_versions SELECT * FROM portfolio_versions")
+            connection.exec_driver_sql("INSERT INTO ledger_versions SELECT * FROM ledger_versions")
     invalid = p.record(buy(day=1))
     # Verify the actual SQLAlchemy binding rejects financial float inputs.
     with pytest.raises(StatementError):
@@ -208,12 +208,12 @@ def test_synthetic_v02_upgrade_has_validated_backup_and_preserves_watchlist(tmp_
         result = ensure_database_schema(config)
         assert result.backup_path.is_file()
         assert get_database_revision(result.backup_path) == "0002_market_to_exchange"
-        assert result.current_revision == "0003_portfolio_ledger"
+        assert result.current_revision == "0004_manual_financial_events"
         with engine.connect() as connection:
             assert connection.exec_driver_sql("PRAGMA quick_check").scalar() == "ok"
             assert connection.exec_driver_sql("SELECT ticker FROM instruments").scalar() == "TEST"
             assert connection.exec_driver_sql("SELECT state FROM watchlist_items").scalar() == "idea"
-        columns = {c["name"]: str(c["type"]) for c in inspect(engine).get_columns("portfolio_versions")}
+        columns = {c["name"]: str(c["type"]) for c in inspect(engine).get_columns("ledger_versions")}
         assert columns["quantity"] == columns["price"] == columns["price_fx"] == "TEXT"
         repository = SqlAlchemyPortfolioRepository(engine)
         p = Portfolio("Synthetic", "EUR")
@@ -252,7 +252,7 @@ def test_downgrade_refused_without_losing_financial_history(store):
     p = service.record(p.portfolio_uid, buy(), expected_revision=0)
     with pytest.raises(RuntimeError, match="backup restore"):
         _run_alembic(config.database_path, command.downgrade, "0002_market_to_exchange")
-    assert get_database_revision(config.database_path) == "0003_portfolio_ledger"
+    assert get_database_revision(config.database_path) == "0004_manual_financial_events"
     assert repository.load(p.portfolio_uid).reconstruct() == p.reconstruct()
 
 
@@ -272,3 +272,4 @@ def test_upgrade_does_not_start_when_backup_fails(tmp_path, monkeypatch):
         assert "portfolios" not in inspect(engine).get_table_names()
     finally:
         engine.dispose()
+

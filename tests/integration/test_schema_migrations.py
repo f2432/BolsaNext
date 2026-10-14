@@ -133,6 +133,7 @@ def test_new_database_is_created_at_head(tmp_path) -> None:
             "watchlist_items",
             "portfolios",
             "portfolio_versions",
+            "ledger_versions",
         }
         instrument_columns = {
             column["name"]

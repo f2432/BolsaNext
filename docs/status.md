@@ -2,6 +2,17 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Atualização P3 (2026-10-14):** P2 fechado com CI #447 Linux/Windows aprovado,
+commit `6ecaa57`. P3 implementado com dividendos manuais multicomponente e split
+inteiro simples auditável; replay conserva rendimento separado, custos e PnL.
+Migration `0004_manual_financial_events` promove todo o histórico P1 para
+`ledger_versions`, mantendo `portfolio_versions` histórica e bloqueada. Bases
+sintéticas comprovaram UUIDs/versões/resultados iguais, foreign keys ativas,
+backup e rollback integral mesmo em falha depois da cópia. **260 testes passaram
+em 7,02 s**, Ruff aprovado, cobertura global **69%** (2494 statements/773 miss).
+P3 validado localmente; CI ainda pendente. Sem reverse splits, compensações,
+outros ajustes, importador broker ou reconciliação automática.
+
 **Atualização P2 (2026-10-14):** P1 fechado com CI #446 aprovado em Linux/Python
 3.12 e Windows/Python 3.14 (pytest e Ruff); commits `29c5d0b`, `0ddca77`
 publicados na `dev`. P2 implementado: snapshots atuais Decimal, valorização

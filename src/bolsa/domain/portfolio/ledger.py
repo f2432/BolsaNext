@@ -6,6 +6,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from bolsa.domain.instruments.instrument import AssetType, Instrument
+from bolsa.domain.portfolio.events import Dividend, Split
 from bolsa.domain.portfolio.values import (
     FINANCIAL_CONTEXT, LedgerConflictError, MoneyComponent, PortfolioError,
     currency_code, financial_decimal,
@@ -87,7 +88,7 @@ class Trade:
 class TransactionVersion:
     portfolio_uid: UUID
     transaction_uid: UUID
-    trade: Trade | None
+    trade: Trade | Dividend | Split | None
     version_number: int = 1
     previous_version_uid: UUID | None = None
     transaction_version_uid: UUID = field(default_factory=uuid4)
@@ -108,7 +109,7 @@ class TransactionVersion:
             raise PortfolioError("Correction/cancellation requires a reason")
         if self.trade is None and self.version_number == 1:
             raise PortfolioError("Cannot cancel a nonexistent operation")
-        if self.trade is not None and not isinstance(self.trade, Trade):
+        if self.trade is not None and not isinstance(self.trade, (Trade, Dividend, Split)):
             raise PortfolioError("Invalid trade payload")
         object.__setattr__(self, "recorded_at", _instant(self.recorded_at))
         if not self.author.strip():
@@ -122,6 +123,7 @@ class Position:
     cost: Decimal = Decimal("0")
     average_cost: Decimal = Decimal("0")
     realized_pnl: Decimal = Decimal("0")
+    dividend_income: Decimal = Decimal("0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,13 +205,29 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
             trade = event.trade
             ticker = trade.instrument.ticker
             current = positions.get(ticker, Position(ticker))
+            if isinstance(trade, Dividend):
+                gross = trade.gross.in_base(base)
+                withholding = trade.withholding.in_base(base)
+                charges = trade.charges.in_base(base)
+                net = trade.net.in_base(base)
+                if net != gross - withholding - charges:
+                    raise PortfolioError(f"Inconsistent manual dividend net: {event.transaction_uid}")
+                positions[ticker] = replace(current, dividend_income=current.dividend_income + net)
+                continue
+            if isinstance(trade, Split):
+                if current.quantity == 0:
+                    raise PortfolioError(f"Split requires an open position: {event.transaction_uid}")
+                q = current.quantity * trade.factor
+                positions[ticker] = replace(current, quantity=q, average_cost=current.cost / q)
+                continue
             quantity = trade.quantity
             gross = quantity * trade.unit_price.amount * trade.unit_price.rate_to_base(base)
             fee = trade.commission.in_base(base)
             if trade.kind is TradeType.BUY:
                 q = current.quantity + quantity
                 cost = current.cost + gross + fee
-                positions[ticker] = Position(ticker, q, cost, cost / q, current.realized_pnl)
+                positions[ticker] = Position(ticker, q, cost, cost / q, current.realized_pnl,
+                                              current.dividend_income)
             else:
                 if quantity > current.quantity:
                     raise PortfolioError(f"Oversell: {event.transaction_uid} ({ticker})")
@@ -219,6 +237,7 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                 positions[ticker] = Position(
                     ticker, q, cost, current.average_cost if q else Decimal("0"),
                     current.realized_pnl + gross - fee - assigned,
+                    current.dividend_income,
                 )
     return ReplayResult(tuple(positions[k] for k in sorted(positions)), tuple(warnings))
 
@@ -246,14 +265,14 @@ class Portfolio:
     def reconstruct(self):
         return replay(self.portfolio_uid, self.base_currency, self.versions)
 
-    def record(self, trade: Trade, *, transaction_uid: UUID | None = None):
+    def record(self, trade: Trade | Dividend | Split, *, transaction_uid: UUID | None = None):
         uid = transaction_uid or uuid4()
         if any(v.transaction_uid == uid for v in self.versions):
             raise LedgerConflictError("Economic identity already exists")
         version = TransactionVersion(self.portfolio_uid, uid, trade)
         return replace(self, versions=self.versions + (version,))
 
-    def revise(self, transaction_uid: UUID, expected_head: UUID, trade: Trade | None,
+    def revise(self, transaction_uid: UUID, expected_head: UUID, trade: Trade | Dividend | Split | None,
                *, reason: str):
         chain = [v for v in self.versions if v.transaction_uid == transaction_uid]
         if not chain:

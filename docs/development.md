@@ -1,5 +1,24 @@
 # Desenvolvimento local
 
+## Validação V0.3-P3 — dividendos e split manual (2026-10-14)
+
+`Dividend` guarda quatro componentes monetárias independentes com FX histórico;
+o líquido manual deve coincidir com o resultado normalizado para moeda base.
+`Split` exige posição aberta, fator inteiro >=2 e motivo; não é automatismo
+societário. Ambos são payloads do mesmo histórico de versões, com as mesmas
+revisões/correções/anulações e validação retroativa P1. `Position.dividend_income`
+é parcela independente do PnL realizado, preservada após vendas/fecho/reabertura.
+
+`0004_manual_financial_events` conserva a tabela P1 e promove os seus registos
+para a nova tabela autoritativa sem desligar FK. Migração tem transação SQLite
+explícita para incluir DDL; compara contagem e `foreign_key_check`. As tabelas
+histórica e atual ficam protegidas contra mutações destrutivas. Testes em
+`test_portfolio_events.py` (unitários) e `test_portfolio_event_persistence.py`
+(integração) verificam fórmulas, independência de parcelas, alterações retroativas,
+reabertura, origem e rollback da promoção. O teste de retry usa instantes de
+backup distintos/determinísticos: nunca apagar ou sobrescrever backup anterior.
+Suite local: 260 testes/Ruff aprovados, 69% global; CI P3 pendente.
+
 ## Validação V0.3-P2 — valorização e FX (2026-10-14)
 
 `PortfolioValuationService.evaluate()` recebe carteira, snapshots `PriceQuote`,

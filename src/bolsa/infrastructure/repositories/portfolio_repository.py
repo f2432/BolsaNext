@@ -6,6 +6,7 @@ from sqlalchemy import Column, MetaData, Table, select, update
 
 from bolsa.domain.instruments.instrument import AssetType, Instrument
 from bolsa.domain.portfolio.ledger import Portfolio, Trade, TradeType, TransactionVersion
+from bolsa.domain.portfolio.events import Dividend, Split
 from bolsa.domain.portfolio.values import LedgerConflictError, MoneyComponent, PortfolioError
 from bolsa.infrastructure.database.decimal_type import ExactDecimalText
 
@@ -31,13 +32,24 @@ def _encode(version):
             notes=trade.notes, source=trade.source, account_ref=trade.account_ref,
             external_id=trade.external_id, original_facts=trade.original_facts,
         )
-        values.update(
-            trade_kind=trade.kind.value, ticker=instrument.ticker, quantity=trade.quantity,
-            price=trade.unit_price.amount, price_currency=trade.unit_price.currency,
-            price_fx=trade.unit_price.historical_fx, commission=trade.commission.amount,
-            commission_currency=trade.commission.currency, commission_fx=trade.commission.historical_fx,
-            trade_metadata=json.dumps(metadata, sort_keys=True, separators=(",", ":")),
-        )
+        values.update(ticker=instrument.ticker,
+                      trade_metadata=json.dumps(metadata, sort_keys=True, separators=(",", ":")))
+        if isinstance(trade, Trade):
+            values.update(
+                trade_kind=trade.kind.value, quantity=trade.quantity,
+                price=trade.unit_price.amount, price_currency=trade.unit_price.currency,
+                price_fx=trade.unit_price.historical_fx, commission=trade.commission.amount,
+                commission_currency=trade.commission.currency, commission_fx=trade.commission.historical_fx,
+            )
+        elif isinstance(trade, Dividend):
+            values["trade_kind"] = "DIVIDEND"
+            for name in ("gross", "withholding", "charges", "net"):
+                component = getattr(trade, name)
+                values.update({name: component.amount, name + "_currency": component.currency,
+                               name + "_fx": component.historical_fx})
+        elif isinstance(trade, Split):
+            values.update(trade_kind="ADJUSTMENT", split_factor=trade.factor,
+                          adjustment_reason=trade.adjustment_reason)
     return values
 
 
@@ -59,12 +71,21 @@ def _decode(row):
         if metadata["settlement_date"]:
             metadata["settlement_date"] = date.fromisoformat(metadata["settlement_date"])
         metadata["original_facts"] = tuple(tuple(pair) for pair in metadata["original_facts"])
-        trade = Trade(
-            Instrument(**instrument), TradeType(row["trade_kind"]), row["quantity"],
-            MoneyComponent(row["price"], row["price_currency"], row["price_fx"]),
-            MoneyComponent(row["commission"], row["commission_currency"], row["commission_fx"]),
-            **metadata,
-        )
+        if row["trade_kind"] in ("BUY", "SELL"):
+            trade = Trade(
+                Instrument(**instrument), TradeType(row["trade_kind"]), row["quantity"],
+                MoneyComponent(row["price"], row["price_currency"], row["price_fx"]),
+                MoneyComponent(row["commission"], row["commission_currency"], row["commission_fx"]),
+                **metadata,
+            )
+        elif row["trade_kind"] == "DIVIDEND":
+            components = {name: MoneyComponent(row[name], row[name + "_currency"], row[name + "_fx"])
+                          for name in ("gross", "withholding", "charges", "net")}
+            trade = Dividend(Instrument(**instrument), **components, **metadata)
+        elif row["trade_kind"] == "ADJUSTMENT":
+            trade = Split(Instrument(**instrument), row["split_factor"], row["adjustment_reason"], **metadata)
+        else:
+            raise PortfolioError("Unsupported persisted financial event")
     return TransactionVersion(
         UUID(row["portfolio_uid"]), UUID(row["transaction_uid"]), trade, row["version_number"],
         UUID(row["previous_version_uid"]) if row["previous_version_uid"] else None,
@@ -83,9 +104,11 @@ class SqlAlchemyPortfolioRepository:
         metadata = MetaData()
         self._portfolios = Table("portfolios", metadata, autoload_with=engine)
         self._versions = Table(
-            "portfolio_versions", metadata,
+            "ledger_versions", metadata,
             *(Column(name, ExactDecimalText()) for name in (
-                "quantity", "price", "price_fx", "commission", "commission_fx"
+                "quantity", "price", "price_fx", "commission", "commission_fx",
+                "gross", "gross_fx", "withholding", "withholding_fx", "charges", "charges_fx",
+                "net", "net_fx", "split_factor"
             )), autoload_with=engine,
         )
         self._instruments = metadata.tables["instruments"]
