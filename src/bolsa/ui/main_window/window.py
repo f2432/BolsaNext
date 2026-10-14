@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabs)
 
         status = QStatusBar()
-        status.showMessage(version_label("Portfolio em integração") if self.portfolio_widget
+        status.showMessage(version_label("Portfolio em desenvolvimento") if self.portfolio_widget
                            else version_label("Market Data"))
         self.setStatusBar(status)
 
