@@ -1,5 +1,28 @@
 # Desenvolvimento local
 
+## Validação V0.3-P4 — portabilidade (2026-10-14)
+
+`export_portfolio()`/`parse_portfolio()` e `PortfolioTransferService.preview()` /
+`confirm()` operam JSON versão 1. Pré-visualização não escreve; confirmação usa
+`import_atomic()` do port/repository, com `BEGIN IMMEDIATE`, revisão e replay
+revalidados. O relatório conta versões (inclui correções/anulações), separa
+inserções planeadas/efetivas e confirma zero inserções em rollback. UUIDs iguais
+com conteúdo diferente são conflitos; fingerprints não deduplicam operações.
+
+Modos: `restore` da identidade canónica, `complement` de carteira existente
+confirmada pela UUID, `clone` deliberado para nova UUID com origem persistida.
+Moeda/origem/identidade existentes não mudam. Exportação preserva as versões e
+factos originais; não inclui campos de credenciais e recusa explicitamente factos
+com chaves sensíveis reconhecidas, sem os apagar no ledger. Limites de exportação
+e importação iguais (5 MiB/20 000 versões); suporte de históricos maiores é
+trabalho futuro, não truncagem silenciosa. Não substituir ficheiros/bases reais.
+
+Casos em `test_portfolio_transfer.py`: ida e volta exata de todos os eventos,
+correções/anulações, revisão obsoleta, conflito de identidade/conteúdo/moeda,
+duplicados/económicos legítimos, clone independente, JSON malformado/UTF-8,
+chaves repetidas, recursos, recuperação após rollback que inclui a carteira nova.
+Suite local: 282 testes/Ruff aprovados, 71% global; CI P4 pendente.
+
 ## Validação V0.3-P3 — dividendos e split manual (2026-10-14)
 
 `Dividend` guarda quatro componentes monetárias independentes com FX histórico;

@@ -2,6 +2,9 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+Atualização P4: P1–P3 concluídos com CI; P4 implementado/testado localmente,
+282 testes/Ruff e 71% global; CI pendente. P5/P6 permanecem pendentes.
+
 Atualização P3: P1/P2 concluídos com CI; P3 implementado e validado localmente
 (260 testes/Ruff), CI pendente. P4–P6 permanecem por implementar.
 

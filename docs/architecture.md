@@ -2,6 +2,31 @@
 
 ## Implementação V0.3-P1 — contrato técnico (2026-10-13)
 
+### Contrato P4 — portabilidade e importação canónica (planeamento)
+
+JSON `format_version=1`, UTF-8, máximo 5 MiB e 20 000 versões por ficheiro:
+carteira UUID/nome/moeda/origem e lista integral de versões. Cada versão contém
+identidades/cadeia/auditoria, componentes decimais textuais, metadados de execução
+e snapshot do instrumento. Rejeitar chaves duplicadas/desconhecidas, formatos
+incompatíveis, referências quebradas e campos financeiros numéricos JSON.
+Nenhum conteúdo é executado. Não são definidos campos de credenciais.
+
+Pré-visualização sem escrita, com candidato imutável, revisão observada e
+relatório de versões a inserir/ignorar/conflitos/rejeições. Unidade do relatório
+é versão (inclui correções e anulações), não fingerprint financeiro. Confirmar
+com transação SQLite única que inclui criação da carteira se necessária,
+revalida revisão/histórico/identidades/replay e faz rollback em erro; relatório
+final conta apenas inserções efetivamente confirmadas. Conflitos nunca substituem
+dados. Repetição exata é idempotente; UUIDs distintos com valores iguais são
+operações distintas. Restaurar mesma UUID ou complementar apenas carteira
+compatível; cópia independente recebe nova UUID de carteira e referência à
+origem, preservando IDs históricos das versões dentro do novo contexto.
+
+Migration P4 `0005_portfolio_origin` acrescenta origem opcional de carteira, sem
+remover tabelas/histórico. Origem é referência portátil, não FK que exija que
+a carteira original exista nesta base. Identidade/moeda/origem são imutáveis.
+Substituição destrutiva, adaptadores broker e restauro automático excluídos.
+
 ### Contrato P3 — eventos manuais (planeamento, 2026-10-14)
 
 P3 acrescenta DIVIDEND com componentes bruto/retenção/encargos/líquido e FX

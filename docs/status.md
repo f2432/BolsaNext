@@ -2,6 +2,20 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Atualização P4 (2026-10-14):** P3 fechado com CI #448 Linux/Windows aprovado,
+commit `3651b49`. P4 implementado: JSON canónico versionado com histórico inteiro,
+pré-visualização sem escrita, confirmação atómica, idempotência, conflitos sem
+sobrescrita, clones com origem e IDs históricos preservados por contexto.
+Migration `0005_portfolio_origin`; erro a meio da importação também desfaz a
+criação da carteira/instrumentos. Limites explícitos 5 MiB/20 000 versões, campos
+financeiros textuais, rejeição de chaves duplicadas/desconhecidas e credenciais
+em campos de origem identificados; não há execução de conteúdo importado.
+**282 testes aprovados em 10,95 s**, Ruff aprovado, cobertura **71%**
+(2687 statements/791 miss); transferência 97%, codec 92%, repository 91%.
+P4 validado localmente; CI pendente antes de P5. Exportação recusa explicitamente
+excesso dos limites sem cortar histórico. Sem adaptadores de extratos, substituição
+destrutiva ou restauro automático. P5 (reconciliação/política) e P6 (UI) pendentes.
+
 **Atualização P3 (2026-10-14):** P2 fechado com CI #447 Linux/Windows aprovado,
 commit `6ecaa57`. P3 implementado com dividendos manuais multicomponente e split
 inteiro simples auditável; replay conserva rendimento separado, custos e PnL.

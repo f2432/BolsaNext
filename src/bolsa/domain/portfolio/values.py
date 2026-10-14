@@ -10,6 +10,14 @@ class LedgerConflictError(PortfolioError):
     """The expected ledger revision or transaction head is obsolete."""
 
 
+class PortfolioNotFoundError(PortfolioError):
+    """The requested portfolio does not exist."""
+
+
+class PortfolioPersistenceError(PortfolioError):
+    """An atomic financial write failed and was rolled back."""
+
+
 FINANCIAL_CONTEXT = Context(prec=50, rounding=ROUND_HALF_EVEN)
 # Initial supported ISO 4217 currencies; extend deliberately, never infer from FX availability.
 SUPPORTED_CURRENCIES = frozenset(

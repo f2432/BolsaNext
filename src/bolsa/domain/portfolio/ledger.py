@@ -248,9 +248,14 @@ class Portfolio:
     base_currency: str
     portfolio_uid: UUID = field(default_factory=uuid4)
     versions: tuple[TransactionVersion, ...] = ()
+    origin_portfolio_uid: UUID | None = None
 
     def __post_init__(self):
         _uuid(self.portfolio_uid)
+        if self.origin_portfolio_uid is not None:
+            _uuid(self.origin_portfolio_uid)
+            if self.origin_portfolio_uid == self.portfolio_uid:
+                raise PortfolioError("Portfolio cannot clone itself")
         if not isinstance(self.name, str) or not self.name.strip() or len(self.name) > 120:
             raise PortfolioError("Invalid portfolio name")
         object.__setattr__(self, "base_currency", currency_code(self.base_currency))

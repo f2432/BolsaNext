@@ -68,7 +68,7 @@ def test_p1_promotion_preserves_audit_then_manual_events_round_trip(tmp_path):
     config, original = _p1_database(tmp_path)
     result = ensure_database_schema(config)
     assert result.previous_revision == "0003_portfolio_ledger"
-    assert result.current_revision == "0004_manual_financial_events"
+    assert result.current_revision == "0005_portfolio_origin"
     assert get_database_revision(result.backup_path) == "0003_portfolio_ledger"
     engine = create_database_engine(config.database_url)
     try:
