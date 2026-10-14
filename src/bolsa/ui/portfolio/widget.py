@@ -18,6 +18,9 @@ from bolsa.app.portfolio_presentation import (
     money, quantity, average_price, percentage, state_label, message, quote_details,
     import_report_text, METRICS,
 )
+from bolsa.app.portfolio_transfer_presentation import (
+    IMPORT_MODES, ImportDisplay, prepare_import_display, import_preview_text,
+)
 from bolsa.domain.portfolio.policy import PolicyParameters
 from bolsa.domain.portfolio.values import SUPPORTED_CURRENCIES
 from bolsa.ui.portfolio.dialogs import TransactionDialog
@@ -324,28 +327,39 @@ class PortfolioWidget(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Exportar", "carteira.json", "JSON (*.json)")
         if path:
             def write():
-                text = export_portfolio(self.service.portfolio.load(portfolio.portfolio_uid))
+                saved = self.service.portfolio.load(portfolio.portfolio_uid)
+                text = export_portfolio(saved)
                 Path(path).write_text(text, encoding="utf-8")
-                return self.service.overview(portfolio.portfolio_uid)
-            self._run(write)
+                return self.service.overview(portfolio.portfolio_uid), saved
+            def complete(result):
+                self._render(result[0])
+                saved = result[1]
+                self.status.setText(f"Exportação concluída. Carteira: {saved.name}; UUID: {saved.portfolio_uid}; "
+                                    f"versões de operações: {saved.ledger_revision}; versões de políticas: {saved.policy_revision}.")
+            self._run(write, complete)
 
     def _import(self):
         path, _ = QFileDialog.getOpenFileName(self, "Importar", "", "JSON (*.json)")
         if not path:
             return
-        choices = ["Restaurar", "Complementar carteira selecionada", "Criar cópia independente"]
-        choice, ok = QInputDialog.getItem(self, "Importar", "Destino:", choices, 0, False)
+        choices = [label for label, _ in IMPORT_MODES.values()]
+        choice, ok = QInputDialog.getItem(self, "Importar", "Operação (explicada na pré-visualização):", choices, 0, False)
         if not ok:
             return
         mode = ("restore", "complement", "clone")[choices.index(choice)]
-        destination = self.selector.currentData() if mode == "complement" else None
+        destination = self._active() if mode == "complement" else None
+        if mode == "complement" and destination is None:
+            self.status.setText("Seleciona a carteira de destino antes de complementar o histórico.")
+            return
         def preview():
             with Path(path).open("rb") as stream:
                 text = stream.read(MAX_IMPORT_BYTES + 1)
-            return self.service.transfer.preview(text, mode=mode, destination_uid=destination)
+            return prepare_import_display(self.service.transfer, text, mode=mode, destination=destination)
         self._run(preview, self._confirm_import)
 
     def _confirm_import(self, plan):
+        display = plan if isinstance(plan, ImportDisplay) else ImportDisplay(plan, "restore")
+        plan = display.preview
         self._pending_confirmation = True
         def ask():
             if self._worker is not None:
@@ -353,12 +367,12 @@ class PortfolioWidget(QWidget):
                 return
             self._pending_confirmation = False
             if plan.candidate is None:
-                self.status.setText(import_report_text(plan.report))
+                self.status.setText(import_preview_text(display))
+                self.status.setToolTip("\n".join(plan.report.reasons))
                 return
             candidate = plan.candidate
             response = QMessageBox.question(self, "Confirmar importação",
-                f"{candidate.name} ({candidate.base_currency}) · {candidate.portfolio_uid}\n"
-                f"Versões previstas: {plan.report.planned_insertions}; ignoradas: {plan.report.ignored}. Confirmar?")
+                import_preview_text(display) + "\n\nConfirmar esta importação atómica?")
             if response == QMessageBox.StandardButton.Yes:
                 def apply():
                     report = self.service.transfer.confirm(plan)

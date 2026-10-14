@@ -338,3 +338,29 @@ def test_form_shows_amount_date_and_reason_errors_before_accept(app):
     assert "fuso" in dialog.errors["executed_at"].text()
     assert "motivo" in dialog.errors["reason"].text()
     dialog.close()
+
+
+def test_import_preview_shows_source_destination_and_cancel_writes_nothing(app, dashboard, monkeypatch, tmp_path):
+    from bolsa.app.portfolio_format import export_portfolio
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    p = dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    path = tmp_path / "synthetic.json"
+    path.write_text(export_portfolio(p), encoding="utf-8")
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    monkeypatch.setattr(gui.QFileDialog, "getOpenFileName", lambda *a: (str(path), "JSON"))
+    monkeypatch.setattr(gui.QInputDialog, "getItem", lambda *a, **k: ("Criar cópia independente", True))
+    texts = []
+    def cancel(*args):
+        texts.append(args[2])
+        return QMessageBox.StandardButton.No
+    monkeypatch.setattr(gui.QMessageBox, "question", cancel)
+    widget._import()
+    finish(widget, app)
+    assert str(p.portfolio_uid) in texts[0]
+    assert "UUID de destino:" in texts[0] and "Cria um novo UUID" in texts[0]
+    assert "Versões a inserir: 1" in texts[0] and "Duplicados a ignorar: 0" in texts[0]
+    assert "Conflitos: 0" in texts[0]
+    assert len(dashboard.repository.list_portfolios()) == 1
+    assert dashboard.repository.load(p.portfolio_uid) == p
+    widget.close()
