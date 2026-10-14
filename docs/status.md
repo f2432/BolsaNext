@@ -2,6 +2,22 @@
 
 ## Síntese prevalecente — integração V0.3 (2026-10-14)
 
+**Fecho CI confirmado:** #454, commit `df40361`, pytest/cobertura/Ruff aprovados
+em Linux/Python 3.12 e Windows/Python 3.14. Branch de integração publicada;
+pronta para revisão/auditoria do código, sem merge em dev/main. Pendências de CI
+nas notas intermédias abaixo ficam históricas. Conversor feature, teste interativo
+Windows/rede e versão de desenvolvimento permanecem pendentes; não declarar
+V0.3 pronta para dados reais. Evidência: https://github.com/f2432/BolsaNext/actions/runs/38624878059
+
+Validação local final do código `df40361`: **348 testes, Ruff aprovado, 82,26%**
+(3607 statements/640 miss, 21,52 s, Windows/Python 3.14.5), incluindo regressões
+V0.2, persistência/concorrência, oráculos racionais, migrations e nove testes GUI.
+Medição física `--cov=src/bolsa` corrigiu exclusão dos módulos Alembic no relatório;
+os 79% anteriores por namespace permanecem registo histórico. CI #453 falhou
+no teardown Qt/Linux após testes passarem; ownership foi corrigido sem remover
+testes. CI #454 Linux aprovado; Windows pendente neste registo. Relatório detalhado
+e commits em `docs/v0.3-integration.md`. Não declarar utilização real validada.
+
 Trabalho autorizado em `integration/v0.3` a partir da dev `bf30dcf`, comparando
 feature `7d3e4f7`. Dev mantém-se base técnica após oráculos independentes; nenhuma
 integração automática em dev/main. Relatório incremental: `docs/v0.3-integration.md`.

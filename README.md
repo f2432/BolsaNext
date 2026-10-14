@@ -1,5 +1,10 @@
 # BolsaNext
 
+Integração V0.3 em `integration/v0.3`: domínio/migrações da dev mantidos após
+oráculos independentes, UI Portfolio adaptada da feature e validações documentadas
+em `docs/v0.3-integration.md`. Sem merge automático na dev/main nem release;
+consultar a síntese prevalecente de `docs/status.md` para limites e auditoria pendente.
+
 Plataforma pessoal de análise de investimentos em Python.
 
 O projeto tem como objetivo reunir, numa aplicação única, a gestão de carteira, análise de ativos, investigação, backtesting e experimentação de modelos de inteligência artificial, mantendo separadas a evidência, a análise e a decisão final.

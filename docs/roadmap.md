@@ -2,6 +2,10 @@
 
 ## Integração autorizada entre branches (2026-10-14)
 
+Validação automática do código concluída: 348 testes locais/Ruff, 82,26% global,
+CI #454 Linux/Windows aprovado (`df40361`). Integração aguarda auditoria final;
+não equivale a release ou validação interativa/com dados reais.
+
 `integration/v0.3` conserva domínio e migrações dev após comparação com feature.
 P6/UI agora implementado para validação automática: carteiras, formulários,
 auditoria paginada, cotação diária/FX, correção/anulação, transferências e política.

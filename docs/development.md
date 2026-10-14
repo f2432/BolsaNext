@@ -2,6 +2,14 @@
 
 ## Validação da integração V0.3 (2026-10-14)
 
+Comando de cobertura agora usa a raiz física:
+`python -m pytest -q --cov=src/bolsa --cov-report=term-missing`.
+A medição por namespace bolsa excluía módulos Alembic
+carregados dinamicamente; experimento com mesmos testes confirmou a causa.
+Qt usa QApplication por sessão nos testes e deferred delete explícito antes de
+teardown. Não excluir testes GUI para contornar crashes nativos. Suite local final
+do código df40361: 348 testes/Ruff, 82,26%, sem warnings na última execução.
+
 Branch `integration/v0.3`, sem merge automático na dev. Testes novos de oráculo
 Fraction, snapshots concorrentes, Qt offscreen e rejeição não destrutiva do schema
 alternativo. Executar pytest com cobertura, Ruff e git diff --check. O CI de push
