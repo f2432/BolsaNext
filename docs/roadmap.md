@@ -2,6 +2,14 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+Atualização P5 (2026-10-14): P1–P4 concluídos com CI; P5 implementado/testado
+localmente, 313 testes/Ruff e 72% global, com gate CI pendente. **P6 por iniciar**:
+integração da carteira na UI PySide6, formulários e histórico/auditoria,
+pré-visualização/confirmação de transferências, política/alertas, snapshots de
+preços com fonte/data/estado, tarefas em background e validação funcional em
+Windows. Implementar sobre os serviços/ports existentes, sem SQL/cálculos
+financeiros na UI, apenas depois de fechar P5. V0.3 não declarada concluída.
+
 Atualização P4: P1–P3 concluídos com CI; P4 implementado/testado localmente,
 282 testes/Ruff e 71% global; CI pendente. P5/P6 permanecem pendentes.
 

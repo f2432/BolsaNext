@@ -37,6 +37,7 @@ def test_database_initialization_creates_initial_schema(tmp_path) -> None:
             "portfolios",
             "portfolio_versions",
             "ledger_versions",
+            "portfolio_policies",
         }
     finally:
         engine.dispose()

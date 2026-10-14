@@ -1,5 +1,39 @@
 # Desenvolvimento local
 
+## Validação V0.3-P5 — integridade e política (2026-10-14)
+
+Políticas têm limites opcionais fracionários [0,1], sem valores pessoais por
+omissão; meta anual assinada pode ser registada, mas não é calculada. Vigência e
+registo aware, cadeias/UUIDs imutáveis, motivo e revisão independente do ledger.
+`PortfolioService.change_policy()` e `PortfolioAnalysisService.analyze()` são
+casos de uso headless. Indicadores só usam totais completos/positivos/revisão
+correta; ETF/sector desconhecido não recebem exposição presumida. Alertas não
+bloqueiam operações válidas. Resultado composto = realizado + não realizado +
+dividendos, apenas quando os dados/contabilidade necessários estiverem confirmados.
+
+`ReportedSettlement` preserva cashflow observado (crédito +/débito −), com FX
+próprio. O replay compara com componentes e produz diferenças pendentes, sem
+as incorporar como taxas/PnL. Facto observado não pode desaparecer numa correção;
+correção explícita de componentes pode resolver a diferença conservando originais.
+Valores originais/raw mantêm-se no histórico e sobrevivem a SQLite/JSON/clones.
+Isto não implementa importação/reconciliação automática XTB. As estimativas
+provisórias têm estado explícito; cotação de mercado pode ser conhecida quando
+PnL dependente de custo não conciliado permanece indisponível.
+
+`0006_portfolio_policies` conserva políticas em TEXT JSON com Decimal textual e
+triggers append-only. Importação inclui ledger/políticas/criação numa transação;
+alteração de política invalida preview obsoleto mesmo sem mudança financeira.
+JSON v1 adiciona `policies` opcional; v1 anterior sem campo continua aceito.
+Limite de 20 000 inclui ambas as espécies de versões. O mecanismo Alembic
+passa a `BEGIN IMMEDIATE` explícito para DDL e caminho completo, sem desligar FK.
+Regressão injetada após DDL de várias revisões verificou rollback de schema/revisão.
+
+Testes novos de política, liquidação observada e atomicidade em bases temporárias:
+histórico/vigência, ausência de defaults, alertas, projeções inválidas, resultado
+composto, isolamento, revisão obsoleta, clones, erro na escrita de política,
+preservação/recálculo de diferenças de origem e round-trip exato. Suite local:
+313 aprovados/Ruff, 72% global; CI P5 ainda pendente neste registo.
+
 ## Validação V0.3-P4 — portabilidade (2026-10-14)
 
 `export_portfolio()`/`parse_portfolio()` e `PortfolioTransferService.preview()` /

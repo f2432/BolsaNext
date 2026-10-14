@@ -3,7 +3,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from bolsa.domain.instruments.instrument import AssetType, Instrument
-from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, financial_decimal
+from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, ReportedSettlement, financial_decimal
 
 
 def _validate_metadata(event):
@@ -54,6 +54,7 @@ class Dividend:
     account_ref: str | None = None
     external_id: str | None = None
     original_facts: tuple[tuple[str, str], ...] = ()
+    reported_settlement: ReportedSettlement | None = None
 
     def __post_init__(self):
         _validate_metadata(self)
@@ -63,6 +64,8 @@ class Dividend:
             raise PortfolioError("Dividend components must be monetary values")
         if self.gross.amount <= 0:
             raise PortfolioError("Gross dividend must be positive")
+        if self.reported_settlement is not None and not isinstance(self.reported_settlement, ReportedSettlement):
+            raise PortfolioError("Invalid observed dividend settlement")
 
     @property
     def execution_key(self):

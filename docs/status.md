@@ -2,6 +2,41 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Atualização P5 (2026-10-14):** P4 fechado com CI #449 Linux/Windows aprovado,
+commit `132b68e`. P5 implementado: política opcional versionada/persistida,
+indicadores com denominador completo, três estados de alerta, setor/ETF desconhecido
+explicitamente não determinado, exposição por moeda de cotação identificada,
+meta anual apenas registada, reconciliação interna e resultado composto por
+parcelas. Políticas fazem parte da exportação/importação/clone atómicos com
+revisão própria, mantendo compatibilidade com JSON v1 anterior. Migration `0006`.
+
+Factos tipados de liquidação observada preservados com moeda/FX e cashflow
+assinado: crédito positivo, débito negativo. Divergências não criam encargos,
+spreads ou PnL fictícios, permanecem pendentes, e impedem resultados dependentes
+do custo/rendimento de serem apresentados como definitivos. Correções não podem
+apagar/alterar liquidação observada confirmada; resolução exige componentes
+explicitamente corrigidas com motivo e histórico preservado. Sem reconciliação
+automática de extratos nem transmissão de ordens. Valores matemáticos provisórios
+continuam rastreáveis com `accounting_confirmed=False`.
+
+Migrações Alembic executam todo o caminho sob transação SQLite explícita,
+incluindo DDL; falha após várias revisões preservou schema anterior e backup.
+**313 testes passaram em 10,16 s**, Ruff aprovado, cobertura global **72%**
+(3045 statements/841 miss), face à baseline reproduzida 161/61% histórica:
++152 testes e +11 pontos percentuais. Serviços Portfolio/análise/valorização
+100%, ledger 94%, valorização 98%, risco 96%, políticas 84%, repository 90%,
+transferência 92%. Lacunas sobretudo UI/entradas e carga dinâmica Alembic;
+testes de integração verificam migrações apesar do indicador de linhas 0%.
+P5 validado localmente; CI pendente nesta atualização.
+
+**Estado global: V0.3 em desenvolvimento, não concluída.** P1–P4 local/CI
+validados; P5 implementado/testado; P6/UI Portfolio e integração de snapshots
+atuais de preços permanecem pendentes. Catálogo de moedas inicial limitado e
+extensível; fallback temporal de 72 h sem calendário de sessões; exportação
+limitada a 5 MiB/20 000 versões (ledger e políticas), sem truncagem. Forex
+provider testado com mocks, não com Yahoo real. Nenhuma base financeira real
+foi aberta/migrada, nenhum teste foi eliminado, `main` e `v0.2.0` intactas.
+
 **Atualização P4 (2026-10-14):** P3 fechado com CI #448 Linux/Windows aprovado,
 commit `3651b49`. P4 implementado: JSON canónico versionado com histórico inteiro,
 pré-visualização sem escrita, confirmação atómica, idempotência, conflitos sem

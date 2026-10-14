@@ -1,8 +1,10 @@
 from uuid import UUID
+from datetime import datetime
 
 from bolsa.app.ports.portfolio import PortfolioRepository
 from bolsa.domain.portfolio.ledger import Portfolio, Trade
 from bolsa.domain.portfolio.events import Dividend, Split
+from bolsa.domain.portfolio.policy import PolicyParameters
 from bolsa.domain.portfolio.values import LedgerConflictError
 
 
@@ -17,6 +19,15 @@ class PortfolioService:
 
     def load(self, portfolio_uid: UUID) -> Portfolio:
         return self._repository.load(portfolio_uid)
+
+    def change_policy(self, portfolio_uid: UUID, parameters: PolicyParameters, *,
+                      expected_head: UUID | None, effective_at: datetime, reason: str) -> Portfolio:
+        current = self.load(portfolio_uid)
+        candidate = current.add_policy(parameters, expected_head=expected_head,
+                                       effective_at=effective_at, reason=reason)
+        self._repository.save(candidate, expected_revision=current.ledger_revision,
+                              expected_policy_revision=current.policy_revision)
+        return candidate
 
     def _expected(self, portfolio_uid, expected_revision):
         portfolio = self.load(portfolio_uid)

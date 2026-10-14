@@ -57,6 +57,17 @@ def decimal_text(value: Decimal) -> str:
     return "0" if value == 0 else text
 
 
+def signed_financial_decimal(value: Decimal | str) -> Decimal:
+    if not isinstance(value, (Decimal, str)):
+        raise PortfolioError("Signed financial inputs must be Decimal or decimal text")
+    try:
+        raw = Decimal(value)
+    except ArithmeticError as exc:
+        raise PortfolioError("Invalid signed decimal") from exc
+    magnitude = financial_decimal(raw.copy_abs())
+    return magnitude.copy_negate() if raw.is_signed() else magnitude
+
+
 @dataclass(frozen=True, slots=True)
 class MoneyComponent:
     amount: Decimal
@@ -87,3 +98,21 @@ class MoneyComponent:
     def in_base(self, base_currency: str) -> Decimal:
         with localcontext(FINANCIAL_CONTEXT):
             return self.amount * self.rate_to_base(base_currency)
+
+
+@dataclass(frozen=True, slots=True)
+class ReportedSettlement:
+    """Observed signed account cashflow: credit positive, debit negative."""
+    amount: Decimal
+    currency: str
+    historical_fx: Decimal | None = None
+
+    def __post_init__(self):
+        object.__setattr__(self, "amount", signed_financial_decimal(self.amount))
+        object.__setattr__(self, "currency", currency_code(self.currency))
+        component = MoneyComponent(self.amount.copy_abs(), self.currency, self.historical_fx)
+        object.__setattr__(self, "historical_fx", component.historical_fx)
+
+    def in_base(self, base_currency):
+        absolute = MoneyComponent(self.amount.copy_abs(), self.currency, self.historical_fx).in_base(base_currency)
+        return absolute.copy_negate() if self.amount.is_signed() else absolute

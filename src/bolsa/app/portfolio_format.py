@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 from bolsa.app.ports.portfolio import PortfolioRepository
 from bolsa.domain.portfolio.codec import decode_version_fields, encode_version_fields
 from bolsa.domain.portfolio.ledger import Portfolio
+from bolsa.domain.portfolio.policy import encode_policy, decode_policy
 from bolsa.domain.portfolio.values import (
     PortfolioError, PortfolioNotFoundError, decimal_text, financial_decimal,
 )
@@ -75,7 +76,7 @@ def _decode_version(fields):
 
 def export_portfolio(portfolio: Portfolio) -> str:
     portfolio.reconstruct()
-    if len(portfolio.versions) > MAX_IMPORT_VERSIONS:
+    if len(portfolio.versions) + len(portfolio.policies) > MAX_IMPORT_VERSIONS:
         raise PortfolioError("Export exceeds version limit; no partial history exported")
     document = {
         "format_version": 1,
@@ -85,6 +86,7 @@ def export_portfolio(portfolio: Portfolio) -> str:
         "versions": [_encode_version(v) for v in sorted(
             portfolio.versions, key=lambda v: (v.transaction_uid.hex, v.version_number)
         )],
+        "policies": [encode_policy(p) for p in sorted(portfolio.policies, key=lambda p: p.version_number)],
     }
     text = json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(text.encode("utf-8")) > MAX_IMPORT_BYTES:
@@ -101,7 +103,9 @@ def parse_portfolio(text: str | bytes) -> Portfolio:
         if isinstance(text, bytes):
             text = text.decode("utf-8")
         document = json.loads(text, object_pairs_hook=_unique_object)
-        if not isinstance(document, dict) or set(document) != {"format_version", "portfolio", "versions"}:
+        if not isinstance(document, dict) or not {"format_version", "portfolio", "versions"} <= document.keys() or (
+            document.keys() - {"format_version", "portfolio", "versions", "policies"}
+        ):
             raise PortfolioError("Unknown canonical document fields")
         if type(document["format_version"]) is not int or document["format_version"] != 1:
             raise PortfolioError("Unsupported portfolio format version")
@@ -109,12 +113,14 @@ def parse_portfolio(text: str | bytes) -> Portfolio:
         if not isinstance(header, dict) or set(header) != {"portfolio_uid", "name", "base_currency", "origin_portfolio_uid"}:
             raise PortfolioError("Invalid portfolio header")
         raw_versions = document["versions"]
-        if not isinstance(raw_versions, list) or len(raw_versions) > MAX_IMPORT_VERSIONS:
+        raw_policies = document.get("policies", [])
+        if not isinstance(raw_versions, list) or not isinstance(raw_policies, list) or len(raw_versions) + len(raw_policies) > MAX_IMPORT_VERSIONS:
             raise PortfolioError("Import exceeds version limit or is not a version list")
         versions = tuple(_decode_version(fields) for fields in raw_versions)
         return Portfolio(
             header["name"], header["base_currency"], UUID(header["portfolio_uid"]), versions,
             UUID(header["origin_portfolio_uid"]) if header["origin_portfolio_uid"] else None,
+            tuple(decode_policy(p) for p in raw_policies),
         )
     except PortfolioError:
         raise
@@ -145,6 +151,7 @@ class ImportPreview:
     candidate: Portfolio | None
     expected_revision: int | None
     report: ImportReport
+    expected_policy_revision: int | None = None
 
 
 class PortfolioTransferService:
@@ -163,7 +170,8 @@ class PortfolioTransferService:
                 original_uid = incoming.portfolio_uid
                 new_uid = uuid4()
                 incoming = replace(incoming, portfolio_uid=new_uid, origin_portfolio_uid=original_uid,
-                                   versions=tuple(replace(v, portfolio_uid=new_uid) for v in incoming.versions))
+                                   versions=tuple(replace(v, portfolio_uid=new_uid) for v in incoming.versions),
+                                   policies=tuple(replace(p, portfolio_uid=new_uid) for p in incoming.policies))
             elif destination_uid is not None and destination_uid != incoming.portfolio_uid:
                 raise PortfolioError("Destination identity conflicts with canonical portfolio")
             try:
@@ -174,7 +182,7 @@ class PortfolioTransferService:
                 current = None
             if current is None:
                 return ImportPreview(incoming, None, ImportReport(
-                    ImportState.PREVIEW, planned_insertions=len(incoming.versions)
+                    ImportState.PREVIEW, planned_insertions=len(incoming.versions) + len(incoming.policies)
                 ))
             if (current.name, current.base_currency, current.origin_portfolio_uid) != (
                 incoming.name, incoming.base_currency, incoming.origin_portfolio_uid
@@ -197,14 +205,27 @@ class PortfolioTransferService:
                     reasons.append(f"Conflicting version identity: {version.transaction_version_uid}")
                 else:
                     added.append(version)
+            known_policies = {p.policy_version_uid: p for p in current.policies}
+            policy_numbers = {p.version_number: p for p in current.policies}
+            added_policies = []
+            for policy in incoming.policies:
+                existing = known_policies.get(policy.policy_version_uid)
+                if existing == policy:
+                    ignored += 1
+                elif existing is not None or policy.version_number in policy_numbers:
+                    conflicts += 1
+                    reasons.append(f"Conflicting policy version: {policy.policy_version_uid}")
+                else:
+                    added_policies.append(policy)
             if conflicts:
                 return ImportPreview(None, current.ledger_revision, ImportReport(
                     ImportState.REJECTED, ignored=ignored, conflicts=conflicts, reasons=tuple(reasons)
                 ))
-            candidate = replace(current, versions=current.versions + tuple(added))
+            candidate = replace(current, versions=current.versions + tuple(added),
+                                policies=current.policies + tuple(added_policies))
             return ImportPreview(candidate, current.ledger_revision, ImportReport(
-                ImportState.PREVIEW, planned_insertions=len(added), ignored=ignored
-            ))
+                ImportState.PREVIEW, planned_insertions=len(added) + len(added_policies), ignored=ignored
+            ), current.policy_revision)
         except PortfolioError as exc:
             return ImportPreview(None, None, ImportReport(
                 ImportState.REJECTED, rejected=1, reasons=(str(exc),)
@@ -214,11 +235,13 @@ class PortfolioTransferService:
         if preview.candidate is None or preview.report.state is not ImportState.PREVIEW:
             return preview.report
         try:
-            self._repository.import_atomic(preview.candidate, expected_revision=preview.expected_revision)
+            self._repository.import_atomic(preview.candidate, expected_revision=preview.expected_revision,
+                                           expected_policy_revision=preview.expected_policy_revision)
         except PortfolioError as exc:
             return replace(preview.report, state=ImportState.REJECTED, inserted=0,
                            rejected=1, reasons=(str(exc),))
-        confirmed_count = preview.candidate.ledger_revision - (preview.expected_revision or 0)
+        confirmed_count = (preview.candidate.ledger_revision - (preview.expected_revision or 0) +
+                           preview.candidate.policy_revision - (preview.expected_policy_revision or 0))
         return replace(preview.report, state=ImportState.COMPLETED if (
             confirmed_count or preview.expected_revision is None
         ) else ImportState.UNCHANGED, planned_insertions=confirmed_count, inserted=confirmed_count)

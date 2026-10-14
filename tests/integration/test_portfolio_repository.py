@@ -208,7 +208,7 @@ def test_synthetic_v02_upgrade_has_validated_backup_and_preserves_watchlist(tmp_
         result = ensure_database_schema(config)
         assert result.backup_path.is_file()
         assert get_database_revision(result.backup_path) == "0002_market_to_exchange"
-        assert result.current_revision == "0005_portfolio_origin"
+        assert result.current_revision == "0006_portfolio_policies"
         with engine.connect() as connection:
             assert connection.exec_driver_sql("PRAGMA quick_check").scalar() == "ok"
             assert connection.exec_driver_sql("SELECT ticker FROM instruments").scalar() == "TEST"
@@ -252,7 +252,7 @@ def test_downgrade_refused_without_losing_financial_history(store):
     p = service.record(p.portfolio_uid, buy(), expected_revision=0)
     with pytest.raises(RuntimeError, match="backup restore"):
         _run_alembic(config.database_path, command.downgrade, "0002_market_to_exchange")
-    assert get_database_revision(config.database_path) == "0005_portfolio_origin"
+    assert get_database_revision(config.database_path) == "0006_portfolio_policies"
     assert repository.load(p.portfolio_uid).reconstruct() == p.reconstruct()
 
 

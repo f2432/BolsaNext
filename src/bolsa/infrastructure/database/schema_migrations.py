@@ -159,7 +159,11 @@ def _run_alembic(path: Path, operation, revision: str) -> None:
         f"sqlite:///{path.resolve().as_posix()}"
     )
     try:
-        with engine.connect() as connection:
+        with engine.begin() as connection:
+            # Explicit SQLite transaction includes DDL and every revision in the path.
+            # Legacy sqlite3 mode otherwise starts a transaction only at first DML.
+            if not connection.connection.driver_connection.in_transaction:
+                connection.exec_driver_sql("BEGIN IMMEDIATE")
             config = _alembic_config()
             config.attributes["connection"] = connection
             operation(config, revision)

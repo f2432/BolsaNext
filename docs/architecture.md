@@ -2,6 +2,46 @@
 
 ## Implementação V0.3-P1 — contrato técnico (2026-10-13)
 
+### Contrato P5 — integridade, indicadores e política opcional (planeamento)
+
+Implementação das divergências de liquidação: `ReportedSettlement` é facto
+opcional tipado de cashflow da conta (crédito positivo, débito negativo), com
+moeda/FX histórico próprios. BUY espera cashflow `-(q*p + comissão)`, SELL
+`q*p - comissão`, dividendo o líquido derivado. Comparar na moeda base sem
+classificar diferenças como comissão/spread/PnL. Diferença não nula fica pendente,
+conservando custo/rendimento matemático como estimativa marcada
+`accounting_confirmed=False`; PnL não realizado dependente desse custo e resultado
+composto não são apresentados como definitivos. Valor de mercado, independente
+do custo, pode continuar conhecido. Resolução só por componentização/correção
+explícita e motivada, com original preservado; nenhuma tolerância material é
+aceite automaticamente. Texto bruto mantém-se em `original_facts`; não inferir
+semântica de campos arbitrários nem importar extratos XTB nesta versão.
+
+Hardening de migrações: a ligação Alembic passa a ter transação explícita SQLite
+para todo o caminho (DDL incluído), garantindo rollback de schema e revisão
+em falha entre `0005`/`0006`. Backups continuam prévios e imutáveis.
+
+Reconciliar internamente o replay e projeções fornecidas para comparação, sem
+alterar ledger/caches nem interpretar automaticamente factos XTB. Estados:
+consistente, discrepância e informação insuficiente (p.ex. valorização incompleta).
+Concentração por ativo, setor e moeda de cotação exige denominador integral e
+positivo. Setor desconhecido permanece não determinado; ETF não assume exposição
+subjacente apenas por um rótulo genérico. Dados insuficientes não dão conformidade.
+
+Políticas opcionais versionadas por carteira, com UUID de versão, predecessor,
+instantes aware de alteração/vigência e motivo. Limites opcionais de concentração
+por ativo/setor/moeda são frações configuradas no intervalo [0,1], sem defaults
+pessoais. Meta anual pode ser registada, mas seu alerta permanece não avaliável
+até metodologia aprovada. Só política vigente no instante avaliado produz alertas:
+conforme, excedido ou não avaliável; nenhum alerta impede transação válida.
+
+Migration P5 `0006_portfolio_policies` cria histórico append-only de políticas e
+revisão independente. Verificar ambas as revisões nas importações e incluir
+políticas na mesma transação/JSON de carteira (campo aditivo opcional `policies`
+no formato v1; ficheiros v1 anteriores sem políticas continuam aceites).
+Guardar parâmetros Decimal como texto. Alterações de política não escrevem
+transações nem posições; clones/restauros preservam versões no contexto correto.
+
 ### Contrato P4 — portabilidade e importação canónica (planeamento)
 
 JSON `format_version=1`, UTF-8, máximo 5 MiB e 20 000 versões por ficheiro:

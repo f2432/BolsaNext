@@ -7,9 +7,11 @@ from uuid import UUID, uuid4
 
 from bolsa.domain.instruments.instrument import AssetType, Instrument
 from bolsa.domain.portfolio.events import Dividend, Split
+from bolsa.domain.portfolio.policy import PolicyParameters, PolicyVersion, validate_policy_history
 from bolsa.domain.portfolio.values import (
     FINANCIAL_CONTEXT, LedgerConflictError, MoneyComponent, PortfolioError,
     currency_code, financial_decimal,
+    ReportedSettlement,
 )
 
 
@@ -45,6 +47,7 @@ class Trade:
     account_ref: str | None = None
     external_id: str | None = None
     original_facts: tuple[tuple[str, str], ...] = ()
+    reported_settlement: ReportedSettlement | None = None
 
     def __post_init__(self):
         if not isinstance(self.instrument, Instrument) or not isinstance(self.instrument.asset_type, AssetType) or self.instrument.asset_type not in (
@@ -75,6 +78,8 @@ class Trade:
             any(not isinstance(v, str) for v in pair) for pair in self.original_facts
         ):
             raise PortfolioError("Original facts must be immutable text pairs")
+        if self.reported_settlement is not None and not isinstance(self.reported_settlement, ReportedSettlement):
+            raise PortfolioError("Invalid observed trade settlement")
 
     @property
     def execution_key(self):
@@ -124,12 +129,23 @@ class Position:
     average_cost: Decimal = Decimal("0")
     realized_pnl: Decimal = Decimal("0")
     dividend_income: Decimal = Decimal("0")
+    accounting_confirmed: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementDifference:
+    transaction_uid: UUID
+    ticker: str
+    expected_cashflow_base: Decimal
+    reported_cashflow_base: Decimal
+    difference_base: Decimal
 
 
 @dataclass(frozen=True, slots=True)
 class ReplayResult:
     positions: tuple[Position, ...]
     warnings: tuple[str, ...]
+    pending_reconciliation: tuple[SettlementDifference, ...] = ()
 
     def position(self, ticker: str) -> Position:
         return next((p for p in self.positions if p.ticker == ticker), Position(ticker))
@@ -165,6 +181,10 @@ def effective_versions(portfolio_uid, versions):
                 previous.trade is None or version.recorded_at < previous.recorded_at
             ):
                 raise PortfolioError("Cancelled operation is terminal; audit order must be monotonic")
+            if previous is not None and previous.trade is not None and version.trade is not None:
+                observed = getattr(previous.trade, "reported_settlement", None)
+                if observed is not None and getattr(version.trade, "reported_settlement", None) != observed:
+                    raise PortfolioError("Confirmed observed settlement cannot be erased or changed by correction")
             previous = version
         if chain[-1].trade is not None:
             effective.append(chain[-1])
@@ -200,6 +220,7 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
             warnings.append(f"Ambiguous execution order: {group[0].trade.instrument.ticker} "
                             f"{instants[0].date()}")
     positions = {}
+    pending = []
     with localcontext(FINANCIAL_CONTEXT):
         for event in events:
             trade = event.trade
@@ -212,6 +233,11 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                 net = trade.net.in_base(base)
                 if net != gross - withholding - charges:
                     raise PortfolioError(f"Inconsistent manual dividend net: {event.transaction_uid}")
+                if trade.reported_settlement is not None:
+                    observed = trade.reported_settlement.in_base(base)
+                    if observed != net:
+                        pending.append(SettlementDifference(event.transaction_uid, ticker, net, observed, observed - net))
+                        current = replace(current, accounting_confirmed=False)
                 positions[ticker] = replace(current, dividend_income=current.dividend_income + net)
                 continue
             if isinstance(trade, Split):
@@ -223,11 +249,17 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
             quantity = trade.quantity
             gross = quantity * trade.unit_price.amount * trade.unit_price.rate_to_base(base)
             fee = trade.commission.in_base(base)
+            if trade.reported_settlement is not None:
+                expected = -(gross + fee) if trade.kind is TradeType.BUY else gross - fee
+                observed = trade.reported_settlement.in_base(base)
+                if observed != expected:
+                    pending.append(SettlementDifference(event.transaction_uid, ticker, expected, observed, observed - expected))
+                    current = replace(current, accounting_confirmed=False)
             if trade.kind is TradeType.BUY:
                 q = current.quantity + quantity
                 cost = current.cost + gross + fee
                 positions[ticker] = Position(ticker, q, cost, cost / q, current.realized_pnl,
-                                              current.dividend_income)
+                                              current.dividend_income, current.accounting_confirmed)
             else:
                 if quantity > current.quantity:
                     raise PortfolioError(f"Oversell: {event.transaction_uid} ({ticker})")
@@ -238,8 +270,9 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                     ticker, q, cost, current.average_cost if q else Decimal("0"),
                     current.realized_pnl + gross - fee - assigned,
                     current.dividend_income,
+                    current.accounting_confirmed,
                 )
-    return ReplayResult(tuple(positions[k] for k in sorted(positions)), tuple(warnings))
+    return ReplayResult(tuple(positions[k] for k in sorted(positions)), tuple(warnings), tuple(pending))
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,6 +282,7 @@ class Portfolio:
     portfolio_uid: UUID = field(default_factory=uuid4)
     versions: tuple[TransactionVersion, ...] = ()
     origin_portfolio_uid: UUID | None = None
+    policies: tuple[PolicyVersion, ...] = ()
 
     def __post_init__(self):
         _uuid(self.portfolio_uid)
@@ -262,10 +296,25 @@ class Portfolio:
         if not isinstance(self.versions, tuple):
             raise PortfolioError("Ledger must be immutable")
         self.reconstruct()
+        validate_policy_history(self.portfolio_uid, self.policies)
 
     @property
     def ledger_revision(self):
         return len(self.versions)
+
+    @property
+    def policy_revision(self):
+        return len(self.policies)
+
+    def add_policy(self, parameters: PolicyParameters, *, effective_at: datetime, reason: str,
+                   expected_head: UUID | None, recorded_at: datetime | None = None):
+        head = max(self.policies, key=lambda p: p.version_number) if self.policies else None
+        if expected_head != (head.policy_version_uid if head else None):
+            raise LedgerConflictError("Obsolete policy head")
+        policy = PolicyVersion(self.portfolio_uid, parameters, self.policy_revision + 1,
+                               expected_head, effective_at, reason,
+                               recorded_at=recorded_at or datetime.now(timezone.utc))
+        return replace(self, policies=self.policies + (policy,))
 
     def reconstruct(self):
         return replay(self.portfolio_uid, self.base_currency, self.versions)

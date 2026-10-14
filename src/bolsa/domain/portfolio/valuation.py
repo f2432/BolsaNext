@@ -3,6 +3,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal, localcontext
 from enum import StrEnum
 from typing import Mapping
+from uuid import UUID
 
 from bolsa.domain.portfolio.ledger import Portfolio
 from bolsa.domain.portfolio.values import FINANCIAL_CONTEXT, PortfolioError, currency_code
@@ -93,6 +94,9 @@ class ValuationResult:
     freshness_policy: str = "elapsed_time_fallback"
     freshness_limit: timedelta = timedelta(hours=72)
     data_errors: tuple[str, ...] = ()
+    portfolio_uid: UUID | None = None
+    ledger_revision: int | None = None
+    accounting_confirmed: bool = True
 
     @property
     def complete(self):
@@ -128,6 +132,7 @@ def value_portfolio(portfolio: Portfolio, prices: Mapping[str, PriceQuote],
     subtotal = Decimal("0")
     pnl_subtotal = Decimal("0")
     realized = Decimal("0")
+    pnl_complete = True
     with localcontext(FINANCIAL_CONTEXT):
         for position in ledger.positions:
             realized += position.realized_pnl
@@ -156,13 +161,19 @@ def value_portfolio(portfolio: Portfolio, prices: Mapping[str, PriceQuote],
             value = pnl = None
             if state is ValuationState.AVAILABLE:
                 value = position.quantity * price.price * rate.rate
-                pnl = value - position.cost
+                pnl = value - position.cost if position.accounting_confirmed else None
                 subtotal += value
-                pnl_subtotal += pnl
+                if pnl is not None:
+                    pnl_subtotal += pnl
+                else:
+                    pnl_complete = False
+                    reason = "Historical accounting is pending settlement reconciliation"
             rows.append(ValuedPosition(position.ticker, state, value, pnl, reason, price, rate))
     complete = all(row.state is ValuationState.AVAILABLE for row in rows)
     return ValuationResult(
         portfolio.base_currency, tuple(rows), subtotal, pnl_subtotal,
-        subtotal if complete else None, pnl_subtotal if complete else None, realized, now,
+        subtotal if complete else None, pnl_subtotal if complete and pnl_complete else None, realized, now,
         freshness_limit=max_age,
+        portfolio_uid=portfolio.portfolio_uid, ledger_revision=portfolio.ledger_revision,
+        accounting_confirmed=not ledger.pending_reconciliation,
     )

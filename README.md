@@ -6,6 +6,14 @@ O projeto tem como objetivo reunir, numa aplicação única, a gestão de cartei
 
 ## Estado do projeto
 
+Estado vigente (2026-10-14): a V0.2.0 é a referência publicada. O desenvolvimento
+da V0.3 está na `dev`, com núcleo financeiro, persistência, portabilidade,
+reconciliação interna e políticas implementados/testados (P1–P5). A interface
+Portfolio continua pendente e a V0.3 ainda não é uma versão concluída.
+Consultar `docs/status.md` para validações/limitações e `docs/roadmap.md` para
+o próximo incremento. Os parágrafos seguintes conservam o estado inicial
+como registo histórico anterior à autorização de desenvolvimento V0.3.
+
 O projeto está numa fase inicial de reconstrução a partir de uma aplicação anterior.
 
 A **V0.1 — Fundação** está concluída. A **V0.2 — Market Data** foi funcionalmente concluída e integrada, mas está agora num ciclo final de estabilização e saneamento antes da V0.3. A **V0.3 — Portfolio ainda não foi iniciada**. O estado canónico encontra-se em `docs/status.md` e o plano sequencial do ciclo atual em `docs/stabilization-v0.2.md`.

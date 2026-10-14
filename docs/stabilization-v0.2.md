@@ -1,5 +1,14 @@
 # Estabilização final da V0.2 antes da V0.3
 
+## Estado prevalecente após publicação e início V0.3
+
+O ciclo V0.2 está fechado/validado e a V0.2.0 foi publicada, conforme síntese
+canónica de `docs/status.md` (2026-10-11). O utilizador autorizou posteriormente
+o desenvolvimento autónomo V0.3 na `dev`, iniciado em 2026-10-13. Os estados
+intermédios e proibições condicionadas ao ciclo aberto abaixo permanecem históricos;
+nenhum item/decisão foi apagado. O estado corrente P1–P5 e trabalho restante P6
+encontram-se em `docs/status.md` e `docs/roadmap.md`.
+
 Última atualização canónica: 2026-10-10.
 
 

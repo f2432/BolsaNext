@@ -5,7 +5,7 @@ from uuid import UUID
 from bolsa.domain.instruments.instrument import AssetType, Instrument
 from bolsa.domain.portfolio.ledger import Trade, TradeType, TransactionVersion
 from bolsa.domain.portfolio.events import Dividend, Split
-from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError
+from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, ReportedSettlement, decimal_text
 
 def encode_version_fields(version):
     values = dict(
@@ -28,6 +28,12 @@ def encode_version_fields(version):
             notes=trade.notes, source=trade.source, account_ref=trade.account_ref,
             external_id=trade.external_id, original_facts=trade.original_facts,
         )
+        if isinstance(trade, (Trade, Dividend)) and trade.reported_settlement is not None:
+            settlement = trade.reported_settlement
+            metadata["reported_settlement"] = dict(
+                amount=decimal_text(settlement.amount), currency=settlement.currency,
+                historical_fx=decimal_text(settlement.historical_fx) if settlement.historical_fx is not None else None,
+            )
         values.update(ticker=instrument.ticker,
                       trade_metadata=json.dumps(metadata, sort_keys=True, separators=(",", ":")))
         if isinstance(trade, Trade):
@@ -67,6 +73,11 @@ def decode_version_fields(row):
         if metadata["settlement_date"]:
             metadata["settlement_date"] = date.fromisoformat(metadata["settlement_date"])
         metadata["original_facts"] = tuple(tuple(pair) for pair in metadata["original_facts"])
+        if "reported_settlement" in metadata:
+            observed = metadata["reported_settlement"]
+            if set(observed) != {"amount", "currency", "historical_fx"} or not isinstance(observed["amount"], str):
+                raise PortfolioError("Invalid observed settlement fields")
+            metadata["reported_settlement"] = ReportedSettlement(**observed)
         if row["trade_kind"] in ("BUY", "SELL"):
             trade = Trade(
                 Instrument(**instrument), TradeType(row["trade_kind"]), row["quantity"],
