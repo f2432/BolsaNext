@@ -1,5 +1,25 @@
 # Arquitetura
 
+## Correção pré-integração — reconciliação e snapshots de mercado
+
+Application mantém em memória um snapshot de fonte por UUID de carteira, ligado
+à revisão do ledger e moeda base; não é cache autoritativa de posições nem é
+persistido. Overview sem pedido de mercado reaproveita apenas identidade/revisão
+compatíveis e recalcula pelo value_portfolio existente, com data/fonte de preço
+e FX originais, instante de avaliação atual e limite de atualidade original.
+Não reutilizar totais/PnL/risco calculados; sem novas consultas de rede. Alteração
+de ledger invalida o snapshot; política/vigência recalculam risco sem invalidar
+cotações. Snapshot completo ainda fresco sobrevive a falha de refresh; snapshot
+completo expirado não substitui subtotal parcial recente. Cache protegida por
+lock e nunca substitui snapshot de revisão mais recente por leitor atrasado.
+
+PortfolioDashboardService.reconcile separa relatório contabilístico (reconcile
+do ledger, sem valuation) da disponibilidade de mercado. Divergências de
+liquidação continuam pendentes; falta de Yahoo não representa erro contabilístico.
+Snapshots expirados/futuros/sem data permanecem indisponíveis para os resultados
+dependentes, embora a reconciliação do ledger possa ser coerente. Fórmulas,
+limite temporal, migrações e formatos canónicos não mudaram.
+
 ## Integração V0.3 (2026-10-14)
 
 Decisão comparativa em `docs/v0.3-integration.md`: conservar domínio/ledger/schema

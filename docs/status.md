@@ -1,5 +1,27 @@
 # Estado atual do projeto
 
+## Síntese prevalecente — correção final pré-integração
+
+Validação final após teste de leitores concorrentes: **394 testes em42,14s**,
+Ruff/diff aprovados, **83,3418%** (3944 statements/657 miss), Windows/Python3.14.5.
++21 testes face à baseline373 (19 serviço,2 Qt). A medição393 abaixo é intermédia.
+CI será confirmado na resposta final após publicar o commit único.
+
+Regressão reproduzida: Reconciliar apagava mercado/risco ao pedir overview sem
+preços. Corrigida em Application/Qt: snapshots de preço/FX de sessão reavaliados
+sem rede, apenas com UUID/revisão/moeda compatíveis e atualidade comprovada pelos
+timestamps originais. Alterações financeiras invalidam derivados; política/vigência
+recalculam risco. Reconciliação contabilística independente do Yahoo, mantendo
+divergências reais de liquidação. Campo Vigência ISO com fuso alargado.
+
+Validação local Windows/Python3.14.5: **393 testes**, Ruff/diff aprovados, **83,39%**
+global (3944 statements/655 miss), 43,87s. São +20 testes face à baseline373,
+incluindo18 testes de serviço e2 Qt; nenhum teste eliminado. CI desta correção
+será confirmado após publicar o commit; não inferir CI a partir de validação local.
+Só integration/v0.3; fórmulas, migrations, JSON, dev/main/v0.2.0 preservados.
+Sem bases pessoais, merge ou release. V0.3 continua para revisão final, não pronta
+para dados reais. Histórico e evidências em docs/v0.3-integration.md.
+
 ## Síntese prevalecente — correções de usabilidade após testes Windows
 
 **CI final confirmado:** #458, commit `9755571`, pytest/cobertura/Ruff aprovados

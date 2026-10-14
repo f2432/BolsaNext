@@ -4,7 +4,7 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from dataclasses import replace
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 import time
@@ -228,6 +228,9 @@ def test_dashboard_keeps_snapshot_when_writer_changes_during_quote(dashboard):
     assert result.valuation.ledger_revision == result.analysis.portfolio.ledger_revision == 1
     assert result.valuation.total_market_value == 1100
     assert dashboard.repository.load(p.portfolio_uid).ledger_revision == 2
+    reconciled = dashboard.reconcile(p.portfolio_uid)
+    assert reconciled.portfolio.ledger_revision == 2
+    assert reconciled.valuation.total_market_value is None
 
 
 def test_gui_dividend_split_and_sell_keep_components_separate(app, dashboard, monkeypatch):
@@ -364,4 +367,56 @@ def test_import_preview_shows_source_destination_and_cancel_writes_nothing(app, 
     assert len(dashboard.repository.list_portfolios()) == 1
     assert dashboard.repository.load(p.portfolio_uid) == p
     assert "Importação cancelada" in widget.status.text()
+    widget.close()
+
+
+def test_reconcile_keeps_market_values_and_risk_when_ledger_unchanged(app, dashboard):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    original_provider = dashboard._quotes
+    class CountingQuotes:
+        calls = 0
+        def get_quote(self, instrument):
+            self.calls += 1
+            return original_provider.get_quote(instrument)
+    provider = CountingQuotes()
+    dashboard._quotes = provider
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    widget._market()
+    finish(widget, app)
+    market = widget.positions.item(0, 6).text()
+    risk = widget.dashboard.analysis.risk
+    widget._reconcile()
+    finish(widget, app)
+    assert widget.positions.item(0, 6).text() == market == "1\N{NO-BREAK SPACE}100,00"
+    assert widget.dashboard.analysis.risk == risk
+    assert widget.dashboard.analysis.reconciliation.state == "consistent"
+    assert provider.calls == 1
+    snapshot_time = widget.dashboard.valuation.evaluated_at
+    dashboard._clock = lambda: snapshot_time + timedelta(hours=73)
+    widget._reconcile()
+    finish(widget, app)
+    assert widget.positions.item(0, 6).text() == "Indisponível"
+    assert widget.dashboard.analysis.reconciliation.state == "consistent"
+    assert widget.dashboard.analysis.risk.asset_weights == (("TEST", None),)
+    assert provider.calls == 1
+    widget.close()
+
+
+def test_policy_effective_iso_field_fits_timestamp(app, dashboard):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    inspected = []
+    def inspect():
+        dialog = QApplication.activeModalWidget()
+        field = dialog.findChild(QLineEdit, "policy_effective_at")
+        assert field.width() >= field.fontMetrics().horizontalAdvance(field.text()) + 20
+        inspected.append(field.text())
+        dialog.reject()
+    QTimer.singleShot(0, inspect)
+    widget._policy()
+    assert inspected and "+00:00" in inspected[0]
+    assert dashboard.repository.load(p.portfolio_uid) == p
     widget.close()

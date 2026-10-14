@@ -1,5 +1,26 @@
 # Desenvolvimento local
 
+## Regressão Reconciliar/Valorizar — correção pré-integração
+
+Medição final ampliada:394 testes em42,14s, Ruff/diff aprovados,83,3418% global
+(3944 statements/657 miss). Inclui corrida determinística de leitor atrasado,
+que não pode apagar/substituir snapshot de revisão mais recente. A medição393
+abaixo permanece como registo intermédio; o código financeiro não foi alterado.
+
+Rodar pytest com --cov=src/bolsa, Ruff e git diff --check. Testes de serviço
+em test_portfolio_dashboard.py usam relógio/providers sintéticos e contam chamadas
+de preço/FX: reconciliação não consulta rede. Cobrem limite72h, price/FX expirado,
+data ausente/futura/diária, revisões financeiras, política futura, divergência
+contabilística, refresh falhado/parcial e isolamento. Testes Qt reproduzem
+Valorizar→Reconciliar, expiração sem rede e largura do campo Vigência ISO.
+
+Suite Windows final:393 testes em43,87s, Ruff/diff aprovados, cobertura83,39%
+(3944 statements/655 miss). Nenhum dado real/Yahoo foi consultado. Snapshots só
+duram a sessão do serviço, sem persistência; após reinício usar Valorizar para
+obter mercado. Accounting reconcile pode ser executado antes/sem Yahoo. Falta
+de mercado continua explícita nas parcelas/risco, não no relatório contabilístico.
+CI Linux/Windows será verificado após publicar; evidência final na resposta de revisão.
+
 ## Correções de apresentação após validação funcional Windows
 
 CI final #458 (`9755571`) confirmado em Linux/Python3.12 e Windows/Python3.14:

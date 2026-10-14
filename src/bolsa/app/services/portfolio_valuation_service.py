@@ -5,11 +5,24 @@ from typing import Mapping
 from bolsa.app.ports.fx import FxRateError, FxRateProvider
 from bolsa.domain.portfolio.ledger import Portfolio
 from bolsa.domain.portfolio.valuation import PriceQuote, ValuationResult, value_portfolio
+from bolsa.domain.portfolio.values import PortfolioError
 
 
 class PortfolioValuationService:
     def __init__(self, fx_provider: FxRateProvider):
         self._fx_provider = fx_provider
+
+    def revalue(self, portfolio: Portfolio, snapshot: ValuationResult, *, now: datetime) -> ValuationResult:
+        """Recompute from dated source quotes, never from cached totals or network."""
+        if (snapshot.portfolio_uid, snapshot.base_currency, snapshot.ledger_revision) != (
+            portfolio.portfolio_uid, portfolio.base_currency, portfolio.ledger_revision
+        ):
+            raise PortfolioError("Valuation snapshot does not match portfolio revision")
+        prices = {row.ticker: row.price_quote for row in snapshot.positions if row.price_quote is not None}
+        rates = {(row.fx_quote.source_currency, row.fx_quote.base_currency): row.fx_quote
+                 for row in snapshot.positions if row.fx_quote is not None}
+        result = value_portfolio(portfolio, prices, rates, now=now, max_age=snapshot.freshness_limit)
+        return replace(result, data_errors=snapshot.data_errors)
 
     def evaluate(self, portfolio: Portfolio, prices: Mapping[str, PriceQuote], *, now: datetime,
                  max_age: timedelta = timedelta(hours=72)) -> ValuationResult:

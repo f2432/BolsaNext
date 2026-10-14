@@ -405,6 +405,9 @@ class PortfolioWidget(QWidget):
             fields[key] = QLineEdit(str(value) if value is not None else "")
             form.addRow(label, fields[key])
         effective, reason = QLineEdit(utc_now().isoformat()), QLineEdit()
+        effective.setObjectName("policy_effective_at")
+        effective.setMinimumWidth(effective.fontMetrics().horizontalAdvance(effective.text()) + 32)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form.addRow("Vigência ISO com fuso", effective)
         form.addRow("Motivo obrigatório", reason)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -428,7 +431,10 @@ class PortfolioWidget(QWidget):
     def _reconcile(self):
         if self._active():
             uid = self._active().portfolio_uid
-            self._run(lambda: self.service.overview(uid))
+            def complete(dashboard):
+                self._render(dashboard)
+                self.status.setText(self.status.text() + "\nReconciliação contabilística sem consulta de mercado.")
+            self._run(lambda: self.service.reconcile(uid), complete)
 
     def _details(self):
         version = self._selected_version()
