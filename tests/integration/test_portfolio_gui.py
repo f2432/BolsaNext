@@ -11,7 +11,7 @@ import time
 
 import pytest
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QLineEdit
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, QCoreApplication, QEvent
 from PySide6.QtTest import QTest
 
 from bolsa.app.portfolio_forms import form_values, transaction_from_form
@@ -20,8 +20,9 @@ from bolsa.app.services.portfolio_valuation_service import PortfolioValuationSer
 from bolsa.config import AppConfig
 from bolsa.domain.instruments import Instrument
 from bolsa.domain.portfolio.ledger import Trade, TradeType, TransactionVersion, Portfolio
+from bolsa.domain.portfolio.events import Dividend, Split
 from bolsa.domain.portfolio.valuation import PriceQuote
-from bolsa.domain.portfolio.values import MoneyComponent, ReportedSettlement
+from bolsa.domain.portfolio.values import MoneyComponent, ReportedSettlement, SignedMoneyComponent
 from bolsa.infrastructure.database import ensure_database_schema, create_database_engine
 from bolsa.infrastructure.repositories.portfolio_repository import SqlAlchemyPortfolioRepository
 from bolsa.ui.portfolio.widget import PortfolioWidget
@@ -30,9 +31,21 @@ from bolsa.ui.main_window.window import MainWindow
 import bolsa.ui.portfolio.widget as gui
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def app():
     return QApplication.instance() or QApplication([])
+
+
+@pytest.fixture(autouse=True)
+def dispose_qt_widgets(app):
+    yield
+    # close() only hides Qt windows. Drain deferred deletion while the single
+    # session QApplication is alive, before Python destroys ownership wrappers.
+    for widget in app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    app.processEvents()
 
 
 @pytest.fixture
@@ -215,3 +228,38 @@ def test_dashboard_keeps_snapshot_when_writer_changes_during_quote(dashboard):
     assert result.valuation.ledger_revision == result.analysis.portfolio.ledger_revision == 1
     assert result.valuation.total_market_value == 1100
     assert dashboard.repository.load(p.portfolio_uid).ledger_revision == 2
+
+
+def test_gui_dividend_split_and_sell_keep_components_separate(app, dashboard, monkeypatch):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    def money(value):
+        return MoneyComponent(Decimal(value), "EUR")
+    dividend = Dividend(trade().instrument, money("1"), money("0"), money("2"),
+                        SignedMoneyComponent(Decimal("-1"), "EUR"), date(2026, 1, 2))
+    split = Split(trade().instrument, Decimal("2"), "Synthetic split", date(2026, 1, 3))
+    sell = replace(trade(), kind=TradeType.SELL, quantity=Decimal("20"), executed_at=date(2026, 1, 4))
+    for tx in (dividend, split, sell):
+        fake_dialog(monkeypatch, form_values(tx))
+        widget._record()
+        finish(widget, app)
+    position = widget._active().reconstruct().position("TEST")
+    assert position.quantity == position.cost == 0
+    assert position.dividend_income == -1 and position.realized_pnl == 1000
+    assert widget.history.rowCount() == 4
+    widget.close()
+
+
+def test_stale_gui_revision_is_rejected_without_overwriting(app, dashboard, monkeypatch):
+    p = dashboard.portfolio.create("Synthetic", "EUR")
+    widget = PortfolioWidget(dashboard)
+    finish(widget, app)
+    dashboard.portfolio.record(p.portfolio_uid, trade(), expected_revision=0)
+    fake_dialog(monkeypatch, form_values(trade()))
+    widget._record()
+    finish(widget, app)
+    assert "Obsolete" in widget.status.text()
+    assert dashboard.repository.load(p.portfolio_uid).ledger_revision == 1
+    widget.close()

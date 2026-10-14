@@ -2,9 +2,12 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 
 from bolsa.app.ports.errors import MarketDataError
+from bolsa.app.ports.portfolio import PortfolioRepository
+from bolsa.app.ports.portfolio_quotes import PortfolioQuoteProvider
 from bolsa.app.portfolio_format import PortfolioTransferService
 from bolsa.app.services.portfolio_service import PortfolioService
-from bolsa.app.services.portfolio_analysis_service import PortfolioAnalysisService
+from bolsa.app.services.portfolio_analysis_service import PortfolioAnalysisService, PortfolioAnalysis
+from bolsa.domain.portfolio.valuation import ValuationResult
 from bolsa.domain.portfolio.ledger import Portfolio, effective_versions
 from bolsa.domain.portfolio.values import PortfolioError
 
@@ -13,12 +16,13 @@ from bolsa.domain.portfolio.values import PortfolioError
 class PortfolioDashboard:
     portfolios: tuple[Portfolio, ...]
     portfolio: Portfolio | None
-    valuation: object = None
-    analysis: object = None
+    valuation: ValuationResult | None = None
+    analysis: PortfolioAnalysis | None = None
 
 
 class PortfolioDashboardService:
-    def __init__(self, repository, valuation_service, quote_provider):
+    def __init__(self, repository: PortfolioRepository, valuation_service,
+                 quote_provider: PortfolioQuoteProvider):
         self.repository = repository
         self.portfolio = PortfolioService(repository)
         self.transfer = PortfolioTransferService(repository)

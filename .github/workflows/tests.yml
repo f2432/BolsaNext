@@ -49,7 +49,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          python -m pytest -q --cov=bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+          python -m pytest -q --cov=src/bolsa --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
 
       - name: Upload coverage report
         if: always()

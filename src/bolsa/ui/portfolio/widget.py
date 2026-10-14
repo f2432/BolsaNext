@@ -87,6 +87,7 @@ class PortfolioWidget(QWidget):
         for button in self._buttons:
             button.setEnabled(False)
         self._worker = FunctionThread(function)
+        self._worker.setParent(self)
         self._worker.result_ready.connect(callback or self._render)
         self._worker.failed.connect(lambda error: self.status.setText("Erro; operação não confirmada: " + error))
         self._worker.finished.connect(self._finished)
