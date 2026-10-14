@@ -351,6 +351,21 @@ def _validate_revision(path: Path, expected: str) -> None:
         )
 
 
+def _reject_divergent_portfolio_schema(path: Path, current: str) -> None:
+    # Both implementations published the same revision string with different
+    # schemas. The stamp alone must never authorize upgrading a foreign ledger.
+    with closing(sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)) as connection:
+        tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(portfolio_versions)")}
+    if "portfolio_components" in tables or (
+        current == "0003_portfolio_ledger" and not {"price", "commission", "trade_metadata"} <= columns
+    ):
+        raise SchemaCompatibilityError(
+            "Schema Portfolio da feature/v0.3-portfolio incompatível com a cadeia dev. "
+            "Base preservada; requer conversão explícita em cópia descartável antes de integração."
+        )
+
+
 def ensure_database_schema(
     config: AppConfig,
     *,
@@ -410,6 +425,8 @@ def ensure_database_schema(
         raise SchemaRevisionError(
             "A base contém alembic_version sem uma revisão válida."
         )
+
+    _reject_divergent_portfolio_schema(path, current)
 
     if current == head:
         return SchemaMigrationResult(

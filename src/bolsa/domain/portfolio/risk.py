@@ -8,7 +8,7 @@ from bolsa.domain.instruments.instrument import AssetType
 from bolsa.domain.portfolio.ledger import Portfolio, effective_versions
 from bolsa.domain.portfolio.policy import active_policy
 from bolsa.domain.portfolio.valuation import ValuationResult, ValuationState
-from bolsa.domain.portfolio.values import FINANCIAL_CONTEXT, PortfolioError
+from bolsa.domain.portfolio.values import FINANCIAL_CONTEXT, PortfolioError, exact_sum
 
 
 class AlertState(StrEnum):
@@ -69,7 +69,7 @@ def evaluate_risk(portfolio: Portfolio, valuation: ValuationResult,
               p.market_value.is_finite() and p.market_value > 0 and p.price_quote is not None for p in rows.values())
     if complete:
         with localcontext(FINANCIAL_CONTEXT):
-            complete = sum((p.market_value for p in rows.values()), Decimal("0")) == valuation.total_market_value
+            complete = exact_sum(*(p.market_value for p in rows.values())) == valuation.total_market_value
     reason = None if complete else "A positive complete valuation of the current ledger is required"
     assets = {ticker: None for ticker in open_positions}
     sector_weights = {}

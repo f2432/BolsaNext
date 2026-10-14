@@ -80,3 +80,38 @@ def test_full_closure_conserves_exact_cashflows():
             rows.append(("SELL", "1", str(index + 11), "0.03", "0.91"))
         actual = implemented_replay(rows)
         assert Fraction(actual.realized_pnl) == rational_replay(rows)[2]
+
+
+def test_maximum_supported_components_preserve_exact_cost():
+    rows = [("BUY", "99999999999999999.12345678", "99999999999999999.87654321",
+             "0.00000001", "99999999999999999.123456789012")]
+    actual = implemented_replay(rows)
+    assert Fraction(actual.cost) == rational_replay(rows)[1]
+
+
+def test_independent_dividend_split_and_market_oracle():
+    from datetime import datetime, timezone
+    from bolsa.domain.portfolio.events import Dividend, Split
+    from bolsa.domain.portfolio.values import SignedMoneyComponent
+    from bolsa.domain.portfolio.valuation import PriceQuote, value_portfolio
+    instrument = Instrument("ORACLE", currency="EUR")
+    p = Portfolio("Synthetic", "EUR").record(Trade(
+        instrument, TradeType.BUY, Decimal("0.75"), MoneyComponent(Decimal("12.25"), "EUR"),
+        MoneyComponent(Decimal("0.03"), "EUR"), date(2020, 1, 1),
+    ))
+    p = p.record(Split(instrument, Decimal("3"), "Synthetic split", date(2020, 1, 2)))
+    p = p.record(Dividend(instrument, MoneyComponent(Decimal("0.1"), "USD", Decimal(".9")),
+        MoneyComponent(Decimal(".01"), "GBP", Decimal("1.1")),
+        MoneyComponent(Decimal(".1"), "EUR"), SignedMoneyComponent(Decimal("-.021"), "EUR"),
+        date(2020, 1, 3)))
+    position = p.reconstruct().position("ORACLE")
+    cost = Fraction(".75") * Fraction("12.25") + Fraction(".03")
+    net = Fraction(".1") * Fraction(".9") - Fraction(".01") * Fraction("1.1") - Fraction(".1")
+    assert Fraction(position.cost) == cost
+    assert Fraction(position.quantity) == Fraction(".75") * 3
+    assert Fraction(position.dividend_income) == net
+    now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    result = value_portfolio(p, {"ORACLE": PriceQuote("ORACLE", "EUR", Decimal("5.12"), now, "synthetic")}, {}, now=now)
+    market = Fraction(".75") * 3 * Fraction("5.12")
+    assert Fraction(result.total_market_value) == market
+    assert Fraction(result.total_unrealized_pnl) == market - cost

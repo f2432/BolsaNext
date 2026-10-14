@@ -19,6 +19,27 @@ class PortfolioPersistenceError(PortfolioError):
 
 
 FINANCIAL_CONTEXT = Context(prec=50, rounding=ROUND_HALF_EVEN)
+
+
+def exact_sum(*values: Decimal) -> Decimal:
+    """Finite decimal addition without losing source digits at large magnitudes."""
+    if not values:
+        return Decimal("0")
+    minimum_exponent = min(value.as_tuple().exponent for value in values)
+    maximum_adjusted = max(value.adjusted() for value in values)
+    with localcontext(FINANCIAL_CONTEXT) as context:
+        context.prec = max(50, maximum_adjusted - minimum_exponent + len(str(len(values))) + 2)
+        return sum(values, Decimal("0"))
+
+
+def exact_product(*values: Decimal) -> Decimal:
+    """Products of finite input components require their combined digit budget."""
+    with localcontext(FINANCIAL_CONTEXT) as context:
+        context.prec = max(50, sum(len(value.as_tuple().digits) for value in values) + 2)
+        result = Decimal("1")
+        for value in values:
+            result *= value
+        return result
 # Initial supported ISO 4217 currencies; extend deliberately, never infer from FX availability.
 SUPPORTED_CURRENCIES = frozenset(
     "EUR USD GBP CHF JPY CAD AUD NZD SEK NOK DKK PLN CZK HKD SGD ZAR ILS".split()
@@ -96,8 +117,7 @@ class MoneyComponent:
         return rate
 
     def in_base(self, base_currency: str) -> Decimal:
-        with localcontext(FINANCIAL_CONTEXT):
-            return self.amount * self.rate_to_base(base_currency)
+        return exact_product(self.amount, self.rate_to_base(base_currency))
 
 
 @dataclass(frozen=True, slots=True)

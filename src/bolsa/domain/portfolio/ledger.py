@@ -12,6 +12,7 @@ from bolsa.domain.portfolio.values import (
     FINANCIAL_CONTEXT, LedgerConflictError, MoneyComponent, PortfolioError,
     currency_code, financial_decimal,
     ReportedSettlement,
+    exact_product, exact_sum,
 )
 
 
@@ -233,46 +234,46 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                 withholding = trade.withholding.in_base(base)
                 charges = trade.charges.in_base(base)
                 net = trade.net.in_base(base)
-                if net != gross - withholding - charges:
+                if net != exact_sum(gross, withholding.copy_negate(), charges.copy_negate()):
                     raise PortfolioError(f"Inconsistent manual dividend net: {event.transaction_uid}")
                 if trade.reported_settlement is not None:
                     observed = trade.reported_settlement.in_base(base)
                     if observed != net:
-                        pending.append(SettlementDifference(event.transaction_uid, ticker, net, observed, observed - net))
+                        pending.append(SettlementDifference(event.transaction_uid, ticker, net, observed, exact_sum(observed, net.copy_negate())))
                         current = replace(current, accounting_confirmed=False)
-                positions[ticker] = replace(current, dividend_income=current.dividend_income + net)
+                positions[ticker] = replace(current, dividend_income=exact_sum(current.dividend_income, net))
                 continue
             if isinstance(trade, Split):
                 if current.quantity == 0:
                     raise PortfolioError(f"Split requires an open position: {event.transaction_uid}")
-                q = current.quantity * trade.factor
+                q = exact_product(current.quantity, trade.factor)
                 positions[ticker] = replace(current, quantity=q, average_cost=current.cost / q)
                 continue
             quantity = trade.quantity
-            gross = quantity * trade.unit_price.amount * trade.unit_price.rate_to_base(base)
+            gross = exact_product(quantity, trade.unit_price.amount, trade.unit_price.rate_to_base(base))
             fee = trade.commission.in_base(base)
             if trade.reported_settlement is not None:
-                expected = -(gross + fee) if trade.kind is TradeType.BUY else gross - fee
+                expected = exact_sum(gross, fee).copy_negate() if trade.kind is TradeType.BUY else exact_sum(gross, fee.copy_negate())
                 observed = trade.reported_settlement.in_base(base)
                 if observed != expected:
-                    pending.append(SettlementDifference(event.transaction_uid, ticker, expected, observed, observed - expected))
+                    pending.append(SettlementDifference(event.transaction_uid, ticker, expected, observed, exact_sum(observed, expected.copy_negate())))
                     current = replace(current, accounting_confirmed=False)
             if trade.kind is TradeType.BUY:
-                purchase_costs[ticker] += gross + fee
-                q = current.quantity + quantity
-                cost = current.cost + gross + fee
+                purchase_costs[ticker] = exact_sum(purchase_costs[ticker], gross, fee)
+                q = exact_sum(current.quantity, quantity)
+                cost = exact_sum(current.cost, gross, fee)
                 positions[ticker] = Position(ticker, q, cost, cost / q, current.realized_pnl,
                                               current.dividend_income, current.accounting_confirmed)
             else:
                 if quantity > current.quantity:
                     raise PortfolioError(f"Oversell: {event.transaction_uid} ({ticker})")
-                q = current.quantity - quantity
-                assigned = current.cost if q == 0 else quantity * current.average_cost
-                cost = Decimal("0") if q == 0 else current.cost - assigned
-                sale_proceeds[ticker] += gross - fee
+                q = exact_sum(current.quantity, quantity.copy_negate())
+                assigned = current.cost if q == 0 else exact_product(quantity, current.average_cost)
+                cost = Decimal("0") if q == 0 else exact_sum(current.cost, assigned.copy_negate())
+                sale_proceeds[ticker] = exact_sum(sale_proceeds[ticker], gross, fee.copy_negate())
                 # Cashflow conservation cancels repeating-average residues on
                 # closure, including reopened positions. Never round to cents.
-                realized = sale_proceeds[ticker] - purchase_costs[ticker] + cost
+                realized = exact_sum(sale_proceeds[ticker], purchase_costs[ticker].copy_negate(), cost)
                 positions[ticker] = Position(
                     ticker, q, cost, current.average_cost if q else Decimal("0"),
                     realized,

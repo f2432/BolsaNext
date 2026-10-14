@@ -6,7 +6,7 @@ from typing import Mapping
 from uuid import UUID
 
 from bolsa.domain.portfolio.ledger import Portfolio
-from bolsa.domain.portfolio.values import FINANCIAL_CONTEXT, PortfolioError, currency_code
+from bolsa.domain.portfolio.values import FINANCIAL_CONTEXT, PortfolioError, currency_code, exact_product, exact_sum
 
 
 def quote_decimal(value: Decimal) -> Decimal:
@@ -135,7 +135,7 @@ def value_portfolio(portfolio: Portfolio, prices: Mapping[str, PriceQuote],
     pnl_complete = True
     with localcontext(FINANCIAL_CONTEXT):
         for position in ledger.positions:
-            realized += position.realized_pnl
+            realized = exact_sum(realized, position.realized_pnl)
             if position.quantity == 0:
                 continue
             price = prices.get(position.ticker)
@@ -160,11 +160,11 @@ def value_portfolio(portfolio: Portfolio, prices: Mapping[str, PriceQuote],
                             state, reason = quote_freshness(rate.quoted_at, now, max_age)
             value = pnl = None
             if state is ValuationState.AVAILABLE:
-                value = position.quantity * price.price * rate.rate
-                pnl = value - position.cost if position.accounting_confirmed else None
-                subtotal += value
+                value = exact_product(position.quantity, price.price, rate.rate)
+                pnl = exact_sum(value, position.cost.copy_negate()) if position.accounting_confirmed else None
+                subtotal = exact_sum(subtotal, value)
                 if pnl is not None:
-                    pnl_subtotal += pnl
+                    pnl_subtotal = exact_sum(pnl_subtotal, pnl)
                 else:
                     pnl_complete = False
                     reason = "Historical accounting is pending settlement reconciliation"

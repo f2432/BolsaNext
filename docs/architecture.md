@@ -1,5 +1,32 @@
 # Arquitetura
 
+## Integração V0.3 (2026-10-14)
+
+Decisão comparativa em `docs/v0.3-integration.md`: conservar domínio/ledger/schema
+da dev, adaptar UI/provider de snapshots da feature. Cadeia publicada 0001–0006
+mantida byte a byte (normalização LF no teste), uma única head. Schema divergente
+com portfolio_components ou 0003 incompatível é recusado antes de qualquer upgrade.
+Não migrar automaticamente bases criadas pela feature.
+
+Refinamento fundamentado do contexto financeiro: somas/produtos de Decimals
+finitos usam orçamento de precisão calculado pelos dígitos/expoentes, preservando
+componentes até nos limites A3. As divisões continuam em contexto 50/HALF_EVEN;
+os registos anteriores de contexto fixo para todos os cálculos ficam históricos.
+Realizado deriva de encaixes acumulados menos compras acumuladas mais custo
+remanescente: elimina resíduos de dízimas no fecho, sem quantizar nem guardar posições.
+Oráculos independentes Fraction cobrem fecho, FX, magnitude máxima, split/dividendo
+assinado/valor de mercado. O teste anterior de magnitude foi reforçado para exigir
+o produto completo (100 dígitos de referência), não eliminado para aprovação.
+
+Dashboard e análise recebem um único agregado imutável durante rede/valorização.
+Repository lista carteiras sob snapshot SQLite. UI usa FunctionThread para casos
+de uso e recusa fecho enquanto há operação ou confirmação pendente. Parsing
+Decimal pertence a Application; formulários preservam original_facts/metadados
+e liquidação observada continua protegida pelo domínio. Provider atual consulta
+metadados atuais e Close diário não ajustado com data/fonte, sem reescrever moeda
+histórica; não inventa timestamp vivo. Histórico UI pagina 200 versões, arquivo
+integral permanece no ledger e exportação. Sem lógica contabilística em Qt.
+
 ## Implementação V0.3-P1 — contrato técnico (2026-10-13)
 
 ### Contrato P5 — integridade, indicadores e política opcional (planeamento)

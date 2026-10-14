@@ -224,7 +224,8 @@ def test_high_magnitude_fx_applies_after_execution_gross():
                 unit_price=MoneyComponent(D("987654321987654321.12345678"), "USD", D("0.123456789012")))
     p = Portfolio("Synthetic", "EUR").record(t)
     with localcontext() as context:
-        context.prec = 50
+        # Full finite product must preserve digits beyond the division context.
+        context.prec = 100
         expected = t.quantity * t.unit_price.amount * t.unit_price.historical_fx
     assert p.reconstruct().position("TEST").cost == expected
 
