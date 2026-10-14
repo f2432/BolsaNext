@@ -220,6 +220,8 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
             warnings.append(f"Ambiguous execution order: {group[0].trade.instrument.ticker} "
                             f"{instants[0].date()}")
     positions = {}
+    purchase_costs = defaultdict(lambda: Decimal("0"))
+    sale_proceeds = defaultdict(lambda: Decimal("0"))
     pending = []
     with localcontext(FINANCIAL_CONTEXT):
         for event in events:
@@ -256,6 +258,7 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                     pending.append(SettlementDifference(event.transaction_uid, ticker, expected, observed, observed - expected))
                     current = replace(current, accounting_confirmed=False)
             if trade.kind is TradeType.BUY:
+                purchase_costs[ticker] += gross + fee
                 q = current.quantity + quantity
                 cost = current.cost + gross + fee
                 positions[ticker] = Position(ticker, q, cost, cost / q, current.realized_pnl,
@@ -266,9 +269,13 @@ def replay(portfolio_uid: UUID, base_currency: str, versions) -> ReplayResult:
                 q = current.quantity - quantity
                 assigned = current.cost if q == 0 else quantity * current.average_cost
                 cost = Decimal("0") if q == 0 else current.cost - assigned
+                sale_proceeds[ticker] += gross - fee
+                # Cashflow conservation cancels repeating-average residues on
+                # closure, including reopened positions. Never round to cents.
+                realized = sale_proceeds[ticker] - purchase_costs[ticker] + cost
                 positions[ticker] = Position(
                     ticker, q, cost, current.average_cost if q else Decimal("0"),
-                    current.realized_pnl + gross - fee - assigned,
+                    realized,
                     current.dividend_income,
                     current.accounting_confirmed,
                 )
