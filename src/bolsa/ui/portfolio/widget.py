@@ -14,6 +14,10 @@ from PySide6.QtWidgets import (
 
 from bolsa.app.portfolio_forms import transaction_from_form, decimal_text, utc_now
 from bolsa.app.portfolio_format import export_portfolio, MAX_IMPORT_BYTES
+from bolsa.app.portfolio_presentation import (
+    money, quantity, average_price, percentage, state_label, message, quote_details,
+    import_report_text, METRICS,
+)
 from bolsa.domain.portfolio.policy import PolicyParameters
 from bolsa.domain.portfolio.values import SUPPORTED_CURRENCIES
 from bolsa.ui.portfolio.dialogs import TransactionDialog
@@ -89,9 +93,13 @@ class PortfolioWidget(QWidget):
         self._worker = FunctionThread(function)
         self._worker.setParent(self)
         self._worker.result_ready.connect(callback or self._render)
-        self._worker.failed.connect(lambda error: self.status.setText("Erro; operação não confirmada: " + error))
+        self._worker.failed.connect(self._show_error)
         self._worker.finished.connect(self._finished)
         self._worker.start()
+
+    def _show_error(self, error):
+        self.status.setText("Erro; operação não confirmada: " + message(error))
+        self.status.setToolTip(error)
 
     def _finished(self):
         self._worker.deleteLater()
@@ -143,25 +151,32 @@ class PortfolioWidget(QWidget):
             return
         valuation, analysis = dashboard.valuation, dashboard.analysis
         self.summary.setText(
-            f"Moeda base: {portfolio.base_currency}. Mercado total: {valuation.total_market_value}; "
-            f"subtotal conhecido: {valuation.known_market_subtotal}. Resultado composto: {analysis.composite_result}. "
-            f"Reconciliação: {analysis.reconciliation.state}. "
-            "Sem total quando dados incompletos. Cotações diárias aproximadas; fallback temporal 72 h.\n"
-            + " | ".join(f"{a.metric}: {a.state} ({a.actual})" for a in analysis.risk.alerts)
+            f"Moeda base: {portfolio.base_currency}. Mercado total: {money(valuation.total_market_value, portfolio.base_currency)}; "
+            f"subtotal conhecido: {money(valuation.known_market_subtotal, portfolio.base_currency)}. "
+            f"Resultado composto: {money(analysis.composite_result, portfolio.base_currency)}. "
+            f"Reconciliação: {state_label(analysis.reconciliation.state)}. "
+            "Cotações diárias aproximadas; limite de atualidade de 72 horas corridas.\n"
+            + " | ".join(f"{METRICS.get(a.metric, 'Política')}: {state_label(a.state)} "
+                         f"(atual: {percentage(a.actual)}; limite: {percentage(a.limit)})"
+                         for a in analysis.risk.alerts)
         )
         valued = {p.ticker: p for p in valuation.positions}
         for position in portfolio.reconstruct().positions:
             current = valued.get(position.ticker)
-            tooltip = ""
-            if current:
-                tooltip = f"{current.state}: {current.reason}; preço: {current.price_quote}; FX: {current.fx_quote}"
-            self._row(self.positions, [position.ticker, position.quantity, position.cost,
-                      position.average_cost, position.realized_pnl, position.dividend_income,
-                      current.market_value if current else None, current.unrealized_pnl if current else None,
+            tooltip = quote_details(current)
+            self._row(self.positions, [position.ticker, quantity(position.quantity), money(position.cost),
+                      average_price(position.average_cost), money(position.realized_pnl), money(position.dividend_income),
+                      money(current.market_value) if current else None, money(current.unrealized_pnl) if current else None,
                       "Confirmado" if position.accounting_confirmed else "Provisório / pendente"], tooltip=tooltip)
+            for column, value in enumerate((position.quantity, position.cost, position.average_cost,
+                                           position.realized_pnl, position.dividend_income), 1):
+                self.positions.item(self.positions.rowCount() - 1, column).setToolTip(
+                    tooltip + f"\nValor exato registado/derivado: {value}"
+                )
         self._render_history()
-        self.status.setText(" | ".join(valuation.data_errors + analysis.reconciliation.issues +
-                                       portfolio.reconstruct().warnings))
+        details = valuation.data_errors + analysis.reconciliation.issues + portfolio.reconstruct().warnings
+        self.status.setText(" | ".join(message(text) for text in details))
+        self.status.setToolTip("\n".join(details))
 
     def _render_history(self):
         portfolio = self._active()
@@ -291,7 +306,7 @@ class PortfolioWidget(QWidget):
                 return
             self._pending_confirmation = False
             if plan.candidate is None:
-                self.status.setText(f"Inseridos: 0. Conflitos: {plan.report.conflicts}. " + " | ".join(plan.report.reasons))
+                self.status.setText(import_report_text(plan.report))
                 return
             candidate = plan.candidate
             response = QMessageBox.question(self, "Confirmar importação",
@@ -304,8 +319,7 @@ class PortfolioWidget(QWidget):
                 def complete(result):
                     self._render(result[0])
                     report = result[1]
-                    self.status.setText(f"Importação: {report.state}. Inseridos: {report.inserted}; "
-                                        f"ignorados: {report.ignored}. " + " | ".join(report.reasons))
+                    self.status.setText(import_report_text(report))
                 self._run(apply, complete)
         QTimer.singleShot(0, ask)
 

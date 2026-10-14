@@ -103,7 +103,7 @@ def test_create_record_value_export_clone(app, dashboard, monkeypatch, tmp_path)
     fake_dialog(monkeypatch, form_values(trade()))
     widget._record()
     finish(widget, app)
-    assert widget.positions.item(0, 2).text() == "1000"
+    assert widget.positions.item(0, 2).text() == "1\N{NO-BREAK SPACE}000,00"
     widget._market()
     finish(widget, app)
     assert widget.dashboard.valuation.total_market_value == 1100
@@ -134,7 +134,7 @@ def test_correction_cancellation_and_error(app, dashboard, monkeypatch):
     fake_dialog(monkeypatch, fields)
     widget._correct()
     finish(widget, app)
-    assert widget.positions.item(0, 2).text() == "1010"
+    assert widget.positions.item(0, 2).text() == "1\N{NO-BREAK SPACE}010,00"
     assert widget._active().versions[-1].trade.original_facts == trade().original_facts
     widget.history.setCurrentCell(1, 0)
     monkeypatch.setattr(gui.QInputDialog, "getText", lambda *a, **k: ("Synthetic cancellation", True))
@@ -260,6 +260,6 @@ def test_stale_gui_revision_is_rejected_without_overwriting(app, dashboard, monk
     fake_dialog(monkeypatch, form_values(trade()))
     widget._record()
     finish(widget, app)
-    assert "Obsolete" in widget.status.text()
+    assert "entretanto alterada" in widget.status.text()
     assert dashboard.repository.load(p.portfolio_uid).ledger_revision == 1
     widget.close()
