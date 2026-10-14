@@ -101,8 +101,8 @@ class MoneyComponent:
 
 
 @dataclass(frozen=True, slots=True)
-class ReportedSettlement:
-    """Observed signed account cashflow: credit positive, debit negative."""
+class SignedMoneyComponent:
+    """Exact signed monetary result (e.g. net dividend after charges)."""
     amount: Decimal
     currency: str
     historical_fx: Decimal | None = None
@@ -116,3 +116,8 @@ class ReportedSettlement:
     def in_base(self, base_currency):
         absolute = MoneyComponent(self.amount.copy_abs(), self.currency, self.historical_fx).in_base(base_currency)
         return absolute.copy_negate() if self.amount.is_signed() else absolute
+
+
+@dataclass(frozen=True, slots=True)
+class ReportedSettlement(SignedMoneyComponent):
+    """Observed signed account cashflow: credit positive, debit negative."""

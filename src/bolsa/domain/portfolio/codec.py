@@ -5,7 +5,9 @@ from uuid import UUID
 from bolsa.domain.instruments.instrument import AssetType, Instrument
 from bolsa.domain.portfolio.ledger import Trade, TradeType, TransactionVersion
 from bolsa.domain.portfolio.events import Dividend, Split
-from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, ReportedSettlement, decimal_text
+from bolsa.domain.portfolio.values import (
+    MoneyComponent, PortfolioError, ReportedSettlement, SignedMoneyComponent, decimal_text,
+)
 
 def encode_version_fields(version):
     values = dict(
@@ -86,7 +88,8 @@ def decode_version_fields(row):
                 **metadata,
             )
         elif row["trade_kind"] == "DIVIDEND":
-            components = {name: MoneyComponent(row[name], row[name + "_currency"], row[name + "_fx"])
+            components = {name: (SignedMoneyComponent if name == "net" else MoneyComponent)(
+                row[name], row[name + "_currency"], row[name + "_fx"])
                           for name in ("gross", "withholding", "charges", "net")}
             trade = Dividend(Instrument(**instrument), **components, **metadata)
         elif row["trade_kind"] == "ADJUSTMENT":

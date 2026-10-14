@@ -25,6 +25,11 @@ class SectorClassification:
     def __post_init__(self):
         if self.label is not None and not isinstance(self.label, str):
             raise PortfolioError("Sector label must be text or unknown")
+        if self.label is not None:
+            label = self.label.strip()
+            if label.casefold() in {"", "unknown", "not determined", "não determinado", "n/a", "none"}:
+                label = None
+            object.__setattr__(self, "label", label)
         if type(self.underlying_exposure_confirmed) is not bool:
             raise PortfolioError("Underlying exposure confirmation must be explicit")
 

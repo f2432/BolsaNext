@@ -1,5 +1,17 @@
 # Desenvolvimento local
 
+### Revisão financeira final P5 (2026-10-14)
+
+Bruto, retenção e encargos continuam não negativos; o líquido de dividendo é
+assinado, respeitando integralmente `bruto - retenção - encargos`, inclusive
+quando encargos superam o bruto. `SignedMoneyComponent` mantém Decimal exato,
+SQLite TEXT e JSON textual sem clamp; posição/custo/PnL de vendas não mudam.
+Setor vazio/desconhecido permanece não determinado. Suite local final: 316 testes,
+Ruff aprovado, 72% global. CI #450 validou P5 anterior; a revisão exige CI próprio.
+Diagnosticar futuramente a cobertura de linhas dos módulos Alembic indicada 0%,
+sem confundir a hipótese de carga dinâmica com uma causa demonstrada nem com
+ausência de testes de integração executados.
+
 ## Validação V0.3-P5 — integridade e política (2026-10-14)
 
 Políticas têm limites opcionais fracionários [0,1], sem valores pessoais por

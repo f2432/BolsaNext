@@ -4,6 +4,14 @@
 
 ### Contrato P5 — integridade, indicadores e política opcional (planeamento)
 
+Revisão do limite de sinal (2026-10-14): o líquido de dividendo é resultado
+assinado, pois `bruto - retenção - encargos` pode ser negativo. `SignedMoneyComponent`
+permite esse resultado exato sem truncagem, mantendo bruto/retenção/encargos
+não negativos. Isto aplica integralmente a fórmula A2; não introduz FEE separado
+nem altera posição/custo/PnL de vendas. SQLite/JSON mantêm o sinal. Metadados
+setoriais vazios ou explicitamente desconhecidos são normalizados para desconhecido,
+evitando demonstrar conformidade com uma etiqueta sem informação.
+
 Implementação das divergências de liquidação: `ReportedSettlement` é facto
 opcional tipado de cashflow da conta (crédito positivo, débito negativo), com
 moeda/FX histórico próprios. BUY espera cashflow `-(q*p + comissão)`, SELL

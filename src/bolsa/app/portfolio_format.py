@@ -11,6 +11,7 @@ from bolsa.domain.portfolio.ledger import Portfolio
 from bolsa.domain.portfolio.policy import encode_policy, decode_policy
 from bolsa.domain.portfolio.values import (
     PortfolioError, PortfolioNotFoundError, decimal_text, financial_decimal,
+    signed_financial_decimal,
 )
 
 MAX_IMPORT_BYTES = 5 * 1024 * 1024
@@ -62,7 +63,9 @@ def _decode_version(fields):
         if row[key] is not None:
             if not isinstance(row[key], str):
                 raise PortfolioError("Financial JSON values must be decimal strings")
-            row[key] = financial_decimal(row[key], scale=12 if key.endswith("_fx") else 8)
+            row[key] = signed_financial_decimal(row[key]) if key == "net" else financial_decimal(
+                row[key], scale=12 if key.endswith("_fx") else 8
+            )
     if row["trade_metadata"] is not None:
         if not isinstance(row["trade_metadata"], dict):
             raise PortfolioError("Event metadata must be an object")

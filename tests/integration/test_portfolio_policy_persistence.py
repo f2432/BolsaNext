@@ -13,7 +13,7 @@ from bolsa.config import AppConfig
 from bolsa.domain.instruments.instrument import Instrument
 from bolsa.domain.portfolio.ledger import Trade, TradeType
 from bolsa.domain.portfolio.policy import PolicyParameters
-from bolsa.domain.portfolio.values import LedgerConflictError, MoneyComponent, ReportedSettlement
+from bolsa.domain.portfolio.values import LedgerConflictError, MoneyComponent, ReportedSettlement, SignedMoneyComponent
 from bolsa.domain.portfolio.valuation import PriceQuote, value_portfolio
 from bolsa.domain.portfolio.events import Dividend
 from bolsa.infrastructure.database import create_database_engine, ensure_database_schema
@@ -167,3 +167,17 @@ def test_observed_settlement_pending_status_survives_database_reopen_and_clone(s
     preview = transfer.preview(export_portfolio(loaded), mode="clone")
     assert transfer.confirm(preview).state is ImportState.COMPLETED
     assert repository.load(preview.candidate.portfolio_uid).reconstruct() == loaded.reconstruct()
+
+
+def test_negative_dividend_net_is_exactly_persistent_and_portable(store):
+    engine, repository, service, _ = store
+    p = service.create("Synthetic", "EUR")
+    event = Dividend(Instrument("TEST"), MoneyComponent(D(50), "EUR"), MoneyComponent(D("7.5"), "EUR"),
+                     MoneyComponent(D(60), "EUR"), SignedMoneyComponent(D("-17.5"), "EUR"), AT)
+    p = service.record(p.portfolio_uid, event, expected_revision=0)
+    engine.dispose()
+    loaded = repository.load(p.portfolio_uid)
+    assert loaded.reconstruct().position("TEST").dividend_income == D("-17.5")
+    assert parse_portfolio(export_portfolio(loaded)).reconstruct() == loaded.reconstruct()
+    with engine.connect() as connection:
+        assert connection.exec_driver_sql("SELECT net, typeof(net) FROM ledger_versions").one() == ("-17.5", "text")

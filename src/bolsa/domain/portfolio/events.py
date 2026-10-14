@@ -3,7 +3,9 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from bolsa.domain.instruments.instrument import AssetType, Instrument
-from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, ReportedSettlement, financial_decimal
+from bolsa.domain.portfolio.values import (
+    MoneyComponent, PortfolioError, ReportedSettlement, SignedMoneyComponent, financial_decimal,
+)
 
 
 def _validate_metadata(event):
@@ -45,7 +47,7 @@ class Dividend:
     gross: MoneyComponent
     withholding: MoneyComponent
     charges: MoneyComponent
-    net: MoneyComponent
+    net: MoneyComponent | SignedMoneyComponent
     executed_at: date | datetime
     broker_sequence: int | None = None
     settlement_date: date | None = None
@@ -59,9 +61,12 @@ class Dividend:
     def __post_init__(self):
         _validate_metadata(self)
         if any(not isinstance(component, MoneyComponent) for component in (
-            self.gross, self.withholding, self.charges, self.net
+            self.gross, self.withholding, self.charges
         )):
             raise PortfolioError("Dividend components must be monetary values")
+        if not isinstance(self.net, (MoneyComponent, SignedMoneyComponent)):
+            raise PortfolioError("Dividend net must be an exact monetary value")
+        object.__setattr__(self, "net", SignedMoneyComponent(self.net.amount, self.net.currency, self.net.historical_fx))
         if self.gross.amount <= 0:
             raise PortfolioError("Gross dividend must be positive")
         if self.reported_settlement is not None and not isinstance(self.reported_settlement, ReportedSettlement):

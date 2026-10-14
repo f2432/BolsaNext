@@ -79,6 +79,15 @@ def test_unknown_sector_and_etf_underlying_are_not_inferred():
     assert dict(evaluate_risk(root, quote, {"A": SectorClassification("Tech", True)}).sector_weights) == {"Tech": D(1)}
 
 
+def test_blank_or_unknown_sector_metadata_cannot_establish_compliance():
+    p = configured(portfolio())
+    for label in (" ", "UNKNOWN", "Não determinado", "N/A"):
+        metadata = {ticker: SectorClassification(label) for ticker in ("A", "B")}
+        report = evaluate_risk(p, valuation(p), metadata)
+        sector = next(a for a in report.alerts if a.metric == "sector_concentration")
+        assert sector.state is AlertState.NOT_EVALUABLE
+
+
 def test_policy_versions_vigency_and_obsolete_head_preserve_history():
     p = configured(portfolio())
     first = p.policies[0]

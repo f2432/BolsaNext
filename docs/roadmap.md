@@ -2,6 +2,10 @@
 
 ## Execução autorizada V0.3 (2026-10-13)
 
+Revisão final: P5 passou CI #450; reforços de sinal de dividendos e metadados
+desconhecidos passaram localmente (316 testes/Ruff, 72%). CI desta revisão
+pendente. P6/UI permanece por iniciar; V0.3 não concluída.
+
 Atualização P5 (2026-10-14): P1–P4 concluídos com CI; P5 implementado/testado
 localmente, 313 testes/Ruff e 72% global, com gate CI pendente. **P6 por iniciar**:
 integração da carteira na UI PySide6, formulários e histórico/auditoria,

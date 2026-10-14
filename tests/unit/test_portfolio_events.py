@@ -7,7 +7,7 @@ import pytest
 from bolsa.domain.instruments.instrument import Instrument
 from bolsa.domain.portfolio.events import Dividend, Split
 from bolsa.domain.portfolio.ledger import Portfolio, Trade, TradeType
-from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError
+from bolsa.domain.portfolio.values import MoneyComponent, PortfolioError, SignedMoneyComponent
 
 D = Decimal
 AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -63,7 +63,7 @@ def test_dividend_components_convert_individually():
         Portfolio("Synthetic", "EUR").record(replace(event, withholding=money("5", "GBP")))
 
 
-def test_manual_dividend_mismatch_or_negative_derived_net_rejected_without_mutation():
+def test_manual_dividend_mismatch_or_unbalanced_components_rejected_without_mutation():
     p = Portfolio("Synthetic", "EUR").record(buy())
     for event in (dividend("42"), replace(dividend(), withholding=money("100"))):
         with pytest.raises(PortfolioError, match="dividend net"):
@@ -117,3 +117,11 @@ def test_dividend_net_zero_is_valid_and_no_profit_is_invented():
     event = replace(dividend("0"), withholding=money("49"))
     p = Portfolio("Synthetic", "EUR").record(event)
     assert p.reconstruct().position("TEST").dividend_income == D(0)
+
+
+def test_dividend_charges_above_gross_preserve_exact_negative_net_without_clamping():
+    event = replace(dividend(), charges=money("60"), net=SignedMoneyComponent(D("-17.5"), "EUR"))
+    p = Portfolio("Synthetic", "EUR").record(buy()).record(event)
+    position = p.reconstruct().position("TEST")
+    assert position.dividend_income == D("-17.5")
+    assert (position.quantity, position.cost, position.realized_pnl) == (D(10), D(1000), D(0))

@@ -2,6 +2,23 @@
 
 ## Síntese prevalecente — execução V0.3 (2026-10-13)
 
+**Revisão final P5 (2026-10-14):** o commit `854f96f` passou no CI #450 em
+Linux/Python 3.12 e Windows/Python 3.14. Uma revisão adicional corrigiu um caso
+de sinal: líquido de dividendo negativo por encargos é conservado exatamente,
+sem truncagem para zero e sem alterar posição/custo. Metadados setoriais vazios
+ou marcados desconhecidos nunca demonstram conformidade. A suite final local
+tem **316 testes aprovados em 29,69 s**, Ruff aprovado e **72% de cobertura**
+(3055 statements/841 miss), +155 testes face à baseline reproduzida de 161;
+61% é a medição histórica V0.2, não uma nova medição nesta execução.
+O commit desta revisão e respetivo CI são ainda pendentes nesta nota.
+
+P1–P5 constituem o núcleo headless implementado. **P6/UI continua por iniciar**,
+com integração de preços/snapshots e validação funcional ainda necessárias;
+**não declarar a V0.3 concluída**. O indicador de cobertura 0% dos módulos Alembic
+é uma lacuna a diagnosticar: a carga dinâmica foi uma hipótese, não causa
+confirmada. Upgrades/rollback/backup foram efetivamente verificados em bases
+sintéticas. Main e tag v0.2.0 mantidas, sem dados/ordens reais.
+
 **Atualização P5 (2026-10-14):** P4 fechado com CI #449 Linux/Windows aprovado,
 commit `132b68e`. P5 implementado: política opcional versionada/persistida,
 indicadores com denominador completo, três estados de alerta, setor/ETF desconhecido
