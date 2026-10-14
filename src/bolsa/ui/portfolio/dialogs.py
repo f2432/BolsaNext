@@ -15,7 +15,7 @@ from bolsa.domain.portfolio.values import SUPPORTED_CURRENCIES
 LABELS = {
     "price": "Preço unitário",
     "commission": "Comissão",
-    "observed_net": "Cashflow observado (+ crédito / − débito, opcional)",
+    "observed_net": "Movimento observado (+ crédito / − débito, opcional)",
     "gross": "Dividendo bruto",
     "withholding": "Retenção",
     "charges": "Outros encargos",
@@ -47,7 +47,8 @@ class TransactionDialog(QDialog):
         layout.addWidget(scroll)
         self.inputs = {}
         self.errors = {}
-        self._combo("type", "Operação", ["BUY", "SELL", "DIVIDEND", "ADJUSTMENT"])
+        self._combo("type", "Operação", [("Compra", "BUY"), ("Venda", "SELL"),
+                                         ("Dividendo", "DIVIDEND"), ("Split", "ADJUSTMENT")])
         self._text("ticker", "Ticker")
         self._combo("asset_type", "Instrumento", [("Ação", "stock"), ("ETF", "etf")])
         self._combo(
@@ -107,6 +108,8 @@ class TransactionDialog(QDialog):
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Confirmar")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Cancelar")
         layout.addWidget(buttons)
 
     def _fx_fields(self, *_):
@@ -168,7 +171,7 @@ class TransactionDialog(QDialog):
         for key, error in self.errors.items():
             self.form.setRowVisible(error, False)
             self.inputs[key].setStyleSheet("")
-        kind = self.inputs["type"].currentText()
+        kind = self.inputs["type"].currentData()
         roles = {
             "BUY": ("price", "commission", "observed_net"),
             "SELL": ("price", "commission", "observed_net"),

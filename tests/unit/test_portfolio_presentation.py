@@ -51,6 +51,7 @@ def test_named_errors_translated_with_identifiers_preserved():
     assert "Atualiza a valorização" in message("Current valuation is incomplete or does not match ledger revision")
     assert message("Conflicting version identity: abc") == "Conflito de identidade de versão: abc"
     assert message(None) == ""
+    assert "JSONDecodeError" not in message("Invalid canonical portfolio: JSONDecodeError")
 
 
 @pytest.mark.parametrize("mode", ["restore", "complement", "clone"])

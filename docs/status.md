@@ -1,5 +1,25 @@
 # Estado atual do projeto
 
+## Síntese prevalecente — correções de usabilidade após testes Windows
+
+O utilizador reportou 12 testes funcionais manuais Windows com resultados
+financeiros corretos (carteiras, operações, correções/anulações, dividendos,
+persistência, Yahoo, transferências e clones). Esta evidência comunicada substitui
+a pendência histórica de primeira validação interativa; as alterações de UI desta
+execução ainda exigem revisão manual específica. V0.3 continua em desenvolvimento.
+
+Em `integration/v0.3`: formatação pt-PT centralizada (sem alterar Decimal interno),
+mensagens traduzidas na apresentação, cabeçalhos legíveis, ações por seleção UUID
+eficaz, FX histórico explícito com erros junto aos campos, preview de importação
+com origem/destino/contagens/conflitos e versão única **0.3.0.dev0** (metadata local
+verificada). Não alterados domínio/fórmulas, migrations, main, dev ou v0.2.0;
+nenhuma operação em bases pessoais. Nenhum teste existente eliminado.
+
+Validação intermédia: 369 testes locais Windows/Python3.14.5, Ruff aprovado,
+82,545% global; CI #456 (`6c86343`) Linux/Windows aprovado. Reforço final de
+cancelamento/rótulos em validação. Evidências e limites em `docs/v0.3-integration.md`.
+Conversor da feature permanece pendente; não declarar prontidão para dados reais.
+
 ## Síntese prevalecente — integração V0.3 (2026-10-14)
 
 **Fecho CI confirmado:** #454, commit `df40361`, pytest/cobertura/Ruff aprovados

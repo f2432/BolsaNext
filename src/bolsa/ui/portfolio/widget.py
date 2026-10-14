@@ -216,7 +216,7 @@ class PortfolioWidget(QWidget):
             for column, value in enumerate((position.quantity, position.cost, position.average_cost,
                                            position.realized_pnl, position.dividend_income), 1):
                 self.positions.item(self.positions.rowCount() - 1, column).setToolTip(
-                    tooltip + f"\nValor exato registado/derivado: {value}"
+                    tooltip + "\nValor exato registado/derivado: " + str(value).replace(".", ",")
                 )
         self._render_history()
         details = valuation.data_errors + analysis.reconciliation.issues + portfolio.reconstruct().warnings
@@ -369,6 +369,7 @@ class PortfolioWidget(QWidget):
             if plan.candidate is None:
                 self.status.setText(import_preview_text(display))
                 self.status.setToolTip("\n".join(plan.report.reasons))
+                self._update_actions()
                 return
             candidate = plan.candidate
             response = QMessageBox.question(self, "Confirmar importação",
@@ -382,6 +383,9 @@ class PortfolioWidget(QWidget):
                     report = result[1]
                     self.status.setText(import_report_text(report))
                 self._run(apply, complete)
+            else:
+                self.status.setText("Importação cancelada. Nenhuma alteração confirmada.")
+                self._update_actions()
         QTimer.singleShot(0, ask)
 
     def _policy(self):
@@ -406,6 +410,8 @@ class PortfolioWidget(QWidget):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Confirmar")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Cancelar")
         form.addRow(buttons)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             parameters = {key: field.text() for key, field in fields.items()}

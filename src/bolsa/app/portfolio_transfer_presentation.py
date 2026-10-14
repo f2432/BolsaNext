@@ -1,5 +1,6 @@
 """Read-only identities and descriptions for canonical two-phase transfers."""
 from dataclasses import dataclass
+from uuid import UUID
 
 from bolsa.app.portfolio_format import ImportPreview, parse_portfolio
 from bolsa.app.portfolio_presentation import import_report_text
@@ -22,10 +23,10 @@ IMPORT_MODES = {
 class ImportDisplay:
     preview: ImportPreview
     mode: str
-    source_uid: object = None
+    source_uid: UUID | None = None
     source_name: str | None = None
-    source_origin_uid: object = None
-    destination_uid: object = None
+    source_origin_uid: UUID | None = None
+    destination_uid: UUID | None = None
     destination_name: str | None = None
 
 

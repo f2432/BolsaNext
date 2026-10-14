@@ -1,5 +1,32 @@
 # Desenvolvimento local
 
+## Correções de apresentação após validação funcional Windows
+
+Versão de desenvolvimento: **0.3.0.dev0**, definida exclusivamente em version.py;
+pyproject mantém configuração dinâmica e os testes confrontam source/metadata/UI.
+Atualizar a instalação editável depois de mudança de versão. Nesta execução
+Windows, `python -m pip install --no-deps -e .` construiu em isolamento e verificou
+metadata. A tentativa --no-build-isolation não funcionou por ausência do backend
+setuptools global; não é motivo para alterar dependências financeiras. Scripts
+não está no PATH local; o ambiente pode executar via `python -m bolsa.main`.
+Não executar a aplicação com bases pessoais para repetir os testes automatizados.
+
+Apresentação financeira em app/portfolio_presentation.py: vírgula decimal,
+espaço inseparável de milhares, moeda2, quantidade8 sem zeros finais, média8
+(notação científica para valores minúsculos), FX12, percentagens2. HALF_EVEN apenas
+no texto; tooltips/detalhe conservam valor completo. Strings formatadas não são
+usadas como dados financeiros nem substituem JSON canónico. Formulários aceitam
+vírgula/ponto sem separadores de milhares, verificam input pelo domínio e indicam
+erros antes de aceitar. Validação integral/revisões/transação permanecem nos serviços.
+
+Testes novos cobrem tradução, limites de formatação/precisão interna, seleção de
+histórico por UUID, cabeçalhos, validação FX/data/motivo e preview/cancelamento
+sem escrita. Rodar pytest com `--cov=src/bolsa`, Ruff e testes Qt offscreen em
+Windows e Linux. Renderização sintética foi inspecionada com fonte Segoe UI
+explicitamente carregada; reavaliar interativamente DPI, scroll, formulários e
+importação depois das alterações. Os 12 cenários anteriores são reporte do utilizador.
+CI #456 passou Linux/Windows; medições finais ficam no relatório de integração.
+
 ## Validação da integração V0.3 (2026-10-14)
 
 Comando de cobertura agora usa a raiz física:

@@ -180,7 +180,7 @@ def test_form_roundtrip_signed_settlement(app):
     dialog = TransactionDialog("EUR", tx)
     assert transaction_from_form(dialog.values(), previous=tx) == tx
     assert not dialog.inputs["source"].isEnabled()
-    dialog.inputs["type"].setCurrentText("DIVIDEND")
+    dialog.inputs["type"].setCurrentIndex(dialog.inputs["type"].findData("DIVIDEND"))
     assert dialog.form.isRowVisible(dialog.inputs["net_amount"])
     assert not dialog.form.isRowVisible(dialog.inputs["quantity"])
     dialog.close()
@@ -363,4 +363,5 @@ def test_import_preview_shows_source_destination_and_cancel_writes_nothing(app, 
     assert "Conflitos: 0" in texts[0]
     assert len(dashboard.repository.list_portfolios()) == 1
     assert dashboard.repository.load(p.portfolio_uid) == p
+    assert "Importação cancelada" in widget.status.text()
     widget.close()

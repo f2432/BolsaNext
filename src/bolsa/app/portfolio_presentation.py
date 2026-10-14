@@ -22,6 +22,8 @@ METRICS = {
     "max_quote_currency_weight": "Concentração por moeda de cotação",
 }
 MESSAGES = {
+    "Invalid canonical portfolio: JSONDecodeError": "O arquivo não contém JSON válido. Seleciona uma exportação canónica da carteira.",
+    "Invalid canonical portfolio: UnicodeDecodeError": "O arquivo deve estar codificado em UTF-8.",
     "Current valuation is incomplete or does not match ledger revision":
         "A valorização está incompleta ou corresponde a outra revisão da carteira. Atualiza a valorização.",
     "Same-currency FX must equal one":
